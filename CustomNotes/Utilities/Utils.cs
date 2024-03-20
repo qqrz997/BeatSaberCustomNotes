@@ -265,12 +265,12 @@ namespace CustomNotes.Utilities
         /// Check if an IDifficultyBeatmap requires noodle extensions
         /// </summary>
         /// <param name="level"></param>
-        public static bool IsNoodleMap(IDifficultyBeatmap level)
+        public static bool IsNoodleMap(BeatmapLevel level, BeatmapKey key)
         {
             // thanks kinsi
             if (PluginManager.EnabledPlugins.Any(x => x.Name == "SongCore") && PluginManager.EnabledPlugins.Any(x => x.Name == "NoodleExtensions"))
             {
-                bool isIsNoodleMap = SongCore.Collections.RetrieveDifficultyData(level)?
+                bool isIsNoodleMap = SongCore.Collections.RetrieveDifficultyData(level, key)?
                     .additionalDifficultyData?
                     ._requirements?.Any(x => x == "Noodle Extensions") == true;
                 return isIsNoodleMap;

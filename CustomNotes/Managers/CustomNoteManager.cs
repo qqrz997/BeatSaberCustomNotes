@@ -10,18 +10,23 @@ namespace CustomNotes.Managers
     {
         private readonly Submission _submission;
         private readonly NoteAssetLoader _noteAssetLoader;
-        private readonly IDifficultyBeatmap _difficultyBeatmap;
         private readonly GameplayCoreSceneSetupData _gameplayCoreSceneSetupData;
 
-        internal CustomNoteManager([InjectOptional] Submission submission, NoteAssetLoader noteAssetLoader, IDifficultyBeatmap difficultyBeatmap, GameplayCoreSceneSetupData gameplayCoreSceneSetupData)
+        internal CustomNoteManager([InjectOptional] Submission submission, NoteAssetLoader noteAssetLoader, GameplayCoreSceneSetupData gameplayCoreSceneSetupData)
         {
             _submission = submission;
             _noteAssetLoader = noteAssetLoader;
-            _difficultyBeatmap = difficultyBeatmap;
             _gameplayCoreSceneSetupData = gameplayCoreSceneSetupData;
         }
+
+        private BeatmapLevel beatmapLevel;
+        private BeatmapKey beatmapKey;
+
         public void Initialize()
         {
+            beatmapLevel = _gameplayCoreSceneSetupData.beatmapLevel;
+            beatmapKey = _gameplayCoreSceneSetupData.beatmapKey;
+
             CustomNote activeNote = _noteAssetLoader.CustomNoteObjects[_noteAssetLoader.SelectedNote];
 
             if (activeNote.NoteBomb != null)
@@ -41,7 +46,7 @@ namespace CustomNotes.Managers
             {
                 _submission?.DisableScoreSubmission("Custom Notes", "Small Notes");
             }
-            if (Utils.IsNoodleMap(_difficultyBeatmap))
+            if (Utils.IsNoodleMap(beatmapLevel, beatmapKey))
             {
                 _submission?.DisableScoreSubmission("Custom Notes", "Noodle Extensions");
             }
