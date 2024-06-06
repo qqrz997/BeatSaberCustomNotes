@@ -4,8 +4,6 @@ using UnityEngine;
 using System.Reflection;
 using System.Collections.Generic;
 using IPA.Loader;
-using IPA.Utilities;
-using System;
 using CustomNotes.Settings.Utilities;
 
 namespace CustomNotes.Utilities
@@ -99,7 +97,7 @@ namespace CustomNotes.Utilities
             if (rendererList.Count > 0)
             {
                 MaterialPropertyBlockController newController = gameObject.AddComponent<MaterialPropertyBlockController>();
-                ReflectionUtil.SetField<MaterialPropertyBlockController, Renderer[]>(newController, "_renderers", rendererList.ToArray());
+                newController._renderers = rendererList.ToArray();
             }
         }
 
