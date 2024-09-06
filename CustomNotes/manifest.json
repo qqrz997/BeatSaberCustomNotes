@@ -5,17 +5,17 @@
     "#![CustomNotes.Resources.description.md]",
     "Adds support for custom notes in beat saber"
   ],
-  "gameVersion": "1.35.0",
+  "gameVersion": "1.37.4",
   "icon": "CustomNotes.Resources.Icons.icon.png",
-  "id": "Custom Notes",
+  "id": "CustomNotes",
   "name": "CustomNotes",
-  "version": "2.6.5",
+  "version": "2.6.6",
   "dependsOn": {
-    "BSIPA": "^4.3.3",
-    "BeatSaberMarkupLanguage": "^1.9.0",
+    "BSIPA": "^4.3.5",
+    "BeatSaberMarkupLanguage": "^1.11.4",
     "SiraUtil": "^3.1.7",
-    "AssetBundleLoadingTools": "^1.1.4",
-    "SongCore": "^3.13.0",
+    "AssetBundleLoadingTools": "^1.1.7",
+    "SongCore": "^3.14.12",
     "CameraUtils": "^1.0.7"
   },
   "links": {
