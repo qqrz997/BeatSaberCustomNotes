@@ -39,17 +39,17 @@ namespace CustomNotes.Settings.UI
         public void Initialize()
         {
             SetupList();
-            GameplaySetup.instance.AddTab("Custom Notes", "CustomNotes.Settings.UI.Views.noteModifier.bsml", this);
+            GameplaySetup.Instance.AddTab("Custom Notes", "CustomNotes.Settings.UI.Views.noteModifier.bsml", this);
         }
 
         public void Dispose()
         {
-            GameplaySetup.instance.RemoveTab("Custom Notes");
+            GameplaySetup.Instance.RemoveTab("Custom Notes");
         }
 
         internal void ParentControllerActivated()
         {
-            notesDropdown.ReceiveValue();
+            notesDropdown?.ReceiveValue();
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(modEnabled)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(noteSize)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(hmdOnly)));
@@ -66,7 +66,7 @@ namespace CustomNotes.Settings.UI
 
             if (notesDropdown != null)
             {
-                notesDropdown.values = notesList;
+                notesDropdown.Values = notesList;
                 notesDropdown.UpdateChoices();
             }
         }

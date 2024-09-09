@@ -83,7 +83,7 @@ namespace CustomNotes.Settings.UI
         {
             _noteAssetLoader.Reload();
             SetupList();
-            Select(customListTableData.tableView, _noteAssetLoader.SelectedNote);
+            Select(customListTableData.TableView, _noteAssetLoader.SelectedNote);
             customNotesReloaded?.Invoke();
         }
 
@@ -126,20 +126,20 @@ namespace CustomNotes.Settings.UI
         [UIAction("#post-parse")]
         public void SetupList()
         {
-            customListTableData.data.Clear();
+            customListTableData.Data.Clear();
 
             foreach (CustomNote note in _noteAssetLoader.CustomNoteObjects)
             {
                 Sprite sprite = Sprite.Create(note.Descriptor.Icon, new Rect(0, 0, note.Descriptor.Icon.width, note.Descriptor.Icon.height), new Vector2(0.5f, 0.5f));
                 CustomListTableData.CustomCellInfo customCellInfo = new CustomListTableData.CustomCellInfo(note.Descriptor.NoteName, note.Descriptor.AuthorName, sprite);
-                customListTableData.data.Add(customCellInfo);
+                customListTableData.Data.Add(customCellInfo);
             }
 
-            customListTableData.tableView.ReloadData();
+            customListTableData.TableView.ReloadData();
             int selectedNote = _noteAssetLoader.SelectedNote;
 
-            customListTableData.tableView.ScrollToCellWithIdx(selectedNote, TableView.ScrollPositionType.Beginning, false) ;
-            customListTableData.tableView.SelectCellWithIdx(selectedNote);
+            customListTableData.TableView.ScrollToCellWithIdx(selectedNote, TableView.ScrollPositionType.Beginning, false) ;
+            customListTableData.TableView.SelectCellWithIdx(selectedNote);
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -163,8 +163,8 @@ namespace CustomNotes.Settings.UI
             }
 
             int selectedNote = _noteAssetLoader.SelectedNote;
-            customListTableData.tableView.SelectCellWithIdx(selectedNote);
-            Select(customListTableData.tableView, selectedNote);
+            customListTableData.TableView.SelectCellWithIdx(selectedNote);
+            Select(customListTableData.TableView, selectedNote);
         }
 
         protected override void DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling)
