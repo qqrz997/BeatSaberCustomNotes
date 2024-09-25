@@ -9,7 +9,7 @@
   "icon": "CustomNotes.Resources.Icons.icon.png",
   "id": "CustomNotes",
   "name": "CustomNotes",
-  "version": "2.6.7",
+  "version": "2.6.8",
   "dependsOn": {
     "BSIPA": "^4.3.5",
     "BeatSaberMarkupLanguage": "^1.12.0",
