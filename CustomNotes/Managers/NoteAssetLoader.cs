@@ -1,80 +1,58 @@
 ﻿using CustomNotes.Data;
 using CustomNotes.Settings.Utilities;
-using CustomNotes.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using AssetBundleLoadingTools.Utilities;
+using IPA.Utilities;
+using UnityEngine;
 using Zenject;
+using Utils = CustomNotes.Utilities.Utils;
 
 namespace CustomNotes.Managers
 {
     public class NoteAssetLoader : IInitializable, IDisposable
     {
-        private readonly PluginConfig _pluginConfig;
+        private readonly PluginConfig config;
 
-        public bool IsLoaded { get; private set; }
+        private bool isLoaded;
 
-        public bool Enabled => _pluginConfig.Enabled;
-
-        public int SelectedNote
+        internal NoteAssetLoader(PluginConfig config)
         {
-            get => _selectedNote;
-            set => _selectedNote = value;
+            this.config = config;
         }
 
-        public IList<CustomNote> CustomNoteObjects { get; private set; }
-        public IEnumerable<string> CustomNoteFiles { get; private set; } = Enumerable.Empty<string>();
+        public List<CustomNote> CustomNoteObjects { get; private set; } = [];
+        public List<string> CustomNoteFiles { get; private set; } = [];
 
-        private int _selectedNote = 0;
+        public static string NotesDirectory { get; } = Path.Combine(UnityGame.InstallPath, "CustomNotes");
 
-        internal NoteAssetLoader(PluginConfig pluginConfig)
-        {
-            _pluginConfig = pluginConfig;
-        }
+        public int SelectedNoteIdx { get; set; }
+        public bool CustomNoteSelected => SelectedNoteIdx != 0;
 
         /// <summary>
-        /// Load all CustomNotes
+        /// Load all CustomNotes 
         /// </summary>
         public void Initialize()
         {
-            if (!IsLoaded)
+            if (isLoaded)
             {
-                Directory.CreateDirectory(Plugin.PluginAssetPath);
-
-                IEnumerable<string> noteFilter = new List<string> { "*.bloq", "*.note", };
-                CustomNoteFiles = Utils.GetFileNames(Plugin.PluginAssetPath, noteFilter, SearchOption.AllDirectories, true);
-                Logger.log.Debug($"{CustomNoteFiles.Count()} external note(s) found.");
-
-                CustomNoteObjects = LoadCustomNotes(CustomNoteFiles);
-                Logger.log.Debug($"{CustomNoteObjects.Count} total note(s) loaded.");
-
-                SelectedNote = 0;
-                if (_pluginConfig.LastNote != null)
-                {
-                    int numberOfNotes = CustomNoteObjects.Count;
-                    for (int i = 0; i < numberOfNotes; i++)
-                    {
-                        if (CustomNoteObjects[i].FileName == _pluginConfig.LastNote)
-                        {
-                            SelectedNote = i;
-                            break;
-                        }
-                    }
-                }
-                IsLoaded = true;
+                return;
             }
-        }
 
-        /// <summary>
-        /// Reload all CustomNotes
-        /// </summary>
-        internal void Reload()
-        {
-            Logger.log.Debug("Reloading the NoteAssetLoader");
+            Directory.CreateDirectory(NotesDirectory);
 
-            Dispose();
-            Initialize();
+            CustomNoteFiles = Utils
+                .GetFileNames(NotesDirectory, ["*.bloq", "*.note"], SearchOption.AllDirectories, true)
+                .ToList();
+            Plugin.Log.Notice($"{CustomNoteFiles.Count} external notes found. Preparing to load.");
+            
+            CustomNoteObjects = LoadCustomNotes(CustomNoteFiles);
+            Plugin.Log.Notice($"{CustomNoteObjects.Count - 1} total custom notes loaded.");
+
+            SelectedNoteIdx = GetSelectedNoteIndex();
+            isLoaded = true;
         }
 
         /// <summary>
@@ -82,42 +60,65 @@ namespace CustomNotes.Managers
         /// </summary>
         public void Dispose()
         {
-            int numberOfObjects = CustomNoteObjects.Count;
-            for (int i = 0; i < numberOfObjects; i++)
+            foreach (var customNote in CustomNoteObjects)
             {
-                CustomNoteObjects[i].Destroy();
-                CustomNoteObjects[i] = null;
+                customNote.Destroy();
             }
-            IsLoaded = false;
-            SelectedNote = 0;
-            CustomNoteObjects = new List<CustomNote>();
-            CustomNoteFiles = Enumerable.Empty<string>();
+            isLoaded = false;
+            SelectedNoteIdx = 0;
+            CustomNoteObjects.Clear();
+            CustomNoteFiles.Clear();
         }
 
-        private IList<CustomNote> LoadCustomNotes(IEnumerable<string> customNoteFiles)
+        /// <summary>
+        /// Reload all CustomNotes
+        /// </summary>
+        internal void Reload()
         {
-            IList<CustomNote> customNotes = new List<CustomNote>
-            {
-                new CustomNote("DefaultNotes"),
-            };
+            Plugin.Log.Debug("Reloading the NoteAssetLoader");
 
-            foreach (string customNoteFile in customNoteFiles)
+            Dispose();
+            Initialize();
+        }
+
+        private int GetSelectedNoteIndex()
+        {
+            if (string.IsNullOrWhiteSpace(config.LastNote))
             {
-                try
+                return 0;
+            }
+            
+            for (int i = 0; i < CustomNoteObjects.Count; i++)
+            {
+                if (CustomNoteObjects[i].FileName == config.LastNote)
                 {
-                    CustomNote newNote = new CustomNote(customNoteFile);
-                    if (newNote != null)
-                    {
-                        customNotes.Add(newNote);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logger.log.Warn($"Failed to Load Custom Note with name '{customNoteFile}'.");
-                    Logger.log.Warn(ex);
+                    return i;
                 }
             }
-            return customNotes;
+            
+            return 0;
         }
+        
+        public static GameObject LoadNotePrefab(AssetBundle assetBundle, string fileName)
+        {
+            var noteObject = assetBundle.LoadAsset<GameObject>("assets/_customnote.prefab");
+            
+            Plugin.Log.Debug($"Repairing shaders for {fileName}");
+            var shaderReplacementInfo = ShaderRepair.FixShadersOnGameObject(noteObject);
+
+            if (!shaderReplacementInfo.AllShadersReplaced)
+            {
+                Plugin.Log.Warn("Missing shader replacement data:");
+                foreach (var shaderName in shaderReplacementInfo.MissingShaderNames)
+                {
+                    Plugin.Log.Warn($"- {shaderName}");
+                }
+            }
+            
+            return noteObject;
+        } 
+
+        private static List<CustomNote> LoadCustomNotes(IEnumerable<string> customNoteFiles) => 
+            customNoteFiles.Prepend("DefaultNotes").Select(CustomNote.Load).ToList();
     }
 }

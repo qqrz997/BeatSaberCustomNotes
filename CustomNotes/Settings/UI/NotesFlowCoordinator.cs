@@ -6,18 +6,18 @@ namespace CustomNotes.Settings.UI
 {
     internal class NotesFlowCoordinator : FlowCoordinator
     {
-        private MainFlowCoordinator _mainFlow;
-        private NoteListViewController _noteListView;
-        private NoteDetailsViewController _noteDetailsView;
-        private NotePreviewViewController _notePreviewView;
+        private MainFlowCoordinator mainFlow;
+        private NoteListViewController noteListView;
+        private NoteDetailsViewController noteDetailsView;
+        private NotePreviewViewController notePreviewView;
 
         [Inject]
         public void Construct(MainFlowCoordinator mainFlow, NoteListViewController noteListView, NoteDetailsViewController noteDetailsView, NotePreviewViewController notePreviewView)
         {
-            _mainFlow = mainFlow;
-            _noteListView = noteListView;
-            _noteDetailsView = noteDetailsView;
-            _notePreviewView = notePreviewView;
+            this.mainFlow = mainFlow;
+            this.noteListView = noteListView;
+            this.noteDetailsView = noteDetailsView;
+            this.notePreviewView = notePreviewView;
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -27,22 +27,22 @@ namespace CustomNotes.Settings.UI
                 SetTitle("Custom Notes");
                 showBackButton = true;
             }
-            ProvideInitialViewControllers(_noteListView, _noteDetailsView, _notePreviewView);
-            _noteListView.customNoteChanged += _noteDetailsView.OnNoteWasChanged;
-            _noteListView.customNoteChanged += _notePreviewView.OnNoteWasChanged;
+            ProvideInitialViewControllers(noteListView, noteDetailsView, notePreviewView);
+            noteListView.CustomNoteChanged += noteDetailsView.OnNoteWasChanged;
+            noteListView.CustomNoteChanged += notePreviewView.OnNoteWasChanged;
         }
 
         protected override void DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling)
         {
-            _noteListView.customNoteChanged -= _noteDetailsView.OnNoteWasChanged;
-            _noteListView.customNoteChanged -= _notePreviewView.OnNoteWasChanged;
+            noteListView.CustomNoteChanged -= noteDetailsView.OnNoteWasChanged;
+            noteListView.CustomNoteChanged -= notePreviewView.OnNoteWasChanged;
             base.DidDeactivate(removedFromHierarchy, screenSystemDisabling);
         }
 
         protected override void BackButtonWasPressed(ViewController topViewController)
         {
             // Dismiss ourselves
-            _mainFlow.DismissFlowCoordinator(this, null);
+            mainFlow.DismissFlowCoordinator(this, null);
         }
     }
 }

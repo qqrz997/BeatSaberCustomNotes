@@ -1,6 +1,5 @@
 ﻿using System;
 using Zenject;
-using BeatSaberMarkupLanguage;
 using CustomNotes.Settings.UI;
 using BeatSaberMarkupLanguage.MenuButtons;
 
@@ -8,30 +7,30 @@ namespace CustomNotes.Managers
 {
     internal class MenuButtonManager : IInitializable, IDisposable
     {
-        private readonly MenuButton _menuButton;
-        private readonly MainFlowCoordinator _mainFlowCoordinator;
-        private readonly NotesFlowCoordinator _notesFlowCoordinator;
+        private readonly MenuButton menuButton;
+        private readonly MainFlowCoordinator mainFlowCoordinator;
+        private readonly NotesFlowCoordinator notesFlowCoordinator;
 
         public MenuButtonManager(MainFlowCoordinator mainFlowCoordinator, NotesFlowCoordinator notesFlowCoordinator)
         {
-            _mainFlowCoordinator = mainFlowCoordinator;
-            _notesFlowCoordinator = notesFlowCoordinator;
-            _menuButton = new MenuButton("Custom Notes", "Change Custom Notes Here!", ShowNotesFlow, true);
+            this.mainFlowCoordinator = mainFlowCoordinator;
+            this.notesFlowCoordinator = notesFlowCoordinator;
+            menuButton = new MenuButton("Custom Notes", "Change Custom Notes Here!", ShowNotesFlow, true);
         }
 
         public void Initialize()
         {
-            MenuButtons.Instance.RegisterButton(_menuButton);
+            MenuButtons.Instance.RegisterButton(menuButton);
         }
 
         public void Dispose()
         {
-            MenuButtons.Instance.UnregisterButton(_menuButton);
+            MenuButtons.Instance.UnregisterButton(menuButton);
         }
 
         private void ShowNotesFlow()
         {
-            _mainFlowCoordinator.PresentFlowCoordinator(_notesFlowCoordinator);
+            mainFlowCoordinator.PresentFlowCoordinator(notesFlowCoordinator);
         }
     }
 }

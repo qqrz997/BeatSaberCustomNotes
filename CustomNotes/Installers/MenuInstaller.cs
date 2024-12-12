@@ -1,11 +1,10 @@
 ﻿using CustomNotes.Managers;
-using CustomNotes.Settings;
 using CustomNotes.Settings.UI;
 using Zenject;
 
 namespace CustomNotes.Installers
 {
-    internal class CustomNotesMenuInstaller : Installer
+    internal class MenuInstaller : Installer
     {
         public override void InstallBindings()
         {

@@ -1,6 +1,5 @@
 ﻿using Zenject;
 using UnityEngine;
-using CustomNotes.Data;
 using CustomNotes.Settings.Utilities;
 using CustomNotes.Utilities;
 using SiraUtil.Objects;
@@ -9,112 +8,106 @@ namespace CustomNotes.Managers
 {
     internal class CustomBombController : MonoBehaviour, INoteControllerDidInitEvent, INoteControllerNoteWasCutEvent, INoteControllerNoteWasMissedEvent, INoteControllerNoteDidDissolveEvent
     {
-        private PluginConfig _pluginConfig;
+        private PluginConfig pluginConfig;
 
-        private CustomNote _customNote;
-        private NoteMovement _noteMovement;
-        private BombNoteController _bombNoteController;
+        private BombNoteController bombNoteController;
 
-        protected Transform bombMesh;
-        protected GameObject fakeFirstPersonBombMesh;
+        protected Transform BombMesh;
+        protected GameObject FakeFirstPersonBombMesh;
 
-        protected GameObject activeNote;
-        protected SiraPrefabContainer container;
-        protected SiraPrefabContainer.Pool bombPool;
+        protected GameObject ActiveNote;
+        protected SiraPrefabContainer Container;
+        protected SiraPrefabContainer.Pool BombPool;
 
         [Inject]
-        internal void Init(PluginConfig pluginConfig, NoteAssetLoader noteAssetLoader, [InjectOptional(Id = Protocol.BombPool)] SiraPrefabContainer.Pool bombContainerPool)
+        internal void Init(PluginConfig pluginConfig, [InjectOptional(Id = Protocol.BombPool)] SiraPrefabContainer.Pool bombContainerPool)
         {
-            _pluginConfig = pluginConfig;
+            this.pluginConfig = pluginConfig;
 
-            _customNote = noteAssetLoader.CustomNoteObjects[noteAssetLoader.SelectedNote];
-            bombPool = bombContainerPool;
+            BombPool = bombContainerPool;
 
-            _bombNoteController = GetComponent<BombNoteController>();
-            _noteMovement = GetComponent<NoteMovement>();
+            bombNoteController = GetComponent<BombNoteController>();
+            GetComponent<NoteMovement>();
 
-            if (bombPool != null)
+            if (BombPool != null)
             {
-                _bombNoteController.didInitEvent.Add(this);
-                _bombNoteController.noteWasCutEvent.Add(this);
-                _bombNoteController.noteWasMissedEvent.Add(this);
-                _bombNoteController.noteDidDissolveEvent.Add(this);
+                bombNoteController.didInitEvent.Add(this);
+                bombNoteController.noteWasCutEvent.Add(this);
+                bombNoteController.noteWasMissedEvent.Add(this);
+                bombNoteController.noteDidDissolveEvent.Add(this);
             }
+    
+            BombMesh = gameObject.transform.Find("Mesh");
 
-            bombMesh = gameObject.transform.Find("Mesh");
-            MeshRenderer bm = GetComponentInChildren<MeshRenderer>();
-
-            if (_pluginConfig.HMDOnly || LayerUtils.HMDOverride)
+            if (pluginConfig.HmdOnly || LayerUtils.ForceHmdOnly)
             {
-                if (bombPool == null)
+                if (BombPool == null)
                 {
                     // create fake bombs for Custom Notes without Custom Bombs
-                    fakeFirstPersonBombMesh = Instantiate(bombMesh.gameObject);
-                    fakeFirstPersonBombMesh.name = "FakeFirstPersonBomb";
-                    fakeFirstPersonBombMesh.transform.parent = bombMesh;
+                    FakeFirstPersonBombMesh = Instantiate(BombMesh.gameObject, BombMesh, true);
+                    FakeFirstPersonBombMesh.name = "FakeFirstPersonBomb";
 
-                    fakeFirstPersonBombMesh.transform.localScale = Vector3.one;
-                    fakeFirstPersonBombMesh.transform.localPosition = Vector3.zero;
-                    fakeFirstPersonBombMesh.transform.rotation = Quaternion.identity;
-                    fakeFirstPersonBombMesh.layer = (int)LayerUtils.NoteLayer.FirstPerson;
+                    FakeFirstPersonBombMesh.transform.localScale = Vector3.one;
+                    FakeFirstPersonBombMesh.transform.localPosition = Vector3.zero;
+                    FakeFirstPersonBombMesh.transform.rotation = Quaternion.identity;
+                    FakeFirstPersonBombMesh.layer = (int)NoteLayer.FirstPerson;
                 }
-
             }
-            else if (bombPool != null)
+            else if (BombPool != null)
             {
-                bm.enabled = false;
+                GetComponentInChildren<MeshRenderer>().enabled = false;
             }
         }
 
         private void DidFinish()
         {
-            container.Prefab.SetActive(false);
-            container.transform.SetParent(null);
-            bombPool.Despawn(container);
+            Container.Prefab.SetActive(false);
+            Container.transform.SetParent(null);
+            BombPool.Despawn(Container);
         }
 
         public void HandleNoteControllerDidInit(NoteControllerBase noteController)
         {
-            SpawnThenParent(bombPool);
+            SpawnThenParent(BombPool);
         }
 
         private void ParentNote(GameObject fakeMesh)
         {
             fakeMesh.SetActive(true);
-            container.transform.SetParent(bombMesh);
-            fakeMesh.transform.localPosition = container.transform.localPosition = new Vector3(0.0f, 0.0f, 0.0f);
-            container.transform.localRotation = Quaternion.identity;
-            fakeMesh.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * Utils.NoteSizeFromConfig(_pluginConfig);
-            container.transform.localScale = Vector3.one;
+            Container.transform.SetParent(BombMesh);
+            fakeMesh.transform.localPosition = Container.transform.localPosition = new Vector3(0.0f, 0.0f, 0.0f);
+            Container.transform.localRotation = Quaternion.identity;
+            fakeMesh.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * pluginConfig.GetNoteSize();
+            Container.transform.localScale = Vector3.one;
         }
 
         private void SpawnThenParent(SiraPrefabContainer.Pool bombModelPool)
         {
-            container = bombModelPool.Spawn();
-            container.Prefab.SetActive(true);
-            activeNote = container.Prefab;
-            bombPool = bombModelPool;
-            if (_pluginConfig.HMDOnly == true || LayerUtils.HMDOverride == true)
+            Container = bombModelPool.Spawn();
+            Container.Prefab.SetActive(true);
+            ActiveNote = Container.Prefab;
+            BombPool = bombModelPool;
+            if (pluginConfig.HmdOnly || LayerUtils.ForceHmdOnly)
             {
-                LayerUtils.SetLayer(activeNote, LayerUtils.NoteLayer.FirstPerson);
+                ActiveNote.SetLayerRecursively(NoteLayer.FirstPerson);
             }
             else
             {
-                LayerUtils.SetLayer(activeNote, LayerUtils.NoteLayer.Note);
+                ActiveNote.SetLayerRecursively(NoteLayer.Note);
             }
-            ParentNote(activeNote);
+            ParentNote(ActiveNote);
         }
 
         protected void OnDestroy()
         {
-            if (_bombNoteController != null)
+            if (bombNoteController != null)
             {
-                _bombNoteController.didInitEvent.Remove(this);
-                _bombNoteController.noteWasCutEvent.Remove(this);
-                _bombNoteController.noteWasMissedEvent.Remove(this);
-                _bombNoteController.noteDidDissolveEvent.Remove(this);
+                bombNoteController.didInitEvent.Remove(this);
+                bombNoteController.noteWasCutEvent.Remove(this);
+                bombNoteController.noteWasMissedEvent.Remove(this);
+                bombNoteController.noteDidDissolveEvent.Remove(this);
             }
-            Destroy(fakeFirstPersonBombMesh);
+            Destroy(FakeFirstPersonBombMesh);
         }
 
         public void HandleNoteControllerNoteDidDissolve(NoteController _)

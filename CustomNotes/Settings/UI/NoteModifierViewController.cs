@@ -4,12 +4,10 @@ using CustomNotes.Settings.Utilities;
 using CustomNotes.Managers;
 using System;
 using BeatSaberMarkupLanguage.GameplaySetup;
-using CustomNotes.Data;
 using System.Collections.Generic;
 using BeatSaberMarkupLanguage.Components.Settings;
 using System.Linq;
 using System.ComponentModel;
-using BeatSaberMarkupLanguage;
 
 namespace CustomNotes.Settings.UI
 {
@@ -19,49 +17,48 @@ namespace CustomNotes.Settings.UI
      */
     internal class NoteModifierViewController : IInitializable, IDisposable, INotifyPropertyChanged
     {
-        private PluginConfig _pluginConfig;
-        private NoteAssetLoader _noteAssetLoader;
+        private readonly PluginConfig pluginConfig;
+        private readonly NoteAssetLoader noteAssetLoader;
+        private readonly GameplaySetup gameplaySetup;
+        
+        [UIValue("notes-list")] private readonly List<object> notesList = [];
+        [UIComponent("notes-dropdown")] private readonly DropDownListSetting notesDropdown = null!;
 
-        [UIValue("notes-list")]
-        private List<object> notesList = new List<object>();
-
-        [UIComponent("notes-dropdown")]
-        private DropDownListSetting notesDropdown = null;
+        public NoteModifierViewController(PluginConfig pluginConfig, NoteAssetLoader noteAssetLoader, GameplaySetup gameplaySetup)
+        {
+            this.pluginConfig = pluginConfig;
+            this.noteAssetLoader = noteAssetLoader;
+            this.gameplaySetup = gameplaySetup;
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
-
-        public NoteModifierViewController(PluginConfig pluginConfig, NoteAssetLoader noteAssetLoader)
-        {
-            _pluginConfig = pluginConfig;
-            _noteAssetLoader = noteAssetLoader;
-        }
 
         public void Initialize()
         {
             SetupList();
-            GameplaySetup.Instance.AddTab("Custom Notes", "CustomNotes.Settings.UI.Views.noteModifier.bsml", this);
+            gameplaySetup.AddTab("Custom Notes", "CustomNotes.Settings.UI.Views.noteModifier.bsml", this);
         }
 
         public void Dispose()
         {
-            GameplaySetup.Instance.RemoveTab("Custom Notes");
+            gameplaySetup.RemoveTab("Custom Notes");
         }
 
         internal void ParentControllerActivated()
         {
             notesDropdown?.ReceiveValue();
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(modEnabled)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(noteSize)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(hmdOnly)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(autoDisable)));
+            PropertyChanged?.Invoke(this, new(nameof(ModEnabled)));
+            PropertyChanged?.Invoke(this, new(nameof(NoteSize)));
+            PropertyChanged?.Invoke(this, new(nameof(HmdOnly)));
+            PropertyChanged?.Invoke(this, new(nameof(AutoDisable)));
         }
 
         public void SetupList()
         {
-            notesList = new List<object>();
-            foreach (CustomNote note in _noteAssetLoader.CustomNoteObjects)
+            notesList.Clear();
+            foreach (var customNote in noteAssetLoader.CustomNoteObjects)
             {
-                notesList.Add(note.Descriptor.NoteName);
+                notesList.Add(customNote.Descriptor.NoteName);
             }
 
             if (notesDropdown != null)
@@ -74,65 +71,60 @@ namespace CustomNotes.Settings.UI
         [UIAction("note-selected")]
         public void OnSelect(string selectedCell)
         {
-            int selectedNote = _noteAssetLoader.CustomNoteObjects.ToList().FindIndex(note => note.Descriptor.NoteName == selectedCell);
-            _noteAssetLoader.SelectedNote = selectedNote;
-            _pluginConfig.LastNote = _noteAssetLoader.CustomNoteObjects[selectedNote].FileName;
+            int selectedNote = noteAssetLoader.CustomNoteObjects
+                .ToList()
+                .FindIndex(note => note.Descriptor.NoteName == selectedCell);
+            noteAssetLoader.SelectedNoteIdx = selectedNote;
+            pluginConfig.LastNote = noteAssetLoader.CustomNoteObjects[selectedNote].FileName;
         }
 
         [UIValue("mod-enabled")]
-        public bool modEnabled
+        public bool ModEnabled
         {
-            get => _pluginConfig.Enabled;
+            get => pluginConfig.Enabled;
             set
             {
-                _pluginConfig.Enabled = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(modEnabled)));
+                pluginConfig.Enabled = value;
+                PropertyChanged?.Invoke(this, new(nameof(ModEnabled)));
             }
         }
 
         [UIValue("selected-note")]
-        private string selectedNote
-        {
-            get
-            {
-                if (_noteAssetLoader.CustomNoteObjects[_noteAssetLoader.SelectedNote].ErrorMessage != null) // Only select if valid bloq is loaded
-                {
-                    return _noteAssetLoader.CustomNoteObjects[_noteAssetLoader.SelectedNote].Descriptor.NoteName;
-                }
-                return "Default";
-            }
-        }
+        private string SelectedNote =>
+            // Only select if valid bloq is loaded
+            noteAssetLoader.CustomNoteObjects[noteAssetLoader.SelectedNoteIdx].ErrorMessage == null ? "Default" 
+            : noteAssetLoader.CustomNoteObjects[noteAssetLoader.SelectedNoteIdx].Descriptor.NoteName;
 
         [UIValue("note-size")]
-        public float noteSize
+        public float NoteSize
         {
-            get => _pluginConfig.NoteSize;
+            get => pluginConfig.NoteSize;
             set
             {
-                _pluginConfig.NoteSize = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(noteSize)));
+                pluginConfig.NoteSize = value;
+                PropertyChanged?.Invoke(this, new(nameof(NoteSize)));
             }
         }
 
         [UIValue("hmd-only")]
-        public bool hmdOnly
+        public bool HmdOnly
         {
-            get => _pluginConfig.HMDOnly;
+            get => pluginConfig.HmdOnly;
             set
             {
-                _pluginConfig.HMDOnly = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(hmdOnly)));
+                pluginConfig.HmdOnly = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HmdOnly)));
             }
         }
 
         [UIValue("auto-disable")]
-        public bool autoDisable
+        public bool AutoDisable
         {
-            get => _pluginConfig.AutoDisable;
+            get => pluginConfig.AutoDisable;
             set
             {
-                _pluginConfig.AutoDisable = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(autoDisable)));
+                pluginConfig.AutoDisable = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AutoDisable)));
             }
         }
     }

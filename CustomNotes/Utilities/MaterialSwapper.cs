@@ -16,12 +16,9 @@ namespace CustomNotes.Utilities
 
         public static void ReplaceMaterialsForGameObject(GameObject gameObject)
         {
-            if (AllMaterials == null)
-            {
-                GetMaterials();
-            }
+            AllMaterials ??= Resources.FindObjectsOfTypeAll<Material>();
 
-            foreach (Material currentMaterial in AllMaterials)
+            foreach (var currentMaterial in AllMaterials)
             {
                 string materialName = currentMaterial.name.ToLower() + "_replace (Instance)";
                 ReplaceAllMaterialsForGameObjectChildren(gameObject, currentMaterial, materialName);
@@ -30,8 +27,7 @@ namespace CustomNotes.Utilities
 
         public static void ReplaceAllMaterialsForGameObjectChildren(GameObject gameObject, Material material, string materialToReplaceName = "")
         {
-            IEnumerable<Renderer> renderers = gameObject.GetComponentsInChildren<Renderer>(true);
-            foreach (Renderer renderer in renderers)
+            foreach (var renderer in gameObject.GetComponentsInChildren<Renderer>(true))
             {
                 ReplaceAllMaterialsForGameObject(renderer.gameObject, material, materialToReplaceName);
             }
@@ -39,17 +35,17 @@ namespace CustomNotes.Utilities
 
         public static void ReplaceAllMaterialsForGameObject(GameObject gameObject, Material material, string materialToReplaceName = "")
         {
-            Renderer renderer = gameObject.GetComponent<Renderer>();
-            Material[] materialsCopy = renderer.materials;
+            var renderer = gameObject.GetComponent<Renderer>();
+            var materialsCopy = renderer.materials;
             bool materialsDidChange = false;
 
             for (int i = 0; i < renderer.materials.Length; i++)
             {
-                if (materialsCopy[i].name.Equals(materialToReplaceName) || materialToReplaceName == "")
+                if (materialsCopy[i].name == materialToReplaceName || materialToReplaceName == "")
                 {
-                    Color oldColor = materialsCopy[i].GetColor("_Color");
+                    var oldColor = materialsCopy[i].GetColor(MaterialProps.Color);
                     materialsCopy[i] = material;
-                    materialsCopy[i].SetColor("_Color", oldColor);
+                    materialsCopy[i].SetColor(MaterialProps.Color, oldColor);
                     materialsDidChange = true;
                 }
             }

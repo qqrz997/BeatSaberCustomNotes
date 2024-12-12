@@ -4,294 +4,190 @@ using UnityEngine;
 using System.Reflection;
 using System.Collections.Generic;
 using IPA.Loader;
-using CustomNotes.Settings.Utilities;
+using SongCore;
 
-namespace CustomNotes.Utilities
+namespace CustomNotes.Utilities;
+
+internal static class Utils
 {
-    public class Utils
+    /// <summary>
+    /// Colorize a Note based on a ColorManager and CustomNote configuration
+    /// </summary>
+    /// <param name="color">Color</param>
+    /// <param name="colorStrength">Color strength</param>
+    /// <param name="noteObject">Note to colorize</param>
+    public static void ColorizeCustomNote(Color color, float colorStrength, GameObject noteObject)
     {
-        /// <summary>
-        /// Sets the active state of a GameObject.
-        /// </summary>
-        /// <param name="gameObject">GameObject.</param>
-        /// <param name="setActive">Desired state.</param>
-        public static bool ActivateGameObject(GameObject gameObject, bool setActive) => ActivateGameObject(gameObject, setActive, null);
-
-        /// <summary>
-        /// Sets the active state of a primary GameObject and then sets the opposite active state for the secondary GameObject.
-        /// </summary>
-        /// <param name="primaryObject">Primary GameObject.</param>
-        /// <param name="setActive">Desired state.</param>
-        /// <param name="secondaryObject">Secondary GameObject.</param>
-        public static bool ActivateGameObject(GameObject primaryObject, bool setActive, GameObject secondaryObject)
+        if (noteObject == null)
         {
-            if (primaryObject)
-            {
-                if (primaryObject.activeSelf != setActive)
-                {
-                    primaryObject.SetActive(setActive);
-                }
-
-                if (secondaryObject != null)
-                {
-                    return ActivateGameObject(secondaryObject, !setActive);
-                }
-
-                return true;
-            }
-
-            return false;
+            return;
         }
 
-        /// <summary>
-        /// Colorize a Note based on a ColorManager and CustomNote configuration
-        /// </summary>
-        /// <param name="color">Color</param>
-        /// <param name="colorStrength">Color strength</param>
-        /// <param name="noteObject">Note to colorize</param>
-        public static void ColorizeCustomNote(Color color, float colorStrength, GameObject noteObject)
+        var noteColor = color * colorStrength;
+        var childTransforms = noteObject.GetComponentsInChildren<Transform>();
+            
+        foreach (var transform in childTransforms)
         {
-            if (!noteObject || color == null)
+            if (transform.GetComponent<DisableNoteColorOnGameobject>() != null)
             {
-                return;
+                continue;
             }
 
-            Color noteColor = color * colorStrength;
-
-            IEnumerable<Transform> childTransforms = noteObject.GetComponentsInChildren<Transform>();
-            foreach (Transform childTransform in childTransforms)
+            if (transform.TryGetComponent<Renderer>(out var renderer))
             {
-                DisableNoteColorOnGameobject colorDisabled = childTransform.GetComponent<DisableNoteColorOnGameobject>();
-                if (!colorDisabled)
-                {
-                    Renderer childRenderer = childTransform.GetComponent<Renderer>();
-                    if (childRenderer)
-                    {
-                        childRenderer.material.SetColor("_Color", noteColor);
-                    }
-                }
-            }
-            MaterialPropertyBlockController materialPropertyBlockController = noteObject.GetComponent<MaterialPropertyBlockController>(); // Set the color of material property block controllers, for the replaced note shader
-            if (materialPropertyBlockController != null)
-            {
-                materialPropertyBlockController.materialPropertyBlock.SetColor("_Color", noteColor);
-                materialPropertyBlockController.ApplyChanges();
+                renderer.material.SetColor(MaterialProps.Color, noteColor);
             }
         }
-
-        /// <summary>
-        /// Adds a MaterialPropertyBlockController to the root of the gameObject. Only selects renderers with specific shaders.
-        /// </summary>
-        /// <param name="gameObject"></param>
-        public static void AddMaterialPropertyBlockController(GameObject gameObject)
+            
+        if (noteObject.TryGetComponent<MaterialPropertyBlockController>(out var materialPropertyBlockController))
         {
-            List<Renderer> rendererList = new List<Renderer>();
-            foreach (Renderer renderer in gameObject.GetComponentsInChildren<Renderer>())
-            {
-                DisableNoteColorOnGameobject colorDisabled = renderer.GetComponent<DisableNoteColorOnGameobject>();
-                if (!colorDisabled && renderer.material.shader.name.ToLower() == "custom/notehd") // only get the replaced note shader
-                {
-                    rendererList.Add(renderer);
-                }
-            }
-            if (rendererList.Count > 0)
-            {
-                MaterialPropertyBlockController newController = gameObject.AddComponent<MaterialPropertyBlockController>();
-                newController._renderers = rendererList.ToArray();
-            }
-        }
-
-        /// <summary>
-        /// Loads an embedded resource from the calling assembly
-        /// </summary>
-        /// <param name="resourcePath">Path to resource</param>
-        public static byte[] LoadFromResource(string resourcePath)
-        {
-            return GetResource(Assembly.GetCallingAssembly(), resourcePath);
-        }
-
-        /// <summary>
-        /// Loads an embedded resource from an assembly
-        /// </summary>
-        /// <param name="assembly">Assembly to load from</param>
-        /// <param name="resourcePath">Path to resource</param>
-        public static byte[] GetResource(Assembly assembly, string resourcePath)
-        {
-            Stream stream = assembly.GetManifestResourceStream(resourcePath);
-            byte[] data = new byte[stream.Length];
-            stream.Read(data, 0, (int)stream.Length);
-            return data;
-        }
-
-        private static Texture2D defaultIcon = null;
-        public static Texture2D GetDefaultIcon()
-        {
-            if (!defaultIcon)
-            {
-                try
-                {
-                    byte[] resource = LoadFromResource($"CustomNotes.Resources.Icons.default.png");
-                    defaultIcon = LoadTextureRaw(resource);
-                }
-                catch { }
-            }
-
-            return defaultIcon;
-        }
-
-        private static Texture2D defaultCustomIcon = null;
-        public static Texture2D GetDefaultCustomIcon()
-        {
-            if (!defaultCustomIcon)
-            {
-                try
-                {
-                    byte[] resource = LoadFromResource($"CustomNotes.Resources.Icons.defaultCustom.png");
-                    defaultCustomIcon = LoadTextureRaw(resource);
-                }
-                catch { }
-            }
-
-            return defaultCustomIcon;
-        }
-
-        private static Texture2D errorIcon = null;
-        public static Texture2D GetErrorIcon()
-        {
-            if (!errorIcon)
-            {
-                try
-                {
-                    byte[] resource = LoadFromResource($"CustomNotes.Resources.Icons.error.png");
-                    errorIcon = LoadTextureRaw(resource);
-                }
-                catch { }
-            }
-
-            return errorIcon;
-        }
-
-        /// <summary>
-        /// Loads an Texture2D from byte[]
-        /// </summary>
-        /// <param name="file"></param>
-        public static Texture2D LoadTextureRaw(byte[] file)
-        {
-            if (file.Length > 0)
-            {
-                Texture2D texture = new Texture2D(2, 2);
-                if (texture.LoadImage(file))
-                {
-                    return texture;
-                }
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Gets every file matching the filter in a path.
-        /// </summary>
-        /// <param name="path">Directory to search in.</param>
-        /// <param name="filters">Pattern(s) to search for.</param>
-        /// <param name="searchOption">Search options.</param>
-        /// <param name="returnShortPath">Remove path from filepaths.</param>
-        public static IEnumerable<string> GetFileNames(string path, IEnumerable<string> filters, SearchOption searchOption, bool returnShortPath = false)
-        {
-            IList<string> filePaths = new List<string>();
-
-            foreach (string filter in filters)
-            {
-                IEnumerable<string> directoryFiles = Directory.GetFiles(path, filter, searchOption);
-
-                if (returnShortPath)
-                {
-                    foreach (string directoryFile in directoryFiles)
-                    {
-                        string filePath = directoryFile.Replace(path, "");
-                        if (filePath.Length > 0 && filePath.StartsWith(@"\"))
-                        {
-                            filePath = filePath.Substring(1, filePath.Length - 1);
-                        }
-
-                        if (!string.IsNullOrWhiteSpace(filePath) && !filePaths.Contains(filePath))
-                        {
-                            filePaths.Add(filePath);
-                        }
-                    }
-                }
-                else
-                {
-                    filePaths = filePaths.Union(directoryFiles).ToList();
-                }
-            }
-
-            return filePaths.Distinct();
-        }
-
-        /// <summary>
-        /// Safely unescape \n and \t
-        /// </summary>
-        /// <param name="text"></param>
-        public static string SafeUnescape(string text)
-        {
-            string unescapedString;
-
-            try
-            {
-                if (string.IsNullOrWhiteSpace(text))
-                {
-                    unescapedString = string.Empty;
-                }
-                else
-                {
-                    // Unescape just some of the basic formatting characters
-                    unescapedString = text;
-                    unescapedString = unescapedString.Replace("\\n", "\n");
-                    unescapedString = unescapedString.Replace("\\t", "\t");
-                }
-            }
-            catch
-            {
-                unescapedString = text;
-            }
-
-            return unescapedString;
-        }
-
-        /// <summary>
-        /// Check if an IDifficultyBeatmap requires noodle extensions
-        /// </summary>
-        /// <param name="level"></param>
-        public static bool IsNoodleMap(BeatmapLevel level, BeatmapKey key)
-        {
-            // thanks kinsi
-            if (PluginManager.EnabledPlugins.Any(x => x.Name == "SongCore") && PluginManager.EnabledPlugins.Any(x => x.Name == "NoodleExtensions"))
-            {
-                bool isIsNoodleMap = SongCore.Collections.RetrieveDifficultyData(level, key)?
-                    .additionalDifficultyData?
-                    ._requirements?.Any(x => x == "Noodle Extensions") == true;
-                return isIsNoodleMap;
-            }
-            else return false;
-        }
-
-        /// <summary>
-        /// Get the proper note size from the config
-        /// </summary>
-        /// <param name="level"></param>
-        public static float NoteSizeFromConfig(PluginConfig config)
-        {
-            if (config.DisableAprilFools) return config.NoteSize;
-            // Not April Fools Day Code
-            System.DateTime time;
-            bool bunbundai = false;
-            if (IPA.Utilities.Utils.CanUseDateTimeNowSafely)
-                time = System.DateTime.Now;
-            else
-                time = System.DateTime.UtcNow;
-            if ((time.Month == 4 && time.Day == 1) || bunbundai) return UnityEngine.Random.Range(0.25f, 1.5f);
-            else return config.NoteSize;
+            // Set the color of material property block controllers, for the replaced note shader
+            materialPropertyBlockController.materialPropertyBlock.SetColor(MaterialProps.Color, noteColor);
+            materialPropertyBlockController.ApplyChanges();
         }
     }
+
+    /// <summary>
+    /// Adds a MaterialPropertyBlockController to the root of the gameObject. Only selects renderers with specific shaders.
+    /// </summary>
+    /// <param name="gameObject"></param>
+    public static void AddMaterialPropertyBlockController(GameObject gameObject)
+    {
+        var rendererList = gameObject.GetComponentsInChildren<Renderer>()
+            .Where(renderer => 
+                renderer.GetComponent<DisableNoteColorOnGameobject>() == null
+                && renderer.material.shader.name == "Custom/NoteHD")
+            .ToArray();
+
+        if (rendererList.Length > 0)
+        {
+            var newController = gameObject.AddComponent<MaterialPropertyBlockController>();
+            newController._renderers = rendererList;
+        }
+    }
+
+    public static byte[] LoadFromResource(string resourcePath)
+    {
+        using var stream = Plugin.ExecutingAssembly.GetManifestResourceStream(resourcePath);
+        if (stream == null)
+        {
+            throw new($"Couldn't find resource at specified path: {resourcePath}");
+        }
+            
+        using var memoryStream = new MemoryStream();
+        stream.CopyTo(memoryStream);
+            
+        return memoryStream.ToArray();
+    }
+
+    private static Texture2D defaultIcon;
+    private static Texture2D defaultCustomIcon;
+    private static Texture2D errorIcon;
+
+    public static Texture2D GetDefaultIcon() => 
+        defaultIcon ??= LoadEmbeddedImage("CustomNotes.Resources.Icons.default.png");
+    public static Texture2D GetDefaultCustomIcon() =>
+        defaultCustomIcon ??= LoadEmbeddedImage("CustomNotes.Resources.Icons.defaultCustom.png");
+    public static Texture2D GetErrorIcon() =>
+        errorIcon ??= LoadEmbeddedImage("CustomNotes.Resources.Icons.error.png");
+
+    private static Texture2D LoadEmbeddedImage(string resourcePath)
+    {
+        try
+        {
+            return LoadTextureRaw(LoadFromResource(resourcePath));
+        }
+        catch
+        {
+            Plugin.Log.Error("Failed to load embedded image into a texture.");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Loads an Texture2D from byte[]
+    /// </summary>
+    /// <param name="file"></param>
+    public static Texture2D LoadTextureRaw(byte[] file)
+    {
+        if (file.Length > 0)
+        {
+            var texture = new Texture2D(2, 2);
+            if (texture.LoadImage(file))
+            {
+                return texture;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Gets every file matching the filter in a path.
+    /// </summary>
+    /// <param name="path">Directory to search in.</param>
+    /// <param name="filters">Pattern(s) to search for.</param>
+    /// <param name="searchOption">Search options.</param>
+    /// <param name="returnShortPath">Remove path from filepaths.</param>
+    public static IEnumerable<string> GetFileNames(string path, IEnumerable<string> filters, SearchOption searchOption, bool returnShortPath = false)
+    {
+        IList<string> filePaths = new List<string>();
+
+        foreach (string filter in filters)
+        {
+            IEnumerable<string> directoryFiles = Directory.GetFiles(path, filter, searchOption);
+
+            if (returnShortPath)
+            {
+                foreach (string directoryFile in directoryFiles)
+                {
+                    string filePath = directoryFile.Replace(path, "");
+                    if (filePath.Length > 0 && filePath.StartsWith(@"\"))
+                    {
+                        filePath = filePath.Substring(1, filePath.Length - 1);
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(filePath) && !filePaths.Contains(filePath))
+                    {
+                        filePaths.Add(filePath);
+                    }
+                }
+            }
+            else
+            {
+                filePaths = filePaths.Union(directoryFiles).ToList();
+            }
+        }
+
+        return filePaths.Distinct();
+    }
+
+    /// <summary>
+    /// Safely unescape \n and \t
+    /// </summary>
+    /// <param name="text"></param>
+    public static string SafeUnescape(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return string.Empty;
+        }
+
+        // Unescape just some of the basic formatting characters
+        return text.Replace("\\n", "\n").Replace("\\t", "\t");
+    }
+
+    /// <summary>
+    /// Check if a beatmap requires noodle extensions
+    /// </summary>
+    public static bool RequiresNoodleExtensions(this GameplayCoreSceneSetupData setupData) =>
+        PluginManager.EnabledPlugins.Any(x => x.Name == "NoodleExtensions")
+        && PluginManager.EnabledPlugins.Any(x => x.Name == "SongCore")
+        && setupData.MapHasRequirement("Noodle Extensions");
+
+    private static bool MapHasRequirement(this GameplayCoreSceneSetupData setupData, string requirementName) =>
+        Collections.RetrieveDifficultyData(setupData.beatmapLevel, setupData.beatmapKey)?
+            .additionalDifficultyData
+            ._requirements
+            .Any(req => req == requirementName) is true;
 }

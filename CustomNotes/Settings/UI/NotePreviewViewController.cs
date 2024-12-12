@@ -10,15 +10,15 @@ namespace CustomNotes.Settings.UI
     {
         public override string ResourceName => "CustomNotes.Settings.UI.Views.notePreview.bsml";
 
-        [UIComponent("error-description")]
-        public TextPageScrollView errorDescription = null;
+        [UIComponent("error-description")] private readonly TextPageScrollView errorDescription = null!;
 
         public void OnNoteWasChanged(CustomNote customNote)
         {
             if (!string.IsNullOrWhiteSpace(customNote.ErrorMessage))
             {
                 errorDescription.gameObject.SetActive(true);
-                errorDescription.SetText($"{customNote.Descriptor?.NoteName}:\n\n{Utils.SafeUnescape(customNote.ErrorMessage)}");
+                errorDescription.SetText($"{customNote.Descriptor?.NoteName}:\n\n{Utils.SafeUnescape(customNote
+                    .ErrorMessage)}");
             }
             else
             {

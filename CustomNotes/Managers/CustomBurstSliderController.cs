@@ -11,23 +11,23 @@ namespace CustomNotes.Managers
 {
     public class CustomBurstSliderController : MonoBehaviour, IColorable, INoteControllerNoteWasCutEvent, INoteControllerNoteWasMissedEvent, INoteControllerDidInitEvent, INoteControllerNoteDidDissolveEvent
     {
-        private PluginConfig _pluginConfig;
+        private PluginConfig pluginConfig;
 
-        protected Transform noteCube;
-        private CustomNote _customNote;
-        private BurstSliderGameNoteController _burstSliderGameNoteController;
-        private CustomNoteColorNoteVisuals _customNoteColorNoteVisuals;
+        protected Transform NoteCube;
+        private CustomNote customNote;
+        private BurstSliderGameNoteController burstSliderGameNoteController;
+        private CustomNoteColorNoteVisuals customNoteColorNoteVisuals;
 
-        protected GameObject activeNote;
-        protected SiraPrefabContainer container;
-        protected SiraPrefabContainer.Pool activePool;
+        protected GameObject ActiveNote;
+        protected SiraPrefabContainer Container;
+        protected SiraPrefabContainer.Pool ActivePool;
 
-        private SiraPrefabContainer.Pool _leftBurstSliderPool;
-        private SiraPrefabContainer.Pool _rightBurstSliderPool;
+        private SiraPrefabContainer.Pool leftBurstSliderPool;
+        private SiraPrefabContainer.Pool rightBurstSliderPool;
 
         public Color Color
         {
-            get => _customNoteColorNoteVisuals != null ? _customNoteColorNoteVisuals._noteColor : Color.white;
+            get => customNoteColorNoteVisuals != null ? customNoteColorNoteVisuals._noteColor : Color.white;
             set => SetColor(value);
         }
 
@@ -37,53 +37,48 @@ namespace CustomNotes.Managers
             [Inject(Id = Protocol.LeftBurstSliderPool)] SiraPrefabContainer.Pool leftBurstSliderPool,
             [Inject(Id = Protocol.RightBurstSliderPool)] SiraPrefabContainer.Pool rightBurstSliderPool)
         {
-            _pluginConfig = pluginConfig;
-            _leftBurstSliderPool = leftBurstSliderPool;
-            _rightBurstSliderPool = rightBurstSliderPool;
+            this.pluginConfig = pluginConfig;
+            this.leftBurstSliderPool = leftBurstSliderPool;
+            this.rightBurstSliderPool = rightBurstSliderPool;
 
-            _customNote = noteAssetLoader.CustomNoteObjects[noteAssetLoader.SelectedNote];
+            customNote = noteAssetLoader.CustomNoteObjects[noteAssetLoader.SelectedNoteIdx];
 
-            _burstSliderGameNoteController = GetComponent<BurstSliderGameNoteController>();
-            _customNoteColorNoteVisuals = gameObject.GetComponent<CustomNoteColorNoteVisuals>();
-            _customNoteColorNoteVisuals.enabled = true;
+            burstSliderGameNoteController = GetComponent<BurstSliderGameNoteController>();
+            customNoteColorNoteVisuals = gameObject.GetComponent<CustomNoteColorNoteVisuals>();
+            customNoteColorNoteVisuals.enabled = true;
 
-            _burstSliderGameNoteController.didInitEvent.Add(this);
-            _burstSliderGameNoteController.noteWasCutEvent.Add(this);
-            _burstSliderGameNoteController.noteWasMissedEvent.Add(this);
-            _burstSliderGameNoteController.noteDidDissolveEvent.Add(this);
-            _customNoteColorNoteVisuals.didInitEvent += Visuals_DidInit;
+            burstSliderGameNoteController.didInitEvent.Add(this);
+            burstSliderGameNoteController.noteWasCutEvent.Add(this);
+            burstSliderGameNoteController.noteWasMissedEvent.Add(this);
+            burstSliderGameNoteController.noteDidDissolveEvent.Add(this);
+            customNoteColorNoteVisuals.didInitEvent += Visuals_DidInit;
 
-            noteCube = _burstSliderGameNoteController.gameObject.transform.Find("NoteCube");
+            NoteCube = burstSliderGameNoteController.gameObject.transform.Find("NoteCube");
 
-            MeshRenderer noteMesh = GetComponentInChildren<MeshRenderer>();
-            if (_pluginConfig.HMDOnly == false && LayerUtils.HMDOverride == false)
+            var noteMesh = GetComponentInChildren<MeshRenderer>();
+            if (pluginConfig.HmdOnly || LayerUtils.ForceHmdOnly)
             {
-                // only disable if custom notes display on both hmd and display
-                noteMesh.forceRenderingOff = true;
+                noteMesh.gameObject.layer = (int)NoteLayer.ThirdPerson;
             }
             else
             {
-                noteMesh.gameObject.layer = (int)LayerUtils.NoteLayer.ThirdPerson;
+                // only disable if custom notes display on both hmd and display
+                noteMesh.forceRenderingOff = true;
             }
         }
 
         public void HandleNoteControllerNoteWasMissed(NoteController nc)
         {
-            if (container != null)
-                container.transform.SetParent(null);
-            switch (nc.noteData.colorType)
+            if (Container != null)
             {
-                case ColorType.ColorA:
-                case ColorType.ColorB:
-                    if (container != null)
-                    {
-                        container.Prefab.SetActive(false);
-                        activePool?.Despawn(container);
-                        container = null;
-                    }
-                    break;
-                default:
-                    break;
+                Container.transform.SetParent(null);
+
+                if (nc.noteData.colorType != ColorType.None)
+                {
+                    Container.Prefab.SetActive(false);
+                    ActivePool?.Despawn(Container);
+                    Container = null;
+                }
             }
         }
 
@@ -91,40 +86,36 @@ namespace CustomNotes.Managers
         {
             var data = noteController.noteData;
             SpawnThenParent(data.colorType == ColorType.ColorA
-                ? _leftBurstSliderPool
-                : _rightBurstSliderPool);
+                ? leftBurstSliderPool
+                : rightBurstSliderPool);
         }
 
         private void ParentNote(GameObject fakeMesh)
         {
-            container.transform.SetParent(noteCube);
-            fakeMesh.transform.localPosition = container.transform.localPosition = new Vector3(0.0f, 0.0f, 0.0f);
-            container.transform.localRotation = Quaternion.identity;
-            fakeMesh.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * Utils.NoteSizeFromConfig(_pluginConfig);
-            container.transform.localScale = Vector3.one;
+            Container.transform.SetParent(NoteCube);
+            fakeMesh.transform.localPosition = Container.transform.localPosition = new Vector3(0.0f, 0.0f, 0.0f);
+            Container.transform.localRotation = Quaternion.identity;
+            fakeMesh.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * pluginConfig.GetNoteSize();
+            Container.transform.localScale = Vector3.one;
         }
 
         private void SpawnThenParent(SiraPrefabContainer.Pool noteModelPool)
         {
-            container = noteModelPool.Spawn();
-            container.Prefab.SetActive(true);
-            activeNote = container.Prefab;
-            activePool = noteModelPool;
-            if (_pluginConfig.HMDOnly == true || LayerUtils.HMDOverride == true)
-            {
-                LayerUtils.SetLayer(activeNote, LayerUtils.NoteLayer.FirstPerson);
-            }
-            else
-            {
-                LayerUtils.SetLayer(activeNote, LayerUtils.NoteLayer.Note);
-            }
-            ParentNote(activeNote);
+            Container = noteModelPool.Spawn();
+            Container.Prefab.SetActive(true);
+            ActiveNote = Container.Prefab;
+            ActivePool = noteModelPool;
+            
+            var noteLayer = pluginConfig.HmdOnly || LayerUtils.ForceHmdOnly ? NoteLayer.FirstPerson : NoteLayer.Note;
+            ActiveNote.SetLayerRecursively(noteLayer);
+            
+            ParentNote(ActiveNote);
         }
 
         protected void SetActiveThenColor(GameObject note, Color color)
         {
             note.SetActive(true);
-            if (_customNote.Descriptor.UsesNoteColor)
+            if (customNote.Descriptor.UsesNoteColor)
             {
                 SetColor(color, true);
             }
@@ -132,52 +123,53 @@ namespace CustomNotes.Managers
 
         private void Visuals_DidInit(ColorNoteVisuals visuals, NoteControllerBase noteController)
         {
-            SetActiveThenColor(activeNote, (visuals as CustomNoteColorNoteVisuals)._noteColor);
+            SetActiveThenColor(ActiveNote, ((CustomNoteColorNoteVisuals)visuals)._noteColor);
+            
             // Hide certain parts of the default note which is not required
-            if (_pluginConfig.HMDOnly == false && LayerUtils.HMDOverride == false)
+            if (!pluginConfig.HmdOnly && !LayerUtils.ForceHmdOnly)
             {
-                _customNoteColorNoteVisuals.SetBaseGameVisualsLayer((int)LayerUtils.NoteLayer.Note);
-                if (_customNote.Descriptor.DisableBaseNoteArrows)
+                customNoteColorNoteVisuals.SetBaseGameVisualsLayer(NoteLayer.Note);
+                if (customNote.Descriptor.DisableBaseNoteArrows)
                 {
-                    _customNoteColorNoteVisuals.TurnOffVisuals();
+                    customNoteColorNoteVisuals.TurnOffVisuals();
                 }
-                else if (Utils.NoteSizeFromConfig(_pluginConfig) != 1)
+                else if (!pluginConfig.NoteSizeEquals(1))
                 {
-                    _customNoteColorNoteVisuals.ScaleVisuals(Utils.NoteSizeFromConfig(_pluginConfig));
+                    customNoteColorNoteVisuals.ScaleVisuals(pluginConfig.GetNoteSize());
                 }
+                
+                return;
             }
-            else
+
+            // HMDOnly code
+            customNoteColorNoteVisuals.SetBaseGameVisualsLayer(NoteLayer.ThirdPerson);
+            if (!customNote.Descriptor.DisableBaseNoteArrows)
             {
-                // HMDOnly code
-                _customNoteColorNoteVisuals.SetBaseGameVisualsLayer((int)LayerUtils.NoteLayer.ThirdPerson);
-                if (!_customNote.Descriptor.DisableBaseNoteArrows)
+                if (!pluginConfig.NoteSizeEquals(1))
                 {
-                    if (Utils.NoteSizeFromConfig(_pluginConfig) != 1)
-                    {
-                        // arrows should be enabled in both views, with fake arrows rescaled
-                        _customNoteColorNoteVisuals.CreateAndScaleFakeVisuals((int)LayerUtils.NoteLayer.FirstPerson, Utils.NoteSizeFromConfig(_pluginConfig));
-                    }
-                    else
-                    {
-                        // arrows should be enabled in both views
-                        _customNoteColorNoteVisuals.CreateFakeVisuals((int)LayerUtils.NoteLayer.FirstPerson);
-                    }
+                    // arrows should be enabled in both views, with fake arrows rescaled
+                    customNoteColorNoteVisuals.CreateAndScaleFakeVisuals(NoteLayer.FirstPerson, pluginConfig.GetNoteSize());
+                }
+                else
+                {
+                    // arrows should be enabled in both views
+                    customNoteColorNoteVisuals.CreateFakeVisuals(NoteLayer.FirstPerson);
                 }
             }
         }
 
         protected void OnDestroy()
         {
-            if (_burstSliderGameNoteController != null)
+            if (burstSliderGameNoteController != null)
             {
-                _burstSliderGameNoteController.didInitEvent.Remove(this);
-                _burstSliderGameNoteController.noteWasCutEvent.Remove(this);
-                _burstSliderGameNoteController.noteWasMissedEvent.Remove(this);
-                _burstSliderGameNoteController.noteDidDissolveEvent.Remove(this);
+                burstSliderGameNoteController.didInitEvent.Remove(this);
+                burstSliderGameNoteController.noteWasCutEvent.Remove(this);
+                burstSliderGameNoteController.noteWasMissedEvent.Remove(this);
+                burstSliderGameNoteController.noteDidDissolveEvent.Remove(this);
             }
-            if (_customNoteColorNoteVisuals != null)
+            if (customNoteColorNoteVisuals != null)
             {
-                _customNoteColorNoteVisuals.didInitEvent -= Visuals_DidInit;
+                customNoteColorNoteVisuals.didInitEvent -= Visuals_DidInit;
             }
         }
 
@@ -188,10 +180,10 @@ namespace CustomNotes.Managers
 
         public void SetColor(Color color, bool updateMatBlocks)
         {
-            if (activeNote != null)
+            if (ActiveNote != null)
             {
-                _customNoteColorNoteVisuals.SetColor(color, updateMatBlocks);
-                Utils.ColorizeCustomNote(color, _customNote.Descriptor.NoteColorStrength, activeNote);
+                customNoteColorNoteVisuals.SetColor(color, updateMatBlocks);
+                Utils.ColorizeCustomNote(color, customNote.Descriptor.NoteColorStrength, ActiveNote);
             }
         }
 
