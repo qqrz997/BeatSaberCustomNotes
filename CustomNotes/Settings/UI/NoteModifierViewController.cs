@@ -1,6 +1,5 @@
 ﻿using BeatSaberMarkupLanguage.Attributes;
 using Zenject;
-using CustomNotes.Settings.Utilities;
 using CustomNotes.Managers;
 using System;
 using BeatSaberMarkupLanguage.GameplaySetup;

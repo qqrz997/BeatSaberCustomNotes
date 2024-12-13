@@ -1,6 +1,5 @@
 ﻿using CustomNotes.Managers;
 using CustomNotes.Overrides;
-using CustomNotes.Settings.Utilities;
 using CustomNotes.Utilities;
 using SiraUtil.Extras;
 using SiraUtil.Objects;
@@ -221,7 +220,7 @@ namespace CustomNotes.Installers
 
             #region Set Slider Layer
 
-            if (pluginConfig.HmdOnly || LayerUtils.ForceHmdOnly)
+            if (pluginConfig.UseHmdOnly())
             {
                 SliderController RedecorateSliderLayer(SliderController sliderController)
                 {
@@ -258,7 +257,7 @@ namespace CustomNotes.Installers
 
         private static SiraPrefabContainer NotePrefabContainer(GameObject initialPrefab)
         {
-            var prefab = new GameObject("CustomNotes" + initialPrefab.name).AddComponent<SiraPrefabContainer>();
+            var prefab = new GameObject($"{initialPrefab.name}SiraContainer").AddComponent<SiraPrefabContainer>();
             prefab.Prefab = initialPrefab;
             return prefab;
         }

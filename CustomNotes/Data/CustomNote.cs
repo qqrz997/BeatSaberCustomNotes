@@ -124,50 +124,24 @@ public class CustomNote
         NoteDotRight = noteDotRightTransform != null ? noteDotRightTransform.gameObject : NoteRight;
         NoteBomb = noteObject.transform.Find("NoteBomb")?.gameObject;
 
-        // burst slider stuff
-        var burstSliderLeftTransform = noteObject.transform.Find("BurstSliderLeft");
-        if (burstSliderLeftTransform == null)
-        {
-            BurstSliderLeft = new();
-            var innerBurstSliderLeft = Object.Instantiate(NoteDotLeft, BurstSliderLeft.transform, true);
-            innerBurstSliderLeft.transform.localPosition = Vector3.zero;
-            innerBurstSliderLeft.transform.localScale = new Vector3(
-                innerBurstSliderLeft.transform.localScale.x,
-                innerBurstSliderLeft.transform.localScale.y / 4,
-                innerBurstSliderLeft.transform.localScale.z);
-            BurstSliderLeft.SetActive(false);
-        }
-        else
-        {
-            BurstSliderLeft = burstSliderLeftTransform.gameObject;
-        }
+        BurstSliderLeft = GetBurstSlider(noteObject, NoteDotLeft, "BurstSliderLeft");
+        BurstSliderRight = GetBurstSlider(noteObject, NoteDotRight, "BurstSliderRight");
 
-        var burstSliderRightTransform = noteObject.transform.Find("BurstSliderRight");
-        if (burstSliderRightTransform == null)
-        {
-            BurstSliderRight = new GameObject();
-            var innerBurstSliderRight = Object.Instantiate(NoteDotRight, BurstSliderRight.transform, true);
-            innerBurstSliderRight.transform.localPosition = Vector3.zero;
-            innerBurstSliderRight.transform.localScale = new Vector3(
-                innerBurstSliderRight.transform.localScale.x,
-                innerBurstSliderRight.transform.localScale.y / 4,
-                innerBurstSliderRight.transform.localScale.z);
-            BurstSliderRight.SetActive(false);
-        }
-        else
-        {
-            BurstSliderRight = burstSliderRightTransform.gameObject;
-        }
-
-        // burst slider head stuff
-        var burstSliderHeadLeftTransform = noteObject.transform.Find("BurstSliderHeadLeft");
-        var burstSliderHeadRightTransform = noteObject.transform.Find("BurstSliderHeadRight");
-        var burstSliderHeadDotLeftTransform = noteObject.transform.Find("BurstSliderHeadDotLeft");
-        var burstSliderHeadDotRightTransform = noteObject.transform.Find("BurstSliderHeadDotRight");
-        BurstSliderHeadLeft = burstSliderHeadLeftTransform != null ? burstSliderHeadLeftTransform.gameObject : NoteLeft;
-        BurstSliderHeadRight = burstSliderHeadRightTransform != null ? burstSliderHeadRightTransform.gameObject : NoteRight;
-        BurstSliderHeadDotLeft = burstSliderHeadDotLeftTransform != null ? burstSliderHeadDotLeftTransform.gameObject : burstSliderHeadLeftTransform != null ? burstSliderHeadLeftTransform.gameObject : NoteDotLeft;
-        BurstSliderHeadDotRight = burstSliderHeadDotRightTransform != null ? burstSliderHeadDotRightTransform.gameObject : burstSliderHeadRightTransform != null ? burstSliderHeadRightTransform.gameObject : NoteDotRight;
+        var burstSliderHeadLeft = noteObject.transform.Find("BurstSliderHeadLeft");
+        var burstSliderHeadRight = noteObject.transform.Find("BurstSliderHeadRight");
+        BurstSliderHeadLeft = burstSliderHeadLeft != null ? burstSliderHeadLeft.gameObject : NoteLeft;
+        BurstSliderHeadRight = burstSliderHeadRight != null ? burstSliderHeadRight.gameObject : NoteRight;
+        
+        var burstSliderHeadDotLeft = noteObject.transform.Find("BurstSliderHeadDotLeft");
+        var burstSliderHeadDotRight = noteObject.transform.Find("BurstSliderHeadDotRight");
+        BurstSliderHeadDotLeft = 
+            burstSliderHeadDotLeft != null ? burstSliderHeadDotLeft.gameObject 
+            : burstSliderHeadLeft != null ? burstSliderHeadLeft.gameObject 
+            : NoteDotLeft;
+        BurstSliderHeadDotRight = 
+            burstSliderHeadDotRight != null ? burstSliderHeadDotRight.gameObject 
+            : burstSliderHeadRight != null ? burstSliderHeadRight.gameObject 
+            : NoteDotRight;
     }
 
     public void Destroy()
@@ -180,5 +154,25 @@ public class CustomNote
         {
             Object.Destroy(Descriptor);
         }
+    }
+
+    private static GameObject GetBurstSlider(GameObject prefab, GameObject dotPrefab, string sliderPrefabName)
+    {
+        var burstSlider = prefab.transform.Find(sliderPrefabName)?.gameObject;
+        if (burstSlider != null)
+        {
+            return burstSlider;
+        }
+
+        burstSlider = new(sliderPrefabName);
+            
+        var burstSliderDot = Object.Instantiate(dotPrefab, burstSlider.transform, true);
+        burstSliderDot.transform.localPosition = Vector3.zero;
+
+        var sliderScale = burstSliderDot.transform.localScale;
+        burstSliderDot.transform.localScale = sliderScale with { y = sliderScale.y / 4 };
+            
+        burstSlider.SetActive(false);
+        return burstSlider;
     }
 }

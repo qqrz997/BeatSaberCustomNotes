@@ -4,7 +4,6 @@ using SiraUtil.Objects;
 using CustomNotes.Data;
 using SiraUtil.Interfaces;
 using CustomNotes.Overrides;
-using CustomNotes.Settings.Utilities;
 using CustomNotes.Utilities;
 
 namespace CustomNotes.Managers
@@ -75,15 +74,15 @@ namespace CustomNotes.Managers
 
             NoteCube = gameNoteController.gameObject.transform.Find("NoteCube");
 
-            MeshRenderer noteMesh = GetComponentInChildren<MeshRenderer>();
-            if (this.pluginConfig.HmdOnly == false && LayerUtils.ForceHmdOnly == false)
+            var noteMesh = GetComponentInChildren<MeshRenderer>();
+            if (pluginConfig.UseHmdOnly())
             {
-                // only disable if custom notes display on both hmd and display
-                noteMesh.forceRenderingOff = true;
+                noteMesh.gameObject.layer = (int)NoteLayer.ThirdPerson;
             }
             else
             {
-                noteMesh.gameObject.layer = (int)NoteLayer.ThirdPerson;
+                // only disable if custom notes display on both hmd and display
+                noteMesh.forceRenderingOff = true;
             }
         }
 
@@ -139,14 +138,7 @@ namespace CustomNotes.Managers
             Container.Prefab.SetActive(true);
             ActiveNote = Container.Prefab;
             ActivePool = noteModelPool;
-            if (pluginConfig.HmdOnly == true || LayerUtils.ForceHmdOnly == true)
-            {
-                LayerUtils.SetLayerRecursively(ActiveNote, NoteLayer.FirstPerson);
-            }
-            else
-            {
-                LayerUtils.SetLayerRecursively(ActiveNote, NoteLayer.Note);
-            }
+            ActiveNote.SetLayerRecursively(pluginConfig.UseHmdOnly() ? NoteLayer.FirstPerson : NoteLayer.Note);
             ParentNote(ActiveNote);
         }
 
@@ -163,7 +155,7 @@ namespace CustomNotes.Managers
         {
             SetActiveThenColor(ActiveNote, ((CustomNoteColorNoteVisuals)visuals)._noteColor);
             // Hide certain parts of the default note which is not required
-            if (pluginConfig.HmdOnly == false && LayerUtils.ForceHmdOnly == false)
+            if (!pluginConfig.UseHmdOnly())
             {
                 customNoteColorNoteVisuals.SetBaseGameVisualsLayer(NoteLayer.Note);
                 if (customNote.Descriptor.DisableBaseNoteArrows)
@@ -174,23 +166,23 @@ namespace CustomNotes.Managers
                 {
                     customNoteColorNoteVisuals.ScaleVisuals(pluginConfig.GetNoteSize());
                 }
+
+                return;
             }
-            else
+
+            // HMDOnly code
+            customNoteColorNoteVisuals.SetBaseGameVisualsLayer(NoteLayer.ThirdPerson);
+            if (!customNote.Descriptor.DisableBaseNoteArrows)
             {
-                // HMDOnly code
-                customNoteColorNoteVisuals.SetBaseGameVisualsLayer(NoteLayer.ThirdPerson);
-                if (!customNote.Descriptor.DisableBaseNoteArrows)
+                if (!pluginConfig.NoteSizeEquals(1))
                 {
-                    if (!pluginConfig.NoteSizeEquals(1))
-                    {
-                        // arrows should be enabled in both views, with fake arrows rescaled
-                        customNoteColorNoteVisuals.CreateAndScaleFakeVisuals(NoteLayer.FirstPerson, pluginConfig.GetNoteSize());
-                    }
-                    else
-                    {
-                        // arrows should be enabled in both views
-                        customNoteColorNoteVisuals.CreateFakeVisuals(NoteLayer.FirstPerson);
-                    }
+                    // arrows should be enabled in both views, with fake arrows rescaled
+                    customNoteColorNoteVisuals.CreateAndScaleFakeVisuals(NoteLayer.FirstPerson, pluginConfig.GetNoteSize());
+                }
+                else
+                {
+                    // arrows should be enabled in both views
+                    customNoteColorNoteVisuals.CreateFakeVisuals(NoteLayer.FirstPerson);
                 }
             }
         }

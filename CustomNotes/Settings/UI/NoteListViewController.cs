@@ -7,7 +7,6 @@ using UnityEngine.UI;
 using CustomNotes.Data;
 using CustomNotes.Managers;
 using CustomNotes.Utilities;
-using CustomNotes.Settings.Utilities;
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Components;
 using BeatSaberMarkupLanguage.Parser;

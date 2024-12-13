@@ -1,5 +1,4 @@
 ﻿using CustomNotes.Managers;
-using CustomNotes.Settings.Utilities;
 using Zenject;
 
 namespace CustomNotes.Installers

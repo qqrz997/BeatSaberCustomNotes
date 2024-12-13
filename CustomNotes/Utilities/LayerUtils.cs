@@ -4,13 +4,6 @@ namespace CustomNotes.Utilities
 {
     internal static class LayerUtils
     {
-        private static bool forceHmdOnly;
-        public static bool ForceHmdOnly
-        {
-            get => forceHmdOnly || Plugin.Config.HmdOnly;
-            set => forceHmdOnly = value;
-        }
-
         /// <summary>
         /// Recursively sets the layer of all children of a GameObject.
         /// </summary>

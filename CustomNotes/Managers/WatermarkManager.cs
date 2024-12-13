@@ -1,5 +1,4 @@
-﻿using CustomNotes.Settings.Utilities;
-using CustomNotes.Utilities;
+﻿using CustomNotes.Utilities;
 using System;
 using BeatSaberMarkupLanguage;
 using HMUI;
@@ -24,8 +23,7 @@ namespace CustomNotes.Managers
 
         public void Initialize()
         {
-            Plugin.Log.Debug($"Initializing {nameof(WatermarkManager)}!");
-            if (pluginConfig.HmdOnly || LayerUtils.ForceHmdOnly)
+            if (pluginConfig.UseHmdOnly())
             {
                 CreateWatermark();
             }
@@ -33,7 +31,6 @@ namespace CustomNotes.Managers
 
         public void Dispose()
         {
-            Plugin.Log.Debug($"Disposing {nameof(WatermarkManager)}!");
             DestroyWatermark();
         }
         

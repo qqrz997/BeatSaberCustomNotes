@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
 using CustomNotes.Installers;
-using CustomNotes.Settings.Utilities;
 using IPA;
 using IPA.Config;
 using IPA.Config.Stores;

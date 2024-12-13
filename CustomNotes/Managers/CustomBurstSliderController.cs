@@ -4,7 +4,6 @@ using SiraUtil.Objects;
 using CustomNotes.Data;
 using SiraUtil.Interfaces;
 using CustomNotes.Overrides;
-using CustomNotes.Settings.Utilities;
 using CustomNotes.Utilities;
 
 namespace CustomNotes.Managers
@@ -56,7 +55,7 @@ namespace CustomNotes.Managers
             NoteCube = burstSliderGameNoteController.gameObject.transform.Find("NoteCube");
 
             var noteMesh = GetComponentInChildren<MeshRenderer>();
-            if (pluginConfig.HmdOnly || LayerUtils.ForceHmdOnly)
+            if (pluginConfig.UseHmdOnly())
             {
                 noteMesh.gameObject.layer = (int)NoteLayer.ThirdPerson;
             }
@@ -106,7 +105,7 @@ namespace CustomNotes.Managers
             ActiveNote = Container.Prefab;
             ActivePool = noteModelPool;
             
-            var noteLayer = pluginConfig.HmdOnly || LayerUtils.ForceHmdOnly ? NoteLayer.FirstPerson : NoteLayer.Note;
+            var noteLayer = pluginConfig.UseHmdOnly() ? NoteLayer.FirstPerson : NoteLayer.Note;
             ActiveNote.SetLayerRecursively(noteLayer);
             
             ParentNote(ActiveNote);
@@ -126,7 +125,7 @@ namespace CustomNotes.Managers
             SetActiveThenColor(ActiveNote, ((CustomNoteColorNoteVisuals)visuals)._noteColor);
             
             // Hide certain parts of the default note which is not required
-            if (!pluginConfig.HmdOnly && !LayerUtils.ForceHmdOnly)
+            if (!pluginConfig.UseHmdOnly())
             {
                 customNoteColorNoteVisuals.SetBaseGameVisualsLayer(NoteLayer.Note);
                 if (customNote.Descriptor.DisableBaseNoteArrows)

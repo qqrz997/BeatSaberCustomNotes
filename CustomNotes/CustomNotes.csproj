@@ -57,9 +57,6 @@
     <EmbeddedResource Include="Settings\UI\Views\noteModifier.bsml" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Settings\UI\Watermark\" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="BeatSaberModdingTools.Tasks">
       <Version>2.0.0-beta1</Version>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
