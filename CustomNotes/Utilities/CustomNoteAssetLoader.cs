@@ -1,6 +1,5 @@
-﻿namespace CustomNotes.Utilities
+﻿namespace CustomNotes.Utilities;
+
+internal class CustomNoteAssetLoader
 {
-    internal class CustomNoteAssetLoader
-    {
-    }
 }

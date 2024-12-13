@@ -4,26 +4,25 @@ using CustomNotes.Utilities;
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
 
-namespace CustomNotes.Settings.UI
+namespace CustomNotes.Settings.UI;
+
+internal class NotePreviewViewController : BSMLResourceViewController
 {
-    internal class NotePreviewViewController : BSMLResourceViewController
+    public override string ResourceName => "CustomNotes.Settings.UI.Views.notePreview.bsml";
+
+    [UIComponent("error-description")] private readonly TextPageScrollView errorDescription = null!;
+
+    public void OnNoteWasChanged(CustomNote customNote)
     {
-        public override string ResourceName => "CustomNotes.Settings.UI.Views.notePreview.bsml";
-
-        [UIComponent("error-description")] private readonly TextPageScrollView errorDescription = null!;
-
-        public void OnNoteWasChanged(CustomNote customNote)
+        if (!string.IsNullOrWhiteSpace(customNote.ErrorMessage))
         {
-            if (!string.IsNullOrWhiteSpace(customNote.ErrorMessage))
-            {
-                errorDescription.gameObject.SetActive(true);
-                errorDescription.SetText($"{customNote.Descriptor?.NoteName}:\n\n{Utils.SafeUnescape(customNote
-                    .ErrorMessage)}");
-            }
-            else
-            {
-                errorDescription.gameObject.SetActive(false);
-            }
+            errorDescription.gameObject.SetActive(true);
+            errorDescription.SetText($"{customNote.Descriptor?.NoteName}:\n\n{Utils.SafeUnescape(customNote
+                .ErrorMessage)}");
+        }
+        else
+        {
+            errorDescription.gameObject.SetActive(false);
         }
     }
 }

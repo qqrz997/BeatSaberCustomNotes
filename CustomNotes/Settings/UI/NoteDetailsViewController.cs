@@ -7,91 +7,90 @@ using UnityEngine;
 using Zenject;
 using static IPA.Utilities.Utils;
 
-namespace CustomNotes.Settings.UI
+namespace CustomNotes.Settings.UI;
+
+internal class NoteDetailsViewController : BSMLResourceViewController
 {
-    internal class NoteDetailsViewController : BSMLResourceViewController
+    public override string ResourceName => "CustomNotes.Settings.UI.Views.noteDetails.bsml";
+
+    [Inject] private readonly PluginConfig config = null!;
+    [Inject] private readonly NoteListViewController listViewController = null!;
+
+    [UIComponent("note-description")] private readonly TextPageScrollView noteDescription = null;
+    [UIObject("disable-april-fools")] private readonly GameObject disableAprilFoolsCheckbox = null!;
+
+    public void OnNoteWasChanged(CustomNote customNote)
     {
-        public override string ResourceName => "CustomNotes.Settings.UI.Views.noteDetails.bsml";
+        noteDescription.SetText(!string.IsNullOrWhiteSpace(customNote.ErrorMessage) ? string.Empty 
+            : $"{customNote.Descriptor.NoteName}:\n\n{Utils.SafeUnescape(customNote.Descriptor.Description)}");
 
-        [Inject] private readonly PluginConfig pluginConfig = null!;
-        [Inject] private readonly NoteListViewController listViewController = null!;
+        NotifyPropertyChanged(nameof(ModEnabled));
+        NotifyPropertyChanged(nameof(NoteSize));
+        NotifyPropertyChanged(nameof(HmdOnly));
+        NotifyPropertyChanged(nameof(AutoDisable));
+    }
 
-        [UIComponent("note-description")] private readonly TextPageScrollView noteDescription = null;
-        [UIObject("disable-april-fools")] private readonly GameObject disableAprilFoolsCheckbox = null!;
-
-        public void OnNoteWasChanged(CustomNote customNote)
+    [UIValue("mod-enabled")]
+    public bool ModEnabled
+    {
+        get => config.Enabled;
+        set
         {
-            noteDescription.SetText(!string.IsNullOrWhiteSpace(customNote.ErrorMessage) ? string.Empty 
-                : $"{customNote.Descriptor.NoteName}:\n\n{Utils.SafeUnescape(customNote.Descriptor.Description)}");
-
-            NotifyPropertyChanged(nameof(ModEnabled));
-            NotifyPropertyChanged(nameof(NoteSize));
-            NotifyPropertyChanged(nameof(HmdOnly));
-            NotifyPropertyChanged(nameof(AutoDisable));
+            config.Enabled = value;
+            NotifyPropertyChanged();
         }
+    }
 
-        [UIValue("mod-enabled")]
-        public bool ModEnabled
+    [UIValue("note-size")]
+    public float NoteSize
+    {
+        get => config.NoteSize;
+        set 
+        { 
+            config.NoteSize = value;
+            listViewController.ScalePreviewNotes(value);
+            NotifyPropertyChanged();
+        }
+    }
+
+    [UIValue("hmd-only")]
+    public bool HmdOnly 
+    {
+        get => config.HmdOnly;
+        set 
+        { 
+            config.HmdOnly = value;
+            NotifyPropertyChanged();
+        }
+    }
+
+    [UIValue("auto-disable")]
+    public bool AutoDisable
+    {
+        get => config.AutoDisable;
+        set
         {
-            get => pluginConfig.Enabled;
-            set
-            {
-                pluginConfig.Enabled = value;
-                NotifyPropertyChanged();
-            }
+            config.AutoDisable = value;
+            NotifyPropertyChanged();
         }
+    }
 
-        [UIValue("note-size")]
-        public float NoteSize
+    [UIValue("disable-april-fools")]
+    public bool DisableAprilFools
+    {
+        get => config.DisableAprilFools;
+        set
         {
-            get => pluginConfig.NoteSize;
-            set 
-            { 
-                pluginConfig.NoteSize = value;
-                listViewController.ScalePreviewNotes(value);
-                NotifyPropertyChanged();
-            }
+            config.DisableAprilFools = value;
+            NotifyPropertyChanged();
         }
+    }
 
-        [UIValue("hmd-only")]
-        public bool HmdOnly 
-        {
-            get => pluginConfig.HmdOnly;
-            set 
-            { 
-                pluginConfig.HmdOnly = value;
-                NotifyPropertyChanged();
-            }
-        }
+    protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
+    {
+        base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
 
-        [UIValue("auto-disable")]
-        public bool AutoDisable
-        {
-            get => pluginConfig.AutoDisable;
-            set
-            {
-                pluginConfig.AutoDisable = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        [UIValue("disable-april-fools")]
-        public bool DisableAprilFools
-        {
-            get => pluginConfig.DisableAprilFools;
-            set
-            {
-                pluginConfig.DisableAprilFools = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
-        {
-            base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
-
-            var time = CanUseDateTimeNowSafely ? System.DateTime.Now : System.DateTime.UtcNow;
-            disableAprilFoolsCheckbox.gameObject.SetActive(time is { Month: 4, Day: 1 });
-        }
+        var time = CanUseDateTimeNowSafely ? System.DateTime.Now : System.DateTime.UtcNow;
+        disableAprilFoolsCheckbox.gameObject.SetActive(time is { Month: 4, Day: 1 });
     }
 }

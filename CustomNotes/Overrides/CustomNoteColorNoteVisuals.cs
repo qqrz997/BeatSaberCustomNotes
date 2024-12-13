@@ -2,118 +2,117 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace CustomNotes.Overrides
+namespace CustomNotes.Overrides;
+
+public class CustomNoteColorNoteVisuals : ColorNoteVisuals
 {
-    public class CustomNoteColorNoteVisuals : ColorNoteVisuals
+    public MeshRenderer[] ArrowRenderers => [.._arrowMeshRenderers, .._circleMeshRenderers];
+
+    public List<GameObject> duplicatedArrows = [];
+
+    public void SetColor(Color color, bool updateMaterialBlocks)
     {
-        public MeshRenderer[] ArrowRenderers => [.._arrowMeshRenderers, .._circleMeshRenderers];
-
-        public List<GameObject> duplicatedArrows = [];
-
-        public void SetColor(Color color, bool updateMaterialBlocks)
+        _noteColor = color;
+        if (updateMaterialBlocks)
         {
-            _noteColor = color;
-            if (updateMaterialBlocks)
+            foreach (var materialPropertyBlockController in _materialPropertyBlockControllers)
             {
-                foreach (var materialPropertyBlockController in _materialPropertyBlockControllers)
-                {
-                    materialPropertyBlockController.materialPropertyBlock.SetColor(MaterialProps.Color, color with { a = 1f });
-                    materialPropertyBlockController.ApplyChanges();
-                }
+                materialPropertyBlockController.materialPropertyBlock.SetColor(MaterialProps.Color, color with { a = 1f });
+                materialPropertyBlockController.ApplyChanges();
             }
         }
+    }
 
-        public void TurnOffVisuals()
+    public void TurnOffVisuals()
+    {
+        foreach (var arrowRenderer in ArrowRenderers)
         {
-            foreach (var arrowRenderer in ArrowRenderers)
-            {
-                arrowRenderer.enabled = false;
-            }
+            arrowRenderer.enabled = false;
+        }
+    }
+
+    public void SetBaseGameVisualsLayer(NoteLayer layer)
+    {
+        foreach (var arrowRenderer in ArrowRenderers)
+        {
+            arrowRenderer.gameObject.layer = (int)layer;
+        }
+    }
+
+    public void CreateFakeVisuals(NoteLayer layer)
+    {
+        ClearDuplicatedArrows();
+        foreach (var arrowRenderer in ArrowRenderers)
+        {
+            DuplicateIfExists(arrowRenderer.gameObject, layer);
+        }
+    }
+
+    public void CreateAndScaleFakeVisuals(NoteLayer layer, float scale)
+    {
+        ClearDuplicatedArrows();
+        foreach (var arrowRenderer in _arrowMeshRenderers)
+        {
+            ScaleIfExists(arrowRenderer.gameObject, layer, scale, new(0, 0.1f, -0.3f));
+        }
+        foreach (var circleRenderer in _circleMeshRenderers)
+        {
+            ScaleIfExists(circleRenderer.gameObject, layer, scale, new(0, 0, -0.25f));
+        }
+    }
+
+    public void ScaleVisuals(float scale)
+    {
+        var scaleVector = new Vector3(1, 1, 1) * scale;
+
+        foreach (var arrowRenderer in _arrowMeshRenderers)
+        {
+            if (arrowRenderer.gameObject.name == "NoteArrowGlow") arrowRenderer.gameObject.transform.localScale = new Vector3(0.6f, 0.3f, 0.6f) * scale;
+            else arrowRenderer.gameObject.transform.localScale = scaleVector;
+
+            arrowRenderer.gameObject.transform.localPosition = new Vector3(0, 0.1f, -0.3f) * scale;
         }
 
-        public void SetBaseGameVisualsLayer(NoteLayer layer)
+        foreach (var circleRenderer in _circleMeshRenderers)
         {
-            foreach (var arrowRenderer in ArrowRenderers)
-            {
-                arrowRenderer.gameObject.layer = (int)layer;
-            }
+            circleRenderer.gameObject.transform.localScale = scaleVector / 2;
+            circleRenderer.gameObject.transform.localPosition = new Vector3(0, 0, -0.3f) * scale;
+        }
+    }
+
+    private void ClearDuplicatedArrows()
+    {
+        foreach (var arrow in duplicatedArrows)
+        {
+            arrow.SetActive(false);
+            Destroy(arrow);
+        }
+        duplicatedArrows.Clear();
+    }
+
+    private GameObject DuplicateIfExists(GameObject gameObject, NoteLayer layer)
+    {
+        if (!gameObject.activeInHierarchy)
+        {
+            return null;
         }
 
-        public void CreateFakeVisuals(NoteLayer layer)
-        {
-            ClearDuplicatedArrows();
-            foreach (var arrowRenderer in ArrowRenderers)
-            {
-                DuplicateIfExists(arrowRenderer.gameObject, layer);
-            }
-        }
+        var tempObject = Instantiate(gameObject, gameObject.transform.parent, true);
+        tempObject.transform.localScale = gameObject.transform.localScale;
+        tempObject.transform.localPosition = gameObject.transform.localPosition;
+        tempObject.SetLayerRecursively(layer);
+        duplicatedArrows.Add(tempObject);
+        return tempObject;
+    }
 
-        public void CreateAndScaleFakeVisuals(NoteLayer layer, float scale)
-        {
-            ClearDuplicatedArrows();
-            foreach (var arrowRenderer in _arrowMeshRenderers)
-            {
-                ScaleIfExists(arrowRenderer.gameObject, layer, scale, new(0, 0.1f, -0.3f));
-            }
-            foreach (var circleRenderer in _circleMeshRenderers)
-            {
-                ScaleIfExists(circleRenderer.gameObject, layer, scale, new(0, 0, -0.25f));
-            }
-        }
-
-        public void ScaleVisuals(float scale)
+    private void ScaleIfExists(GameObject gameObject, NoteLayer layer, float scale, Vector3 positionModifier)
+    {
+        var tempObject = DuplicateIfExists(gameObject, layer);
+        if (tempObject != null)
         {
             var scaleVector = new Vector3(1, 1, 1) * scale;
-
-            foreach (var arrowRenderer in _arrowMeshRenderers)
-            {
-                if (arrowRenderer.gameObject.name == "NoteArrowGlow") arrowRenderer.gameObject.transform.localScale = new Vector3(0.6f, 0.3f, 0.6f) * scale;
-                else arrowRenderer.gameObject.transform.localScale = scaleVector;
-
-                arrowRenderer.gameObject.transform.localPosition = new Vector3(0, 0.1f, -0.3f) * scale;
-            }
-
-            foreach (var circleRenderer in _circleMeshRenderers)
-            {
-                circleRenderer.gameObject.transform.localScale = scaleVector / 2;
-                circleRenderer.gameObject.transform.localPosition = new Vector3(0, 0, -0.3f) * scale;
-            }
-        }
-
-        private void ClearDuplicatedArrows()
-        {
-            foreach (var arrow in duplicatedArrows)
-            {
-                arrow.SetActive(false);
-                Destroy(arrow);
-            }
-            duplicatedArrows.Clear();
-        }
-
-        private GameObject DuplicateIfExists(GameObject gameObject, NoteLayer layer)
-        {
-            if (!gameObject.activeInHierarchy)
-            {
-                return null;
-            }
-
-            var tempObject = Instantiate(gameObject, gameObject.transform.parent, true);
-            tempObject.transform.localScale = gameObject.transform.localScale;
-            tempObject.transform.localPosition = gameObject.transform.localPosition;
-            tempObject.SetLayerRecursively(layer);
-            duplicatedArrows.Add(tempObject);
-            return tempObject;
-        }
-
-        private void ScaleIfExists(GameObject gameObject, NoteLayer layer, float scale, Vector3 positionModifier)
-        {
-            var tempObject = DuplicateIfExists(gameObject, layer);
-            if (tempObject != null)
-            {
-                var scaleVector = new Vector3(1, 1, 1) * scale;
-                tempObject.transform.localScale = scaleVector;
-                tempObject.transform.localPosition = positionModifier * scale;
-            }
+            tempObject.transform.localScale = scaleVector;
+            tempObject.transform.localPosition = positionModifier * scale;
         }
     }
 }
