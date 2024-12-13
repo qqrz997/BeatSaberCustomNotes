@@ -71,7 +71,7 @@ internal class CustomBombController : MonoBehaviour, INoteControllerDidInitEvent
         SiraContainer = BombPool.Spawn();
         
         var activeNoteBomb = SiraContainer.Prefab;
-        activeNoteBomb.SetLayerRecursively(config.UseHmdOnly() ? NoteLayer.FirstPerson : NoteLayer.ThirdPerson);
+        activeNoteBomb.SetLayerRecursively(config.UseHmdOnly() ? NoteLayer.FirstPerson : NoteLayer.Note);
         activeNoteBomb.transform.localPosition = Vector3.zero;
         activeNoteBomb.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * config.GetNoteSize();
         activeNoteBomb.SetActive(true);
