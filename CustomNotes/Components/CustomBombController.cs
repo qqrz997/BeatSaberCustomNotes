@@ -12,8 +12,8 @@ internal class CustomBombController : MonoBehaviour, INoteControllerDidInitEvent
 
     private BombNoteController bombNoteController;
 
-    protected MeshRenderer VanillaBombMesh;
-    protected GameObject FakeFirstPersonBombMesh;
+    protected MeshRenderer VanillaBombRenderer;
+    protected MeshRenderer FakeBombRenderer;
 
     protected SiraPrefabContainer SiraContainer;
     protected SiraPrefabContainer.Pool BombPool;
@@ -29,6 +29,8 @@ internal class CustomBombController : MonoBehaviour, INoteControllerDidInitEvent
 
         bombNoteController = GetComponent<BombNoteController>();
         GetComponent<NoteMovement>();
+    
+        VanillaBombRenderer = gameObject.transform.Find("Mesh").GetComponent<MeshRenderer>();
 
         if (BombPool != null)
         {
@@ -36,26 +38,23 @@ internal class CustomBombController : MonoBehaviour, INoteControllerDidInitEvent
             bombNoteController.noteWasCutEvent.Add(this);
             bombNoteController.noteWasMissedEvent.Add(this);
             bombNoteController.noteDidDissolveEvent.Add(this);
+            
+            VanillaBombRenderer.enabled = false;
         }
-    
-        VanillaBombMesh = gameObject.transform.Find("Mesh").GetComponent<MeshRenderer>();
             
         if (config.UseHmdOnly())
         {
             // create fake bombs because for some reason changing the layer of the vanilla bomb mesh causes them
             // to be unable to be cut.
             // TODO: investigate better solutions for the above ^
-            FakeFirstPersonBombMesh = Instantiate(VanillaBombMesh.gameObject, VanillaBombMesh.transform, true);
-            FakeFirstPersonBombMesh.name = "FakeFirstPersonBomb";
+            FakeBombRenderer = Instantiate(VanillaBombRenderer, VanillaBombRenderer.transform, true);
+            FakeBombRenderer.gameObject.name = "FakeCameraOnlyBomb";
+            FakeBombRenderer.gameObject.layer = (int)NoteLayer.ThirdPerson;
+            FakeBombRenderer.enabled = true;
 
-            FakeFirstPersonBombMesh.transform.localScale = Vector3.one;
-            FakeFirstPersonBombMesh.transform.localPosition = Vector3.zero;
-            FakeFirstPersonBombMesh.transform.rotation = Quaternion.identity;
-            FakeFirstPersonBombMesh.layer = (int)NoteLayer.FirstPerson;
-        }
-        else if (BombPool != null)
-        {
-            VanillaBombMesh.enabled = false;
+            FakeBombRenderer.transform.localScale = Vector3.one;
+            FakeBombRenderer.transform.localPosition = Vector3.zero;
+            FakeBombRenderer.transform.rotation = Quaternion.identity;
         }
     }
 
@@ -76,7 +75,7 @@ internal class CustomBombController : MonoBehaviour, INoteControllerDidInitEvent
         activeNoteBomb.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * config.GetNoteSize();
         activeNoteBomb.SetActive(true);
             
-        SiraContainer.transform.SetParent(VanillaBombMesh.transform);
+        SiraContainer.transform.SetParent(VanillaBombRenderer.transform);
         SiraContainer.transform.localPosition = Vector3.zero;
         SiraContainer.transform.localRotation = Quaternion.identity;
         SiraContainer.transform.localScale = Vector3.one;
@@ -91,7 +90,7 @@ internal class CustomBombController : MonoBehaviour, INoteControllerDidInitEvent
             bombNoteController.noteWasMissedEvent.Remove(this);
             bombNoteController.noteDidDissolveEvent.Remove(this);
         }
-        Destroy(FakeFirstPersonBombMesh);
+        Destroy(FakeBombRenderer);
     }
 
     public void HandleNoteControllerNoteDidDissolve(NoteController _)
