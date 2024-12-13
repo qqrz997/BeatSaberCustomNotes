@@ -7,7 +7,7 @@
         <PluginId>CustomNotes</PluginId>
         <PluginName>CustomNotes</PluginName>
         <Authors>Bobbie</Authors>
-        <Version>2.6.8</Version>
+        <Version>2.6.9</Version>
         <GameVersion>1.39.1</GameVersion>
         <!-- figure out how to get an array here instead of a single string -->
         <Description>Adds support for custom notes in beat saber</Description>
