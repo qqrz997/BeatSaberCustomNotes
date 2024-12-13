@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using CustomNotes.Components.CustomNotes;
 using CustomNotes.Managers;
 using CustomNotes.Utilities;
 using UnityEngine;
