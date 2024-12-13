@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This file contains project properties used by the build. -->
+<Project>
+
+    <!-- Plugin Metadata -->
+    <PropertyGroup>
+        <PluginId>CustomNotes</PluginId>
+        <PluginName>CustomNotes</PluginName>
+        <Authors>Bobbie</Authors>
+        <Version>2.6.8</Version>
+        <GameVersion>1.39.1</GameVersion>
+        <!-- figure out how to get an array here instead of a single string -->
+        <Description>Adds support for custom notes in beat saber</Description>
+        <!-- isn't generated -->
+        <Icon>CustomNotes.Resources.Icons.icon.png</Icon>
+        <ProjectSource>https://github.com/qqrz997/BeatSaberCustomNotes</ProjectSource>
+    </PropertyGroup>
+    
+    <!-- Plugin Dependencies -->
+    <ItemGroup>
+        <DependsOn Include="BSIPA" Version="^4.3.5"/>
+        <DependsOn Include="BeatSaberMarkupLanguage" Version="^1.12.3"/>
+        <DependsOn Include="SiraUtil" Version="^3.1.14"/>
+        <DependsOn Include="AssetBundleLoadingTools" Version="^1.1.9"/>
+        <DependsOn Include="SongCore" Version="^3.14.15"/>
+    </ItemGroup>
+
+    <PropertyGroup>
+        <BSMTProjectType>BSIPA</BSMTProjectType>
+        <GenerateManifest>true</GenerateManifest>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)' != 'Release'">
+        <DisableZipRelease>true</DisableZipRelease>
+    </PropertyGroup>
+
+</Project>
