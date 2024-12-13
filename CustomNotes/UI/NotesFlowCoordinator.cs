@@ -1,8 +1,8 @@
-﻿using HMUI;
+﻿using BeatSaberMarkupLanguage;
+using HMUI;
 using Zenject;
-using BeatSaberMarkupLanguage;
 
-namespace CustomNotes.Settings.UI;
+namespace CustomNotes.UI;
 
 internal class NotesFlowCoordinator : FlowCoordinator
 {

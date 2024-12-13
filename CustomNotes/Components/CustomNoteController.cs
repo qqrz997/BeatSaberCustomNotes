@@ -1,12 +1,12 @@
-﻿using Zenject;
-using UnityEngine;
-using SiraUtil.Objects;
-using CustomNotes.Data;
-using SiraUtil.Interfaces;
-using CustomNotes.Overrides;
+﻿using CustomNotes.Managers;
+using CustomNotes.Models;
 using CustomNotes.Utilities;
+using SiraUtil.Interfaces;
+using SiraUtil.Objects;
+using UnityEngine;
+using Zenject;
 
-namespace CustomNotes.Managers;
+namespace CustomNotes.Components;
 
 public class CustomNoteController : MonoBehaviour, IColorable, INoteControllerNoteWasCutEvent, INoteControllerNoteWasMissedEvent, INoteControllerDidInitEvent, INoteControllerNoteDidDissolveEvent
 {
@@ -86,23 +86,18 @@ public class CustomNoteController : MonoBehaviour, IColorable, INoteControllerNo
         }
     }
 
-    public void HandleNoteControllerNoteWasMissed(NoteController nc)
+    public void HandleNoteControllerNoteWasMissed(NoteController noteController)
     {
         if (Container != null)
-            Container.transform.SetParent(null);
-        switch (nc.noteData.colorType)
         {
-            case ColorType.ColorA:
-            case ColorType.ColorB:
-                if (Container != null)
-                {
-                    Container.Prefab.SetActive(false);
-                    ActivePool?.Despawn(Container);
-                    Container = null;
-                }
-                break;
-            default:
-                break;
+            Container.transform.SetParent(null);
+            
+            if (noteController.noteData.colorType != ColorType.None)
+            {
+                Container.Prefab.SetActive(false);
+                ActivePool?.Despawn(Container);
+                Container = null;
+            }
         }
     }
 
@@ -123,23 +118,21 @@ public class CustomNoteController : MonoBehaviour, IColorable, INoteControllerNo
         }
     }
 
-    private void ParentNote(GameObject fakeMesh)
-    {
-        Container.transform.SetParent(NoteCube);
-        fakeMesh.transform.localPosition = Container.transform.localPosition = new Vector3(0.0f, 0.0f, 0.0f);
-        Container.transform.localRotation = Quaternion.identity;
-        fakeMesh.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * config.GetNoteSize();
-        Container.transform.localScale = Vector3.one;
-    }
-
     private void SpawnThenParent(SiraPrefabContainer.Pool noteModelPool)
     {
-        Container = noteModelPool.Spawn();
-        Container.Prefab.SetActive(true);
-        ActiveNote = Container.Prefab;
         ActivePool = noteModelPool;
+        Container = noteModelPool.Spawn();
+        
+        ActiveNote = Container.Prefab;
         ActiveNote.SetLayerRecursively(config.UseHmdOnly() ? NoteLayer.FirstPerson : NoteLayer.Note);
-        ParentNote(ActiveNote);
+        ActiveNote.transform.localPosition = Vector3.zero;
+        ActiveNote.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * config.GetNoteSize();
+        ActiveNote.SetActive(true);
+        
+        Container.transform.SetParent(NoteCube);
+        Container.transform.localPosition = Vector3.zero;
+        Container.transform.localRotation = Quaternion.identity;
+        Container.transform.localScale = Vector3.one;
     }
 
     protected void SetActiveThenColor(GameObject note, Color color)

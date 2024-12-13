@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using CustomNotes.Models;
+using UnityEngine;
 
 namespace CustomNotes.Utilities;
 

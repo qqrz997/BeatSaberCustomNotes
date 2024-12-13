@@ -3,6 +3,7 @@ using System.Linq;
 using UnityEngine;
 using System.Reflection;
 using System.Collections.Generic;
+using CustomNotes.Components.CustomNotes;
 using IPA.Loader;
 using SongCore;
 

@@ -1,23 +1,23 @@
-﻿using HMUI;
-using System;
+﻿using System;
 using System.Collections;
-using Zenject;
-using UnityEngine;
-using UnityEngine.UI;
-using CustomNotes.Data;
-using CustomNotes.Managers;
-using CustomNotes.Utilities;
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Components;
 using BeatSaberMarkupLanguage.Parser;
 using BeatSaberMarkupLanguage.ViewControllers;
+using CustomNotes.Managers;
+using CustomNotes.Models;
+using CustomNotes.Utilities;
+using HMUI;
 using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+using Zenject;
 
-namespace CustomNotes.Settings.UI;
+namespace CustomNotes.UI;
 
 internal class NoteListViewController : BSMLResourceViewController
 {
-    public override string ResourceName => "CustomNotes.Settings.UI.Views.noteList.bsml";
+    public override string ResourceName => "CustomNotes.Resources.BSML.noteList.bsml";
 
     private PluginConfig config;
     private NoteAssetLoader noteAssetLoader;

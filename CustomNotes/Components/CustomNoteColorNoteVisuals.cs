@@ -1,8 +1,9 @@
-﻿using CustomNotes.Utilities;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using CustomNotes.Models;
+using CustomNotes.Utilities;
 using UnityEngine;
 
-namespace CustomNotes.Overrides;
+namespace CustomNotes.Components;
 
 public class CustomNoteColorNoteVisuals : ColorNoteVisuals
 {

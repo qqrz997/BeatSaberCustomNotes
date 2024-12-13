@@ -1,12 +1,12 @@
-﻿using Zenject;
-using UnityEngine;
-using SiraUtil.Objects;
-using CustomNotes.Data;
-using SiraUtil.Interfaces;
-using CustomNotes.Overrides;
+﻿using CustomNotes.Managers;
+using CustomNotes.Models;
 using CustomNotes.Utilities;
+using SiraUtil.Interfaces;
+using SiraUtil.Objects;
+using UnityEngine;
+using Zenject;
 
-namespace CustomNotes.Managers;
+namespace CustomNotes.Components;
 
 public class CustomBurstSliderController : MonoBehaviour, IColorable, INoteControllerNoteWasCutEvent, INoteControllerNoteWasMissedEvent, INoteControllerDidInitEvent, INoteControllerNoteDidDissolveEvent
 {
@@ -42,15 +42,15 @@ public class CustomBurstSliderController : MonoBehaviour, IColorable, INoteContr
 
         customNote = noteAssetLoader.CustomNoteObjects[noteAssetLoader.SelectedNoteIdx];
 
-        burstSliderGameNoteController = GetComponent<BurstSliderGameNoteController>();
         customNoteColorNoteVisuals = gameObject.GetComponent<CustomNoteColorNoteVisuals>();
         customNoteColorNoteVisuals.enabled = true;
+        customNoteColorNoteVisuals.didInitEvent += Visuals_DidInit;
 
+        burstSliderGameNoteController = GetComponent<BurstSliderGameNoteController>();
         burstSliderGameNoteController.didInitEvent.Add(this);
         burstSliderGameNoteController.noteWasCutEvent.Add(this);
         burstSliderGameNoteController.noteWasMissedEvent.Add(this);
         burstSliderGameNoteController.noteDidDissolveEvent.Add(this);
-        customNoteColorNoteVisuals.didInitEvent += Visuals_DidInit;
 
         NoteCube = burstSliderGameNoteController.gameObject.transform.Find("NoteCube");
 
@@ -66,13 +66,13 @@ public class CustomBurstSliderController : MonoBehaviour, IColorable, INoteContr
         }
     }
 
-    public void HandleNoteControllerNoteWasMissed(NoteController nc)
+    public void HandleNoteControllerNoteWasMissed(NoteController noteController)
     {
         if (Container != null)
         {
             Container.transform.SetParent(null);
 
-            if (nc.noteData.colorType != ColorType.None)
+            if (noteController.noteData.colorType != ColorType.None)
             {
                 Container.Prefab.SetActive(false);
                 ActivePool?.Despawn(Container);
@@ -83,32 +83,19 @@ public class CustomBurstSliderController : MonoBehaviour, IColorable, INoteContr
 
     public void HandleNoteControllerDidInit(NoteControllerBase noteController)
     {
-        var data = noteController.noteData;
-        SpawnThenParent(data.colorType == ColorType.ColorA
-            ? leftBurstSliderPool
-            : rightBurstSliderPool);
-    }
+        ActivePool = noteController.noteData.colorType == ColorType.ColorA ? leftBurstSliderPool : rightBurstSliderPool;
+        Container = ActivePool.Spawn();
 
-    private void ParentNote(GameObject fakeMesh)
-    {
-        Container.transform.SetParent(NoteCube);
-        fakeMesh.transform.localPosition = Container.transform.localPosition = new Vector3(0.0f, 0.0f, 0.0f);
-        Container.transform.localRotation = Quaternion.identity;
-        fakeMesh.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * config.GetNoteSize();
-        Container.transform.localScale = Vector3.one;
-    }
-
-    private void SpawnThenParent(SiraPrefabContainer.Pool noteModelPool)
-    {
-        Container = noteModelPool.Spawn();
-        Container.Prefab.SetActive(true);
         ActiveNote = Container.Prefab;
-        ActivePool = noteModelPool;
+        ActiveNote.SetLayerRecursively(config.UseHmdOnly() ? NoteLayer.FirstPerson : NoteLayer.Note);
+        ActiveNote.transform.localPosition = Vector3.zero;
+        ActiveNote.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * config.GetNoteSize();
+        ActiveNote.SetActive(true);
             
-        var noteLayer = config.UseHmdOnly() ? NoteLayer.FirstPerson : NoteLayer.Note;
-        ActiveNote.SetLayerRecursively(noteLayer);
-            
-        ParentNote(ActiveNote);
+        Container.transform.SetParent(NoteCube);
+        Container.transform.localRotation = Quaternion.identity;
+        Container.transform.localScale = Vector3.one;
+        Container.transform.localPosition = Vector3.zero;
     }
 
     protected void SetActiveThenColor(GameObject note, Color color)

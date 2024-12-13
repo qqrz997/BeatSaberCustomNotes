@@ -1,17 +1,17 @@
 ﻿using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
-using CustomNotes.Data;
+using CustomNotes.Models;
 using CustomNotes.Utilities;
 using HMUI;
 using UnityEngine;
 using Zenject;
 using static IPA.Utilities.Utils;
 
-namespace CustomNotes.Settings.UI;
+namespace CustomNotes.UI;
 
 internal class NoteDetailsViewController : BSMLResourceViewController
 {
-    public override string ResourceName => "CustomNotes.Settings.UI.Views.noteDetails.bsml";
+    public override string ResourceName => "CustomNotes.Resources.BSML.noteDetails.bsml";
 
     [Inject] private readonly PluginConfig config = null!;
     [Inject] private readonly NoteListViewController listViewController = null!;

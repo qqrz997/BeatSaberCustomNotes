@@ -1,5 +1,5 @@
-﻿using CustomNotes.Settings.UI;
-using System;
+﻿using System;
+using CustomNotes.UI;
 using Zenject;
 
 namespace CustomNotes.Managers;

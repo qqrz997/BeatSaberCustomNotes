@@ -1,10 +1,10 @@
 ﻿using CustomNotes.Managers;
-using CustomNotes.Overrides;
 using CustomNotes.Utilities;
 using SiraUtil.Extras;
 using SiraUtil.Objects;
 using SiraUtil.Objects.Beatmap;
 using System.Reflection;
+using CustomNotes.Components;
 using UnityEngine;
 using Zenject;
 

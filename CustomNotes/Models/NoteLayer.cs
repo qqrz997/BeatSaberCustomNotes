@@ -1,4 +1,4 @@
-namespace CustomNotes.Utilities;
+namespace CustomNotes.Models;
 
 public enum NoteLayer
 {

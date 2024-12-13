@@ -44,17 +44,17 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="manifest.json" />
+    <EmbeddedResource Include="Resources\BSML\noteDetails.bsml" />
+    <EmbeddedResource Include="Resources\BSML\noteList.bsml" />
+    <EmbeddedResource Include="Resources\BSML\noteModifier.bsml" />
+    <EmbeddedResource Include="Resources\BSML\notePreview.bsml" />
     <EmbeddedResource Include="Resources\description.md" />
     <EmbeddedResource Include="Resources\Icons\default.png" />
     <EmbeddedResource Include="Resources\Icons\defaultCustom.png" />
     <EmbeddedResource Include="Resources\Icons\error.png" />
     <EmbeddedResource Include="Resources\Icons\icon.png" />
+    <EmbeddedResource Include="Resources\Icons\patreon.png" />
     <EmbeddedResource Include="Resources\Notes\cn_arrowplaceholder.bloq" />
-    <EmbeddedResource Include="Settings\UI\Resources\patreon.png" />
-    <EmbeddedResource Include="Settings\UI\Views\noteDetails.bsml" />
-    <EmbeddedResource Include="Settings\UI\Views\noteList.bsml" />
-    <EmbeddedResource Include="Settings\UI\Views\notePreview.bsml" />
-    <EmbeddedResource Include="Settings\UI\Views\noteModifier.bsml" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="BeatSaberModdingTools.Tasks">
@@ -66,9 +66,5 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="Data\ColliderEvent.cs" />
-    <Compile Remove="Data\NoteExtensions\VelocityMult.cs" />
   </ItemGroup>
 </Project>

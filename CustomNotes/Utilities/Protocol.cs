@@ -1,4 +1,4 @@
-﻿namespace CustomNotes;
+﻿namespace CustomNotes.Utilities;
 
 internal static class Protocol
 {

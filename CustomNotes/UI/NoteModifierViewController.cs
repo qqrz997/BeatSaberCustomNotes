@@ -1,14 +1,14 @@
-﻿using BeatSaberMarkupLanguage.Attributes;
-using Zenject;
-using CustomNotes.Managers;
-using System;
-using BeatSaberMarkupLanguage.GameplaySetup;
+﻿using System;
 using System.Collections.Generic;
-using BeatSaberMarkupLanguage.Components.Settings;
-using System.Linq;
 using System.ComponentModel;
+using System.Linq;
+using BeatSaberMarkupLanguage.Attributes;
+using BeatSaberMarkupLanguage.Components.Settings;
+using BeatSaberMarkupLanguage.GameplaySetup;
+using CustomNotes.Managers;
+using Zenject;
 
-namespace CustomNotes.Settings.UI;
+namespace CustomNotes.UI;
 
 /*
  * View Controller for the Custom Notes selection found under the Mods tab in the Modifiers View
@@ -35,7 +35,7 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
     public void Initialize()
     {
         SetupList();
-        gameplaySetup.AddTab("Custom Notes", "CustomNotes.Settings.UI.Views.noteModifier.bsml", this);
+        gameplaySetup.AddTab("Custom Notes", "CustomNotes.Resources.BSML.noteModifier.bsml", this);
     }
 
     public void Dispose()

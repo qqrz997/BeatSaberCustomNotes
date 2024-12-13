@@ -1,11 +1,12 @@
-﻿using CustomNotes.Utilities;
-using System;
+﻿using System;
 using System.IO;
+using CustomNotes.Components.CustomNotes;
 using CustomNotes.Managers;
+using CustomNotes.Utilities;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace CustomNotes.Data;
+namespace CustomNotes.Models;
 
 public class CustomNote
 {

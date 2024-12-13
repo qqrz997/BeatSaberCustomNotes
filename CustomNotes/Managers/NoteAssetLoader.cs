@@ -1,9 +1,9 @@
-﻿using CustomNotes.Data;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using AssetBundleLoadingTools.Utilities;
+using CustomNotes.Models;
 using IPA.Utilities;
 using UnityEngine;
 using Zenject;

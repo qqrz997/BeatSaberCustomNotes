@@ -1,9 +1,10 @@
-﻿using Zenject;
-using UnityEngine;
+﻿using CustomNotes.Models;
 using CustomNotes.Utilities;
 using SiraUtil.Objects;
+using UnityEngine;
+using Zenject;
 
-namespace CustomNotes.Managers;
+namespace CustomNotes.Components;
 
 internal class CustomBombController : MonoBehaviour, INoteControllerDidInitEvent, INoteControllerNoteWasCutEvent, INoteControllerNoteWasMissedEvent, INoteControllerNoteDidDissolveEvent
 {
@@ -68,9 +69,8 @@ internal class CustomBombController : MonoBehaviour, INoteControllerDidInitEvent
     public void HandleNoteControllerDidInit(NoteControllerBase noteController)
     {
         SiraContainer = BombPool.Spawn();
-        SiraContainer.Prefab.SetActive(true);
+        
         var activeNoteBomb = SiraContainer.Prefab;
-            
         activeNoteBomb.SetLayerRecursively(config.UseHmdOnly() ? NoteLayer.FirstPerson : NoteLayer.ThirdPerson);
         activeNoteBomb.transform.localPosition = Vector3.zero;
         activeNoteBomb.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * config.GetNoteSize();

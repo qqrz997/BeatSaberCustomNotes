@@ -1,6 +1,7 @@
 ﻿using CustomNotes.Utilities;
 using System;
 using BeatSaberMarkupLanguage;
+using CustomNotes.Models;
 using HMUI;
 using TMPro;
 using UnityEngine;
