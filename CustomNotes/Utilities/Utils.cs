@@ -2,8 +2,8 @@
 using System.Linq;
 using UnityEngine;
 using System.Collections.Generic;
-using IPA.Loader;
-using SongCore;
+using static IPA.Loader.PluginManager;
+using static SongCore.Collections;
 
 namespace CustomNotes.Utilities;
 
@@ -167,25 +167,21 @@ internal static class Utils
     /// <param name="text"></param>
     public static string SafeUnescape(string text)
     {
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return string.Empty;
-        }
-
-        // Unescape just some of the basic formatting characters
-        return text.Replace("\\n", "\n").Replace("\\t", "\t");
+        return string.IsNullOrWhiteSpace(text) ? string.Empty 
+            // Unescape just some of the basic formatting characters
+            : text.Replace("\\n", "\n").Replace("\\t", "\t");
     }
 
     /// <summary>
     /// Check if a beatmap requires noodle extensions
     /// </summary>
-    public static bool RequiresNoodleExtensions(this GameplayCoreSceneSetupData setupData) =>
-        PluginManager.EnabledPlugins.Any(x => x.Name == "NoodleExtensions")
-        && PluginManager.EnabledPlugins.Any(x => x.Name == "SongCore")
-        && setupData.MapHasRequirement("Noodle Extensions");
+    public static bool RequiresNoodleExtensions(this BeatmapKey beatmapKey) =>
+        EnabledPlugins.Any(x => x.Name == "NoodleExtensions")
+        && EnabledPlugins.Any(x => x.Name == "SongCore")
+        && beatmapKey.MapHasRequirement("Noodle Extensions");
 
-    private static bool MapHasRequirement(this GameplayCoreSceneSetupData setupData, string requirementName) =>
-        Collections.RetrieveDifficultyData(setupData.beatmapLevel, setupData.beatmapKey)?
+    private static bool MapHasRequirement(this BeatmapKey beatmapKey, string requirementName) =>
+        GetCustomLevelSongDifficultyData(beatmapKey)?
             .additionalDifficultyData
             ._requirements
             .Any(req => req == requirementName) is true;

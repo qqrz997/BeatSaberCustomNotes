@@ -38,7 +38,7 @@ internal class PlayerInstaller : Installer
         bool proMode = gameplayCoreSceneSetupData.gameplayModifiers.proMode;
             
         bool isMultiplayer = Container.HasBinding<MultiplayerLevelSceneSetupData>();
-        bool isNoodle = gameplayCoreSceneSetupData.RequiresNoodleExtensions();
+        bool isNoodle = gameplayCoreSceneSetupData.beatmapKey.RequiresNoodleExtensions();
         bool isIncompatibleMode = ghostNotes || disappearingArrows || smallCubes || isNoodle;
             
         // Disable the mod in cases where scoring would be disabled if custom notes are enabled

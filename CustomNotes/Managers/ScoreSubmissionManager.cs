@@ -38,7 +38,7 @@ internal class ScoreSubmissionManager : IInitializable
         {
             submission?.DisableScoreSubmission("Custom Notes", "Small Notes");
         }
-        if (gameplayCoreSceneSetupData.RequiresNoodleExtensions())
+        if (gameplayCoreSceneSetupData.beatmapKey.RequiresNoodleExtensions())
         {
             submission?.DisableScoreSubmission("Custom Notes", "Noodle Extensions");
         }
