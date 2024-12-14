@@ -7,7 +7,7 @@ internal class AppInstaller : Installer
 {
     private readonly PluginConfig config;
 
-    public AppInstaller(PluginConfig config)
+    private AppInstaller(PluginConfig config)
     {
         this.config = config;
     }

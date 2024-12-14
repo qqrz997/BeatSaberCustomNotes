@@ -5,20 +5,20 @@ namespace CustomNotes.Utilities;
 
 internal class MaterialSwapper
 {
-    public static IEnumerable<Material> AllMaterials { get; private set; }
+    private static IEnumerable<Material> allMaterials;
 
     public static void GetMaterials()
     {
         // This object should be created in the Menu Scene
         // Grab materials from Menu Scene objects
-        AllMaterials = Resources.FindObjectsOfTypeAll<Material>();
+        allMaterials = Resources.FindObjectsOfTypeAll<Material>();
     }
 
     public static void ReplaceMaterialsForGameObject(GameObject gameObject)
     {
-        AllMaterials ??= Resources.FindObjectsOfTypeAll<Material>();
+        allMaterials ??= Resources.FindObjectsOfTypeAll<Material>();
 
-        foreach (var currentMaterial in AllMaterials)
+        foreach (var currentMaterial in allMaterials)
         {
             string materialName = currentMaterial.name.ToLower() + "_replace (Instance)";
             ReplaceAllMaterialsForGameObjectChildren(gameObject, currentMaterial, materialName);

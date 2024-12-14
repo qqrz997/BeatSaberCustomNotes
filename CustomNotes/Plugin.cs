@@ -11,7 +11,7 @@ using IPALogger = IPA.Logging.Logger;
 namespace CustomNotes;
 
 [Plugin(RuntimeOptions.DynamicInit), NoEnableDisable]
-public class Plugin
+internal class Plugin
 {
     public static IPALogger Log { get; private set; } = null!;
     public static PluginConfig Config { get; private set; } = null!;

@@ -18,7 +18,7 @@ internal class PlayerInstaller : Installer
 
     private const int DecorationPriority = 300;
 
-    public PlayerInstaller(PluginConfig config, NoteAssetLoader noteAssetLoader, GameplayCoreSceneSetupData gameplayCoreSceneSetupData)
+    private PlayerInstaller(PluginConfig config, NoteAssetLoader noteAssetLoader, GameplayCoreSceneSetupData gameplayCoreSceneSetupData)
     {
         this.config = config;
         this.noteAssetLoader = noteAssetLoader;

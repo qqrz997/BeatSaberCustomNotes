@@ -8,18 +8,18 @@ using Zenject;
 
 namespace CustomNotes.Components;
 
-public class CustomNoteController : MonoBehaviour, IColorable, INoteControllerNoteWasCutEvent, INoteControllerNoteWasMissedEvent, INoteControllerDidInitEvent, INoteControllerNoteDidDissolveEvent
+internal class CustomNoteController : MonoBehaviour, IColorable, INoteControllerNoteWasCutEvent, INoteControllerNoteWasMissedEvent, INoteControllerDidInitEvent, INoteControllerNoteDidDissolveEvent
 {
-    private PluginConfig config;
+    private PluginConfig config = null!;
+    private CustomNote customNote = null!;
 
-    protected Transform NoteCube;
-    private CustomNote customNote;
-    private GameNoteController gameNoteController;
-    private CustomNoteColorNoteVisuals customNoteColorNoteVisuals;
+    private Transform noteCube = null!;
+    private GameNoteController gameNoteController = null!;
+    private CustomNoteColorNoteVisuals customNoteColorNoteVisuals = null!;
 
-    protected GameObject ActiveNote;
-    protected SiraPrefabContainer Container;
-    protected SiraPrefabContainer.Pool ActivePool;
+    private GameObject activeNote;
+    private SiraPrefabContainer siraContainer;
+    private SiraPrefabContainer.Pool activePool;
 
     private SiraPrefabContainer.Pool leftDotNotePool;
     private SiraPrefabContainer.Pool rightDotNotePool;
@@ -37,7 +37,8 @@ public class CustomNoteController : MonoBehaviour, IColorable, INoteControllerNo
     }
 
     [Inject]
-    internal void Init(PluginConfig config,
+    internal void Init(
+        PluginConfig config,
         NoteAssetLoader noteAssetLoader,
         [Inject(Id = Protocol.LeftArrowPool)] SiraPrefabContainer.Pool leftArrowNotePool,
         [Inject(Id = Protocol.RightArrowPool)] SiraPrefabContainer.Pool rightArrowNotePool,
@@ -72,7 +73,7 @@ public class CustomNoteController : MonoBehaviour, IColorable, INoteControllerNo
         gameNoteController.noteDidDissolveEvent.Add(this);
         customNoteColorNoteVisuals.didInitEvent += Visuals_DidInit;
 
-        NoteCube = gameNoteController.gameObject.transform.Find("NoteCube");
+        noteCube = gameNoteController.gameObject.transform.Find("NoteCube");
 
         var noteMesh = GetComponentInChildren<MeshRenderer>();
         if (config.UseHmdOnly())
@@ -88,15 +89,15 @@ public class CustomNoteController : MonoBehaviour, IColorable, INoteControllerNo
 
     public void HandleNoteControllerNoteWasMissed(NoteController noteController)
     {
-        if (Container != null)
+        if (siraContainer != null)
         {
-            Container.transform.SetParent(null);
+            siraContainer.transform.SetParent(null);
             
             if (noteController.noteData.colorType != ColorType.None)
             {
-                Container.Prefab.SetActive(false);
-                ActivePool?.Despawn(Container);
-                Container = null;
+                siraContainer.Prefab.SetActive(false);
+                activePool?.Despawn(siraContainer);
+                siraContainer = null;
             }
         }
     }
@@ -120,19 +121,19 @@ public class CustomNoteController : MonoBehaviour, IColorable, INoteControllerNo
 
     private void SpawnThenParent(SiraPrefabContainer.Pool noteModelPool)
     {
-        ActivePool = noteModelPool;
-        Container = noteModelPool.Spawn();
+        activePool = noteModelPool;
+        siraContainer = noteModelPool.Spawn();
         
-        ActiveNote = Container.Prefab;
-        ActiveNote.SetLayerRecursively(config.UseHmdOnly() ? NoteLayer.FirstPerson : NoteLayer.Note);
-        ActiveNote.transform.localPosition = Vector3.zero;
-        ActiveNote.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * config.GetNoteSize();
-        ActiveNote.SetActive(true);
+        activeNote = siraContainer.Prefab;
+        activeNote.SetLayerRecursively(config.UseHmdOnly() ? NoteLayer.FirstPerson : NoteLayer.Note);
+        activeNote.transform.localPosition = Vector3.zero;
+        activeNote.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * config.GetNoteSize();
+        activeNote.SetActive(true);
         
-        Container.transform.SetParent(NoteCube);
-        Container.transform.localPosition = Vector3.zero;
-        Container.transform.localRotation = Quaternion.identity;
-        Container.transform.localScale = Vector3.one;
+        siraContainer.transform.SetParent(noteCube);
+        siraContainer.transform.localPosition = Vector3.zero;
+        siraContainer.transform.localRotation = Quaternion.identity;
+        siraContainer.transform.localScale = Vector3.one;
     }
 
     protected void SetActiveThenColor(GameObject note, Color color)
@@ -146,7 +147,7 @@ public class CustomNoteController : MonoBehaviour, IColorable, INoteControllerNo
 
     private void Visuals_DidInit(ColorNoteVisuals visuals, NoteControllerBase noteController)
     {
-        SetActiveThenColor(ActiveNote, ((CustomNoteColorNoteVisuals)visuals)._noteColor);
+        SetActiveThenColor(activeNote, ((CustomNoteColorNoteVisuals)visuals)._noteColor);
         // Hide certain parts of the default note which is not required
         if (!config.UseHmdOnly())
         {
@@ -202,10 +203,10 @@ public class CustomNoteController : MonoBehaviour, IColorable, INoteControllerNo
 
     public void SetColor(Color color, bool updateMatBlocks)
     {
-        if (ActiveNote != null)
+        if (activeNote != null)
         {
             customNoteColorNoteVisuals.SetColor(color, updateMatBlocks);
-            Utils.ColorizeCustomNote(color, customNote.Descriptor.NoteColorStrength, ActiveNote);
+            Utils.ColorizeCustomNote(color, customNote.Descriptor.NoteColorStrength, activeNote);
         }
     }
 

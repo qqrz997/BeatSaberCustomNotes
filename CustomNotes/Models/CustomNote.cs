@@ -7,7 +7,7 @@ using Object = UnityEngine.Object;
 
 namespace CustomNotes.Models;
 
-public class CustomNote
+internal class CustomNote
 {
     public string FileName { get; private set; }
     public AssetBundle AssetBundle { get; }
@@ -30,16 +30,7 @@ public class CustomNote
     {
         if (fileName == "DefaultNotes")
         {
-            return new()
-            {
-                Descriptor = new NoteDescriptor
-                {
-                    AuthorName = "Beat Saber",
-                    NoteName = "Default",
-                    Description = "This is the default notes. (No preview available)",
-                    Icon = Utils.GetDefaultIcon()
-                }
-            };
+            return new();
         }
 
         try
@@ -51,61 +42,47 @@ public class CustomNote
         }
         catch (Exception ex)
         {
-            Plugin.Log.Warn($"Something went wrong getting the AssetBundle for '{fileName}'!");
+            Plugin.Log.Warn($"Problem encountered when loading '{Path.GetFileNameWithoutExtension(fileName)}'");
             Plugin.Log.Warn(ex);
         }
 
-        return new()
-        {
-            FileName = "DefaultNotes",
-            Descriptor = new NoteDescriptor
-            {
-                NoteName = "Invalid Note (Delete it!)",
-                AuthorName = fileName,
-                Icon = Utils.GetErrorIcon()
-            },
-            ErrorMessage = $"File: '{fileName}'" +
-                           "\n\nThis file failed to load." +
-                           "\n\nThis may have been caused by having duplicated files," +
-                           " another note with the same name already exists or " +
-                           " that the custom note is simply just broken." +
-                           "\n\nThe best thing is probably just to delete it!"
-        };
+        return new("DefaultNotes",
+            $"File: '{fileName}'" +
+            "\n\nThis file failed to load." +
+            "\n\nThis may have been caused by having duplicated files, another note with the" +
+            " same name already exists or that the custom note is simply just broken." +
+            "\n\nThe best thing is probably just to delete it!");
     }
 
     public static CustomNote LoadInternal(byte[] noteData, string name)
     {
         try
         {
-            if (noteData == null) throw new ArgumentNullException(nameof(noteData), "noteData is null.");
-            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name), "note name is null.");
+            if (noteData is null or []) throw new ArgumentNullException(nameof(noteData), "noteData is null.");
+            if (name is null or []) throw new ArgumentNullException(nameof(name), "note name is null.");
             
             var assetBundle = AssetBundle.LoadFromMemory(noteData);
             return new(assetBundle, name);
         }
         catch (Exception ex)
         {
-            Plugin.Log.Warn($"Something went wrong getting the AssetBundle from a resource!");
+            Plugin.Log.Warn("Problem encountered getting the AssetBundle from a resource");
             Plugin.Log.Warn(ex);
         }
 
-        return new()
-        {
-            FileName = "DefaultNotes",
-            Descriptor = new NoteDescriptor
-            {
-                NoteName = "Internal Error (Report it!)",
-                AuthorName = name,
-                Icon = Utils.GetErrorIcon()
-            },
-            ErrorMessage = $@"File: 'internalResource\\{name}'" +
-                           "\n\nAn internal asset has failed to load." +
-                           "\n\nThis shouldn't have happened and should be reported!" +
-                           " Remember to include the log related to this incident."
-        };
+        return new("DefaultNotes",
+            $@"File: 'internalResource\\{name}'" +
+            "\n\nAn internal asset has failed to load." +
+            "\n\nThis shouldn't have happened and should be reported!" +
+            " Remember to include the log related to this incident.");
     }
-
-    private CustomNote() { }
+    
+    public void Destroy()
+    {
+        if (AssetBundle != null) AssetBundle.Unload(true);
+        if (Descriptor != null) Object.Destroy(Descriptor);
+    }
+    
     private CustomNote(AssetBundle assetBundle, string fileName)
     {
         FileName = fileName;
@@ -144,16 +121,28 @@ public class CustomNote
             : NoteDotRight;
     }
 
-    public void Destroy()
+    private CustomNote()
     {
-        if (AssetBundle != null)
+        FileName = "DefaultNotes";
+        Descriptor = new NoteDescriptor
         {
-            AssetBundle.Unload(true);
-        }
-        else
+            AuthorName = "Beat Games",
+            NoteName = "Default",
+            Description = "This is the default notes. (No preview available)",
+            Icon = Utils.GetDefaultIcon()
+        };
+    }
+
+    private CustomNote(string fileName, string errorMessage)
+    {
+        FileName = fileName;
+        Descriptor = new NoteDescriptor
         {
-            Object.Destroy(Descriptor);
-        }
+            NoteName = "Error - Check Description",
+            AuthorName = string.Empty,
+            Icon = Utils.GetErrorIcon()
+        };
+        ErrorMessage = errorMessage;
     }
 
     private static GameObject GetBurstSlider(GameObject prefab, GameObject dotPrefab, string sliderPrefabName)

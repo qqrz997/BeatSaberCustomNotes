@@ -6,19 +6,10 @@ namespace CustomNotes.UI;
 
 internal class NotesFlowCoordinator : FlowCoordinator
 {
-    private MainFlowCoordinator mainFlow;
-    private NoteListViewController noteListView;
-    private NoteDetailsViewController noteDetailsView;
-    private NotePreviewViewController notePreviewView;
-
-    [Inject]
-    public void Construct(MainFlowCoordinator mainFlow, NoteListViewController noteListView, NoteDetailsViewController noteDetailsView, NotePreviewViewController notePreviewView)
-    {
-        this.mainFlow = mainFlow;
-        this.noteListView = noteListView;
-        this.noteDetailsView = noteDetailsView;
-        this.notePreviewView = notePreviewView;
-    }
+    [Inject] private readonly MainFlowCoordinator mainFlow = null!;
+    [Inject] private readonly NoteListViewController noteListView = null!;
+    [Inject] private readonly NoteDetailsViewController noteDetailsView = null!;
+    [Inject] private readonly NotePreviewViewController notePreviewView = null!;
 
     protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
     {

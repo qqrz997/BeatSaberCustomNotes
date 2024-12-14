@@ -11,25 +11,15 @@ internal class MenuButtonManager : IInitializable, IDisposable
     private readonly MainFlowCoordinator mainFlowCoordinator;
     private readonly NotesFlowCoordinator notesFlowCoordinator;
 
-    public MenuButtonManager(MainFlowCoordinator mainFlowCoordinator, NotesFlowCoordinator notesFlowCoordinator)
+    private MenuButtonManager(MainFlowCoordinator mainFlowCoordinator, NotesFlowCoordinator notesFlowCoordinator)
     {
         this.mainFlowCoordinator = mainFlowCoordinator;
         this.notesFlowCoordinator = notesFlowCoordinator;
-        menuButton = new MenuButton("Custom Notes", "Change Custom Notes Here!", ShowNotesFlow, true);
+        
+        menuButton = new("Custom Notes", "Change Custom Notes Here!", ShowNotesFlow);
     }
 
-    public void Initialize()
-    {
-        MenuButtons.Instance.RegisterButton(menuButton);
-    }
-
-    public void Dispose()
-    {
-        MenuButtons.Instance.UnregisterButton(menuButton);
-    }
-
-    private void ShowNotesFlow()
-    {
-        mainFlowCoordinator.PresentFlowCoordinator(notesFlowCoordinator);
-    }
+    public void Initialize() => MenuButtons.Instance.RegisterButton(menuButton);
+    public void Dispose() => MenuButtons.Instance.UnregisterButton(menuButton);
+    private void ShowNotesFlow() => mainFlowCoordinator.PresentFlowCoordinator(notesFlowCoordinator);
 }

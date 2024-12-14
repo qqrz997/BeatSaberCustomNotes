@@ -15,7 +15,7 @@ internal static class LayerUtils
         gameObject.transform.SetLayerRecursively(layer);
     }
 
-    private static void SetLayerRecursively(this Transform transform, NoteLayer layer)
+    public static void SetLayerRecursively(this Transform transform, NoteLayer layer)
     {
         transform.gameObject.layer = (int)layer;
         for (int index = 0; index < transform.childCount; ++index)
@@ -23,10 +23,7 @@ internal static class LayerUtils
             transform.GetChild(index).SetLayerRecursively(layer);
         }
     }
-
-    /// <summary>
-    /// Prints all layer names with their ids
-    /// </summary>
+    
     public static void PrintLayerNames()
     {
         for (int i = 8; i < 32; i++)
@@ -34,7 +31,7 @@ internal static class LayerUtils
             Plugin.Log.Notice($"LayerID:{i} : \"{LayerMask.LayerToName(i)}\"");
         }
 
-        /* | Game Version 1.39.1
+        /* | Game Version 1.40.0
         8  : "Note"
         9  : "NoteDebris"
         10 : "Avatar"

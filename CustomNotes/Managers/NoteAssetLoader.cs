@@ -11,21 +11,21 @@ using Utils = CustomNotes.Utilities.Utils;
 
 namespace CustomNotes.Managers;
 
-public class NoteAssetLoader : IInitializable, IDisposable
+internal class NoteAssetLoader : IInitializable, IDisposable
 {
     private readonly PluginConfig config;
 
-    private bool isLoaded;
-
-    internal NoteAssetLoader(PluginConfig config)
+    private NoteAssetLoader(PluginConfig config)
     {
         this.config = config;
     }
 
-    public List<CustomNote> CustomNoteObjects { get; private set; } = [];
-    public List<string> CustomNoteFiles { get; private set; } = [];
+    private bool isLoaded;
 
     public static string NotesDirectory { get; } = Path.Combine(UnityGame.InstallPath, "CustomNotes");
+
+    public List<CustomNote> CustomNoteObjects { get; private set; } = [];
+    public List<string> CustomNoteFiles { get; private set; } = [];
 
     public int SelectedNoteIdx { get; set; }
     public bool CustomNoteSelected => SelectedNoteIdx != 0;

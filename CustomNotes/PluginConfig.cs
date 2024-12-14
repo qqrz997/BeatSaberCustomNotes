@@ -1,8 +1,11 @@
-﻿using UnityEngine;
+﻿using System.Runtime.CompilerServices;
+using IPA.Config.Stores;
+using UnityEngine;
 
+[assembly: InternalsVisibleTo(GeneratedStore.AssemblyVisibilityTarget)]
 namespace CustomNotes;
 
-public class PluginConfig
+internal class PluginConfig
 {
     public virtual bool Enabled { get; set; } = true;
     public virtual string LastNote { get; set; }

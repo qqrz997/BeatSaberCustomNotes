@@ -19,16 +19,16 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
     private readonly PluginConfig config;
     private readonly NoteAssetLoader noteAssetLoader;
     private readonly GameplaySetup gameplaySetup;
-        
-    [UIValue("notes-list")] private readonly List<object> notesList = [];
-    [UIComponent("notes-dropdown")] private readonly DropDownListSetting notesDropdown = null!;
 
-    public NoteModifierViewController(PluginConfig config, NoteAssetLoader noteAssetLoader, GameplaySetup gameplaySetup)
+    private NoteModifierViewController(PluginConfig config, NoteAssetLoader noteAssetLoader, GameplaySetup gameplaySetup)
     {
         this.config = config;
         this.noteAssetLoader = noteAssetLoader;
         this.gameplaySetup = gameplaySetup;
     }
+        
+    [UIValue("notes-list")] private readonly List<object> notesList = [];
+    [UIComponent("notes-dropdown")] private readonly DropDownListSetting notesDropdown = null!;
 
     public event PropertyChangedEventHandler PropertyChanged;
 

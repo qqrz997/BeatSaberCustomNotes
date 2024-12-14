@@ -1,15 +1,15 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using CustomNotes.Models;
 using CustomNotes.Utilities;
 using UnityEngine;
 
 namespace CustomNotes.Components;
 
-public class CustomNoteColorNoteVisuals : ColorNoteVisuals
+internal class CustomNoteColorNoteVisuals : ColorNoteVisuals
 {
-    public MeshRenderer[] ArrowRenderers => [.._arrowMeshRenderers, .._circleMeshRenderers];
-
-    public List<GameObject> duplicatedArrows = [];
+    private MeshRenderer[] ArrowRenderers => _arrowMeshRenderers.Concat(_circleMeshRenderers).ToArray();
+    private readonly List<GameObject> duplicatedArrows = [];
 
     public void SetColor(Color color, bool updateMaterialBlocks)
     {

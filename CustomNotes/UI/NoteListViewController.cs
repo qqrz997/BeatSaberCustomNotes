@@ -17,11 +17,11 @@ namespace CustomNotes.UI;
 
 internal class NoteListViewController : BSMLResourceViewController
 {
+    [Inject] private readonly PluginConfig config = null!;
+    [Inject] private readonly NoteAssetLoader noteAssetLoader = null!;
+    [Inject] private readonly GameplaySetupViewController gameplaySetupViewController = null!;
+ 
     public override string ResourceName => "CustomNotes.Resources.BSML.noteList.bsml";
-
-    private PluginConfig config;
-    private NoteAssetLoader noteAssetLoader;
-    private GameplaySetupViewController gameplaySetupViewController;
 
     private bool isGeneratingPreview;
     private GameObject preview;
@@ -49,14 +49,6 @@ internal class NoteListViewController : BSMLResourceViewController
 
     public Action<CustomNote> CustomNoteChanged;
     public Action CustomNotesReloaded;
-
-    [Inject]
-    public void Construct(PluginConfig config, NoteAssetLoader noteAssetLoader, GameplaySetupViewController gameplaySetupViewController)
-    {
-        this.config = config;
-        this.noteAssetLoader = noteAssetLoader;
-        this.gameplaySetupViewController = gameplaySetupViewController;
-    }
         
     [UIParams] private readonly BSMLParserParams parserParams = null!;
         
@@ -126,10 +118,10 @@ internal class NoteListViewController : BSMLResourceViewController
         foreach (var customNote in noteAssetLoader.CustomNoteObjects)
         {
             var icon = customNote.Descriptor.Icon;
+            var name = customNote.Descriptor.NoteName;
+            var subName = customNote.Descriptor.AuthorName;
             var sprite = Sprite.Create(icon, new(0, 0, icon.width, icon.height), new(0.5f, 0.5f));
-            var customCellInfo = new CustomListTableData.CustomCellInfo(
-                customNote.Descriptor.NoteName, customNote.Descriptor.AuthorName, sprite);
-            customListTableData.Data.Add(customCellInfo);
+            customListTableData.Data.Add(new(name, subName, sprite));
         }
 
         customListTableData.TableView.ReloadData();

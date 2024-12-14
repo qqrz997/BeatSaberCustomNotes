@@ -11,11 +11,11 @@ using Object = UnityEngine.Object;
 namespace CustomNotes.Managers;
 
 // Displays text that shows that the player is using custom notes in HMD only mode
-public class WatermarkManager : IInitializable, IDisposable
+internal class WatermarkManager : IInitializable, IDisposable
 {
     private readonly PluginConfig config;
 
-    internal WatermarkManager(PluginConfig config)
+    private WatermarkManager(PluginConfig config)
     {
         this.config = config;
     }

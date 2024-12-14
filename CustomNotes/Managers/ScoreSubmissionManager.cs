@@ -10,7 +10,7 @@ internal class ScoreSubmissionManager : IInitializable
     private readonly NoteAssetLoader noteAssetLoader;
     private readonly GameplayCoreSceneSetupData gameplayCoreSceneSetupData;
 
-    internal ScoreSubmissionManager([InjectOptional] Submission submission, NoteAssetLoader noteAssetLoader, GameplayCoreSceneSetupData gameplayCoreSceneSetupData)
+    private ScoreSubmissionManager([InjectOptional] Submission submission, NoteAssetLoader noteAssetLoader, GameplayCoreSceneSetupData gameplayCoreSceneSetupData)
     {
         this.submission = submission;
         this.noteAssetLoader = noteAssetLoader;
@@ -26,21 +26,26 @@ internal class ScoreSubmissionManager : IInitializable
             MaterialSwapper.ReplaceMaterialsForGameObject(activeNote.NoteBomb);
         }
 
+        if (submission == null)
+        {
+            return;
+        }
+        
         if (gameplayCoreSceneSetupData.gameplayModifiers.ghostNotes)
         {
-            submission?.DisableScoreSubmission("Custom Notes", "Ghost Notes");
+            submission.DisableScoreSubmission("Custom Notes", "Ghost Notes");
         }
         if (gameplayCoreSceneSetupData.gameplayModifiers.disappearingArrows)
         {
-            submission?.DisableScoreSubmission("Custom Notes", "Disappearing Arrows");
+            submission.DisableScoreSubmission("Custom Notes", "Disappearing Arrows");
         }
         if (gameplayCoreSceneSetupData.gameplayModifiers.smallCubes)
         {
-            submission?.DisableScoreSubmission("Custom Notes", "Small Notes");
+            submission.DisableScoreSubmission("Custom Notes", "Small Notes");
         }
         if (gameplayCoreSceneSetupData.beatmapKey.RequiresNoodleExtensions())
         {
-            submission?.DisableScoreSubmission("Custom Notes", "Noodle Extensions");
+            submission.DisableScoreSubmission("Custom Notes", "Noodle Extensions");
         }
     }
 }
