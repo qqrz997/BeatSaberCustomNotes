@@ -220,7 +220,7 @@ internal class PlayerInstaller : Installer
 
         #region Set Slider Layer
 
-        if (config.UseHmdOnly())
+        if (config.HmdOnly)
         {
             SliderController RedecorateSliderLayer(SliderController sliderController)
             {

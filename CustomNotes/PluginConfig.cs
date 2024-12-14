@@ -16,7 +16,4 @@ internal class PluginConfig
         
     public float GetNoteSize() => DisableAprilFools || !Plugin.IsAprilFirst ? NoteSize : Random.Range(0.25f, 1.5f);
     public bool NoteSizeEquals(float noteSize) => Mathf.Approximately(GetNoteSize(), noteSize);
-        
-    public static bool ForceHmdOnly { private get; set; }
-    public bool UseHmdOnly() => HmdOnly || ForceHmdOnly;
 }

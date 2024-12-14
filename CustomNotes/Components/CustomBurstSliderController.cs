@@ -48,7 +48,7 @@ internal class CustomBurstSliderController : MonoBehaviour, IColorable, INoteCon
         noteCube = burstSliderGameNoteController.gameObject.transform.Find("NoteCube");
 
         var noteMesh = GetComponentInChildren<MeshRenderer>();
-        if (config.UseHmdOnly())
+        if (config.HmdOnly)
         {
             noteMesh.gameObject.layer = (int)NoteLayer.ThirdPerson;
         }
@@ -86,7 +86,7 @@ internal class CustomBurstSliderController : MonoBehaviour, IColorable, INoteCon
         siraContainer = activeSliderPool.Spawn();
 
         activeNote = siraContainer.Prefab;
-        activeNote.SetLayerRecursively(config.UseHmdOnly() ? NoteLayer.FirstPerson : NoteLayer.Note);
+        activeNote.SetLayerRecursively(config.HmdOnly ? NoteLayer.FirstPerson : NoteLayer.Note);
         activeNote.transform.localPosition = Vector3.zero;
         activeNote.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * config.GetNoteSize();
         activeNote.SetActive(true);
@@ -111,7 +111,7 @@ internal class CustomBurstSliderController : MonoBehaviour, IColorable, INoteCon
         SetActiveThenColor(activeNote, ((CustomNoteColorNoteVisuals)visuals)._noteColor);
             
         // Hide certain parts of the default note which is not required
-        if (!config.UseHmdOnly())
+        if (!config.HmdOnly)
         {
             customNoteColorNoteVisuals.SetBaseGameVisualsLayer(NoteLayer.Note);
             if (customNote.Descriptor.DisableBaseNoteArrows)

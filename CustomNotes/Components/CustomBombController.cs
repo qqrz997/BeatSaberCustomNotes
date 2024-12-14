@@ -43,7 +43,7 @@ internal class CustomBombController : MonoBehaviour, INoteControllerDidInitEvent
             vanillaBombRenderer.enabled = false;
         }
             
-        if (config.UseHmdOnly())
+        if (config.HmdOnly)
         {
             // create fake bombs because for some reason changing the layer of the vanilla bomb mesh causes them
             // to be unable to be cut.
@@ -71,7 +71,7 @@ internal class CustomBombController : MonoBehaviour, INoteControllerDidInitEvent
         siraContainer = bombPool.Spawn();
         
         var activeNoteBomb = siraContainer.Prefab;
-        activeNoteBomb.SetLayerRecursively(config.UseHmdOnly() ? NoteLayer.FirstPerson : NoteLayer.Note);
+        activeNoteBomb.SetLayerRecursively(config.HmdOnly ? NoteLayer.FirstPerson : NoteLayer.Note);
         activeNoteBomb.transform.localPosition = Vector3.zero;
         activeNoteBomb.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * config.GetNoteSize();
         activeNoteBomb.SetActive(true);

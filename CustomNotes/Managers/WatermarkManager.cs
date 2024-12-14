@@ -24,7 +24,7 @@ internal class WatermarkManager : IInitializable, IDisposable
 
     public void Initialize()
     {
-        if (config.UseHmdOnly())
+        if (config.HmdOnly)
         {
             CreateWatermark();
         }
