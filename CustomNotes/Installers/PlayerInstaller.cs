@@ -32,7 +32,7 @@ internal class PlayerInstaller : Installer
             return;
         }
             
-        bool ghostNotes = gameplayCoreSceneSetupData.gameplayModifiers.proMode;
+        bool ghostNotes = gameplayCoreSceneSetupData.gameplayModifiers.ghostNotes;
         bool disappearingArrows = gameplayCoreSceneSetupData.gameplayModifiers.disappearingArrows;
         bool smallCubes = gameplayCoreSceneSetupData.gameplayModifiers.smallCubes;
         bool proMode = gameplayCoreSceneSetupData.gameplayModifiers.proMode;
