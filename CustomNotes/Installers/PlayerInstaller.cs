@@ -224,7 +224,8 @@ internal class PlayerInstaller : Installer
         {
             SliderController RedecorateSliderLayer(SliderController sliderController)
             {
-                sliderController.transform.Find("MeshRenderer").gameObject.layer = 0;
+                var meshRenderer = sliderController.GetComponentInChildren<MeshRenderer>();
+                meshRenderer.gameObject.layer = 0;
                 return sliderController;
             }
             Container.RegisterRedecorator(new ShortSliderNoteRegistration(RedecorateSliderLayer, DecorationPriority));
