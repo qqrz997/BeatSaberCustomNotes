@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using CustomNotes.Models;
+using CameraUtils.Core;
 using CustomNotes.Utilities;
 using UnityEngine;
 
@@ -32,7 +32,7 @@ internal class CustomNoteColorNoteVisuals : ColorNoteVisuals
         }
     }
 
-    public void SetBaseGameVisualsLayer(NoteLayer layer)
+    public void SetBaseGameVisualsLayer(VisibilityLayer layer)
     {
         foreach (var arrowRenderer in ArrowRenderers)
         {
@@ -40,7 +40,7 @@ internal class CustomNoteColorNoteVisuals : ColorNoteVisuals
         }
     }
 
-    public void CreateFakeVisuals(NoteLayer layer)
+    public void CreateFakeVisuals(VisibilityLayer layer)
     {
         ClearDuplicatedArrows();
         foreach (var arrowRenderer in ArrowRenderers)
@@ -49,7 +49,7 @@ internal class CustomNoteColorNoteVisuals : ColorNoteVisuals
         }
     }
 
-    public void CreateAndScaleFakeVisuals(NoteLayer layer, float scale)
+    public void CreateAndScaleFakeVisuals(VisibilityLayer layer, float scale)
     {
         ClearDuplicatedArrows();
         foreach (var arrowRenderer in _arrowMeshRenderers)
@@ -91,7 +91,7 @@ internal class CustomNoteColorNoteVisuals : ColorNoteVisuals
         duplicatedArrows.Clear();
     }
 
-    private GameObject DuplicateIfExists(GameObject gameObject, NoteLayer layer)
+    private GameObject DuplicateIfExists(GameObject gameObject, VisibilityLayer layer)
     {
         if (!gameObject.activeInHierarchy)
         {
@@ -106,7 +106,7 @@ internal class CustomNoteColorNoteVisuals : ColorNoteVisuals
         return tempObject;
     }
 
-    private void ScaleIfExists(GameObject gameObject, NoteLayer layer, float scale, Vector3 positionModifier)
+    private void ScaleIfExists(GameObject gameObject, VisibilityLayer layer, float scale, Vector3 positionModifier)
     {
         var tempObject = DuplicateIfExists(gameObject, layer);
         if (tempObject != null)

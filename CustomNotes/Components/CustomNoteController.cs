@@ -1,4 +1,5 @@
-﻿using CustomNotes.Managers;
+﻿using CameraUtils.Core;
+using CustomNotes.Managers;
 using CustomNotes.Models;
 using CustomNotes.Utilities;
 using SiraUtil.Interfaces;
@@ -78,7 +79,7 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
         var noteMesh = GetComponentInChildren<MeshRenderer>();
         if (config.HmdOnly)
         {
-            noteMesh.gameObject.layer = (int)NoteLayer.ThirdPerson;
+            noteMesh.gameObject.SetLayer(VisibilityLayer.DesktopOnlyAndReflected);
         }
         else
         {
@@ -125,7 +126,7 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
         siraContainer = noteModelPool.Spawn();
         
         activeNote = siraContainer.Prefab;
-        activeNote.SetLayerRecursively(config.HmdOnly ? NoteLayer.FirstPerson : NoteLayer.Note);
+        activeNote.SetLayerRecursively(config.HmdOnly ? VisibilityLayer.HmdOnlyAndReflected : VisibilityLayer.Note);
         activeNote.transform.localPosition = Vector3.zero;
         activeNote.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * config.GetNoteSize();
         activeNote.SetActive(true);
@@ -151,7 +152,7 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
         // Hide certain parts of the default note which is not required
         if (!config.HmdOnly)
         {
-            customNoteColorNoteVisuals.SetBaseGameVisualsLayer(NoteLayer.Note);
+            customNoteColorNoteVisuals.SetBaseGameVisualsLayer(VisibilityLayer.Note);
             if (customNote.Descriptor.DisableBaseNoteArrows)
             {
                 customNoteColorNoteVisuals.TurnOffVisuals();
@@ -165,18 +166,18 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
         }
 
         // HMDOnly code
-        customNoteColorNoteVisuals.SetBaseGameVisualsLayer(NoteLayer.ThirdPerson);
+        customNoteColorNoteVisuals.SetBaseGameVisualsLayer(VisibilityLayer.DesktopOnlyAndReflected);
         if (!customNote.Descriptor.DisableBaseNoteArrows)
         {
             if (!config.NoteSizeEquals(1))
             {
                 // arrows should be enabled in both views, with fake arrows rescaled
-                customNoteColorNoteVisuals.CreateAndScaleFakeVisuals(NoteLayer.FirstPerson, config.GetNoteSize());
+                customNoteColorNoteVisuals.CreateAndScaleFakeVisuals(VisibilityLayer.HmdOnlyAndReflected, config.GetNoteSize());
             }
             else
             {
                 // arrows should be enabled in both views
-                customNoteColorNoteVisuals.CreateFakeVisuals(NoteLayer.FirstPerson);
+                customNoteColorNoteVisuals.CreateFakeVisuals(VisibilityLayer.HmdOnlyAndReflected);
             }
         }
     }

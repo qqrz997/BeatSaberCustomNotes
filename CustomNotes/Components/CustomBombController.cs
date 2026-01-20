@@ -1,4 +1,4 @@
-﻿using CustomNotes.Models;
+﻿using CameraUtils.Core;
 using CustomNotes.Utilities;
 using SiraUtil.Objects;
 using UnityEngine;
@@ -50,7 +50,7 @@ internal class CustomBombController : MonoBehaviour, INoteControllerDidInitEvent
             // TODO: investigate better solutions for the above ^
             fakeBombRenderer = Instantiate(vanillaBombRenderer, vanillaBombRenderer.transform, true);
             fakeBombRenderer.gameObject.name = "FakeCameraOnlyBomb";
-            fakeBombRenderer.gameObject.layer = (int)NoteLayer.ThirdPerson;
+            fakeBombRenderer.gameObject.SetLayer(VisibilityLayer.DesktopOnlyAndReflected);
             fakeBombRenderer.enabled = true;
 
             fakeBombRenderer.transform.localScale = Vector3.one;
@@ -71,7 +71,7 @@ internal class CustomBombController : MonoBehaviour, INoteControllerDidInitEvent
         siraContainer = bombPool.Spawn();
         
         var activeNoteBomb = siraContainer.Prefab;
-        activeNoteBomb.SetLayerRecursively(config.HmdOnly ? NoteLayer.FirstPerson : NoteLayer.Note);
+        activeNoteBomb.SetLayerRecursively(config.HmdOnly ? VisibilityLayer.HmdOnlyAndReflected : VisibilityLayer.Note);
         activeNoteBomb.transform.localPosition = Vector3.zero;
         activeNoteBomb.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * config.GetNoteSize();
         activeNoteBomb.SetActive(true);

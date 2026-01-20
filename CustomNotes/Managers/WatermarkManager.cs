@@ -1,7 +1,6 @@
-﻿using CustomNotes.Utilities;
-using System;
+﻿using System;
 using BeatSaberMarkupLanguage;
-using CustomNotes.Models;
+using CameraUtils.Core;
 using HMUI;
 using TMPro;
 using UnityEngine;
@@ -57,7 +56,7 @@ internal class WatermarkManager : IInitializable, IDisposable
         text.alignment = TextAlignmentOptions.Center;
         text.color = new(0.95f, 0.95f, 0.95f);
 
-        watermarkObject.SetLayerRecursively(NoteLayer.ThirdPerson);
+        watermarkObject.SetLayerRecursively(VisibilityLayer.DesktopOnlyAndReflected);
     }
         
     public void DestroyWatermark()
