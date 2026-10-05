@@ -1,7 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
+using AssetComponents.Components.Notes;
+using AssetComponents.Models;
 using CustomNotes.Managers;
 using CustomNotes.Utilities;
+using Newtonsoft.Json;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -26,19 +31,19 @@ internal class CustomNote
 
     public string ErrorMessage { get; private set; } = string.Empty;
 
+    public static CustomNote GetDefault()
+    {
+        return new();
+    }
+    
     public static CustomNote Load(string fileName)
     {
-        if (fileName == "DefaultNotes")
-        {
-            return new();
-        }
-
         try
         {
             string filePath = Path.Combine(NoteAssetLoader.NotesDirectory, fileName);
-            var assetBundle = AssetBundle.LoadFromFile(filePath);
-            
-            return new(assetBundle, fileName);
+            var fileInfo = new FileInfo(filePath);
+
+            return LoadBloq2(fileInfo);
         }
         catch (Exception ex)
         {
@@ -62,7 +67,7 @@ internal class CustomNote
             if (name is null or []) throw new ArgumentNullException(nameof(name), "note name is null.");
             
             var assetBundle = AssetBundle.LoadFromMemory(noteData);
-            return new(assetBundle, name);
+            return LoadFromBundle(assetBundle, name);
         }
         catch (Exception ex)
         {
@@ -83,42 +88,67 @@ internal class CustomNote
         if (Descriptor != null) Object.Destroy(Descriptor);
     }
     
-    private CustomNote(AssetBundle assetBundle, string fileName)
+    private static CustomNote LoadBloq2(FileInfo file)
     {
+        Plugin.Log.Debug($"Attempting to load bloq2 file - {file.Name}");
+
+        using var fileStream = file.OpenRead();
+        using var archive = new ZipArchive(fileStream, ZipArchiveMode.Read);
+
+        var jsonEntry = archive.GetEntry("metadata.json");
+        using var jsonStream = jsonEntry.Open();
+        var bloq2 = DeserializeStream<Bloq2Model>(jsonStream);
+        var assetMetadata = bloq2.Assets[AssetPlatform.PC];
+        
+        var bundleEntry = archive.GetEntry(assetMetadata.FilePath);
+        using var bundleStream = bundleEntry.Open();
+        var bundle = LoadBundle(bundleStream);
+
+        return LoadFromBundle(bundle, file.Name);
+    }
+
+    private static CustomNote LoadFromBundle(AssetBundle bundle, string fileName)
+    {
+        var notePrefab = bundle.LoadAsset<GameObject>(AssetBundleDefinition.NoteAssetName);
+        var descriptor = notePrefab.GetComponent<NoteDescriptor>();
+
+        return new(descriptor, fileName, bundle);
+    }
+
+    private CustomNote(NoteDescriptor descriptor, string fileName, AssetBundle assetBundle)
+    {
+        Descriptor = descriptor;
+        Descriptor.icon ??= Utils.GetDefaultCustomIcon();
+        
         FileName = fileName;
         AssetBundle = assetBundle;
+
+        var left = Descriptor.leftNotes;
+        var right = Descriptor.rightNotes ? Descriptor.rightNotes : Descriptor.leftNotes;
+
+        NoteLeft = left.noteArrow;
+        NoteRight = right.noteArrow ? right.noteArrow : NoteLeft;
         
-        var noteObject = NoteAssetLoader.LoadNotePrefab(assetBundle, fileName);
-
-        Descriptor = noteObject.GetComponent<NoteDescriptor>();
-        Descriptor.Icon ??= Utils.GetDefaultCustomIcon();
-
-        NoteLeft = noteObject.transform.Find("NoteLeft").gameObject;
-        NoteRight = noteObject.transform.Find("NoteRight").gameObject;
-        var noteDotLeftTransform = noteObject.transform.Find("NoteDotLeft");
-        var noteDotRightTransform = noteObject.transform.Find("NoteDotRight");
-        NoteDotLeft = noteDotLeftTransform != null ? noteDotLeftTransform.gameObject : NoteLeft;
-        NoteDotRight = noteDotRightTransform != null ? noteDotRightTransform.gameObject : NoteRight;
-        NoteBomb = noteObject.transform.Find("NoteBomb")?.gameObject;
-
-        BurstSliderLeft = GetBurstSlider(noteObject, NoteDotLeft, "BurstSliderLeft");
-        BurstSliderRight = GetBurstSlider(noteObject, NoteDotRight, "BurstSliderRight");
-
-        var burstSliderHeadLeft = noteObject.transform.Find("BurstSliderHeadLeft");
-        var burstSliderHeadRight = noteObject.transform.Find("BurstSliderHeadRight");
-        BurstSliderHeadLeft = burstSliderHeadLeft != null ? burstSliderHeadLeft.gameObject : NoteLeft;
-        BurstSliderHeadRight = burstSliderHeadRight != null ? burstSliderHeadRight.gameObject : NoteRight;
+        NoteDotLeft = left.noteDot ? left.noteDot : NoteLeft;
+        NoteDotRight = right.noteDot ? right.noteDot : NoteRight;
         
-        var burstSliderHeadDotLeft = noteObject.transform.Find("BurstSliderHeadDotLeft");
-        var burstSliderHeadDotRight = noteObject.transform.Find("BurstSliderHeadDotRight");
-        BurstSliderHeadDotLeft = 
-            burstSliderHeadDotLeft != null ? burstSliderHeadDotLeft.gameObject 
-            : burstSliderHeadLeft != null ? burstSliderHeadLeft.gameObject 
-            : NoteDotLeft;
-        BurstSliderHeadDotRight = 
-            burstSliderHeadDotRight != null ? burstSliderHeadDotRight.gameObject 
-            : burstSliderHeadRight != null ? burstSliderHeadRight.gameObject 
-            : NoteDotRight;
+        NoteBomb = Descriptor.bomb;
+
+        BurstSliderLeft = left.chainSegment ? left.chainSegment : NoteDotLeft;
+        BurstSliderRight = right.chainSegment ? right.chainSegment : NoteDotRight;
+
+        BurstSliderHeadLeft = left.chainArrow ? left.chainArrow : NoteLeft;
+        BurstSliderHeadRight = right.chainArrow ? right.chainArrow : NoteRight;
+
+        BurstSliderHeadDotLeft = left.chainDot ? left.noteDot : NoteDotLeft;
+        BurstSliderHeadDotRight = right.chainDot ? right.chainDot : NoteDotRight;
+    }
+    
+    public static T DeserializeStream<T>(Stream stream)
+    {
+        using var streamReader = new StreamReader(stream);
+        using var jsonTextReader = new JsonTextReader(streamReader);
+        return new JsonSerializer().Deserialize<T>(jsonTextReader);
     }
 
     private CustomNote()
@@ -126,10 +156,9 @@ internal class CustomNote
         FileName = "DefaultNotes";
         Descriptor = new NoteDescriptor
         {
-            AuthorName = "Beat Games",
-            NoteName = "Default",
-            Description = "This is the default notes. (No preview available)",
-            Icon = Utils.GetDefaultIcon()
+            authorName = "Beat Games",
+            noteName = "Default",
+            icon = Utils.GetDefaultIcon()
         };
     }
 
@@ -138,9 +167,9 @@ internal class CustomNote
         FileName = fileName;
         Descriptor = new NoteDescriptor
         {
-            NoteName = "Error - Check Description",
-            AuthorName = string.Empty,
-            Icon = Utils.GetErrorIcon()
+            noteName = "Error - Check Description",
+            authorName = string.Empty,
+            icon = Utils.GetErrorIcon()
         };
         ErrorMessage = errorMessage;
     }
@@ -164,4 +193,59 @@ internal class CustomNote
         burstSlider.SetActive(false);
         return burstSlider;
     }
+    
+    public static AssetBundle LoadBundle(Stream stream)
+    {
+        if (!stream.CanRead || !stream.CanSeek)
+            return CopyStreamAndLoadBundle(stream);
+
+        return AssetBundle.LoadFromStream(stream);
+        //return await AssetBundleExtensions.LoadFromStreamAsync(stream);
+    }
+
+    private static AssetBundle CopyStreamAndLoadBundle(Stream stream)
+    {
+        using var memoryStream = new MemoryStream();
+        stream.CopyTo(memoryStream);
+        return AssetBundle.LoadFromStream(memoryStream);
+        // return await AssetBundleExtensions.LoadFromStreamAsync(memoryStream);
+    }
+}
+
+internal class Bloq2Model
+{
+    [JsonConstructor]
+    public Bloq2Model(
+        string iconPath,
+        string modelName,
+        string authorName,
+        Dictionary<AssetPlatform, AssetModel> assets)
+    {
+        IconPath = iconPath;
+        ModelName = modelName;
+        AuthorName = authorName;
+        Assets = assets;
+    }
+    
+    public string IconPath { get; }
+    public string ModelName { get; }
+    public string AuthorName { get; }
+    public Dictionary<AssetPlatform, AssetModel> Assets { get; }
+}
+
+internal enum AssetPlatform
+{
+    PC
+}
+
+internal class AssetModel
+{
+    [JsonConstructor]
+    public AssetModel(
+        string filePath)
+    {
+        FilePath = filePath;
+    }
+    
+    public string FilePath { get; }
 }

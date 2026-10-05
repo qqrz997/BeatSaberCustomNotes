@@ -21,8 +21,8 @@ internal class NoteDetailsViewController : BSMLResourceViewController
 
     public void OnNoteWasChanged(CustomNote customNote)
     {
-        noteDescription.SetText(!string.IsNullOrWhiteSpace(customNote.ErrorMessage) ? string.Empty 
-            : $"{customNote.Descriptor.NoteName}:\n\n{Utils.SafeUnescape(customNote.Descriptor.Description)}");
+        // todo remove descriptions
+        noteDescription.SetText("custom asset description is currently deprecated");
 
         NotifyPropertyChanged(nameof(ModEnabled));
         NotifyPropertyChanged(nameof(NoteSize));

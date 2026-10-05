@@ -128,7 +128,7 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
         activeNote = siraContainer.Prefab;
         activeNote.SetLayerRecursively(config.HmdOnly ? VisibilityLayer.HmdOnlyAndReflected : VisibilityLayer.Note);
         activeNote.transform.localPosition = Vector3.zero;
-        activeNote.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * config.GetNoteSize();
+        activeNote.transform.localScale = Vector3.one * config.GetNoteSize();
         activeNote.SetActive(true);
         
         siraContainer.transform.SetParent(noteCube);
@@ -140,10 +140,11 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
     protected void SetActiveThenColor(GameObject note, Color color)
     {
         note.SetActive(true);
-        if (customNote.Descriptor.UsesNoteColor)
-        {
-            SetColor(color, true);
-        }
+        // todo new colors stuffs
+        // if (customNote.Descriptor.UsesNoteColor)
+        // {
+        //     SetColor(color, true);
+        // }
     }
 
     private void Visuals_DidInit(ColorNoteVisuals visuals, NoteControllerBase noteController)
@@ -153,7 +154,7 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
         if (!config.HmdOnly)
         {
             customNoteColorNoteVisuals.SetBaseGameVisualsLayer(VisibilityLayer.Note);
-            if (customNote.Descriptor.DisableBaseNoteArrows)
+            if (customNote.Descriptor.disableBaseNoteArrows)
             {
                 customNoteColorNoteVisuals.TurnOffVisuals();
             }
@@ -167,7 +168,7 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
 
         // HMDOnly code
         customNoteColorNoteVisuals.SetBaseGameVisualsLayer(VisibilityLayer.DesktopOnlyAndReflected);
-        if (!customNote.Descriptor.DisableBaseNoteArrows)
+        if (!customNote.Descriptor.disableBaseNoteArrows)
         {
             if (!config.NoteSizeEquals(1))
             {
@@ -207,7 +208,8 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
         if (activeNote != null)
         {
             customNoteColorNoteVisuals.SetColor(color, updateMatBlocks);
-            Utils.ColorizeCustomNote(color, customNote.Descriptor.NoteColorStrength, activeNote);
+            // todo colors stuffs
+            // Utils.ColorizeCustomNote(color, customNote.Descriptor.NoteColorStrength, activeNote);
         }
     }
 

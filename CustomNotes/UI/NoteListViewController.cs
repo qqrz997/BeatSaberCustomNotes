@@ -41,11 +41,11 @@ internal class NoteListViewController : BSMLResourceViewController
     private GameObject fakeRightDot;
 
     // NotePositions (Local to the previewer)
-    private readonly Vector3 leftDotPos = new(0.0f, 1.5f, 0.0f);
+    private readonly Vector3 leftDotPos = new(0.0f, 0.6f, 0.0f);
     private readonly Vector3 leftArrowPos = new(0.0f, 0.0f, 0.0f);
-    private readonly Vector3 rightDotPos = new(1.5f, 1.5f, 0.0f);
-    private readonly Vector3 rightArrowPos = new(1.5f, 0.0f, 0.0f);
-    private readonly Vector3 bombPos = new(3.0f, 0.75f, 0.0f);
+    private readonly Vector3 rightDotPos = new(0.6f, 0.6f, 0.0f);
+    private readonly Vector3 rightArrowPos = new(0.6f, 0.0f, 0.0f);
+    private readonly Vector3 bombPos = new(1.2f, 0.3f, 0.0f);
 
     public Action<CustomNote> CustomNoteChanged;
     public Action CustomNotesReloaded;
@@ -117,9 +117,9 @@ internal class NoteListViewController : BSMLResourceViewController
 
         foreach (var customNote in noteAssetLoader.CustomNoteObjects)
         {
-            var icon = customNote.Descriptor.Icon;
-            var name = customNote.Descriptor.NoteName;
-            var subName = customNote.Descriptor.AuthorName;
+            var icon = customNote.Descriptor.icon;
+            var name = customNote.Descriptor.noteName;
+            var subName = customNote.Descriptor.authorName;
             var sprite = Sprite.Create(icon, new(0, 0, icon.width, icon.height), new(0.5f, 0.5f));
             customListTableData.Data.Add(new(name, subName, sprite));
         }
@@ -146,8 +146,7 @@ internal class NoteListViewController : BSMLResourceViewController
         if (preview == null)
         {
             preview = new("NotePreviewContainer");
-            preview.transform.Rotate(0.0f, 60.0f, 0.0f);
-            preview.transform.localScale = new(0.3f, 0.3f, 0.3f);
+            preview.transform.Rotate(0.0f, 57.0f, 0.0f);
         }
 
         int selectedNote = noteAssetLoader.SelectedNoteIdx;
@@ -192,7 +191,7 @@ internal class NoteListViewController : BSMLResourceViewController
     private void InitializePreviewNotes(CustomNote customNote, Transform transform)
     {
         // Position previewer based on the CustomNote having a NoteBomb
-        preview.transform.position = customNote.NoteBomb ? new(3.05f, 0.9f, 2.0f) : new Vector3(2.90f, 0.9f, 1.85f);
+        preview.transform.position = customNote.NoteBomb ? new(2.60f, 0.90f, 2.50f) : new Vector3(2.75f, 0.9f, 2.25f);
 
         noteLeft = CreatePreviewNote(customNote.NoteLeft, transform, leftArrowPos);
         noteDotLeft = CreatePreviewNote(customNote.NoteDotLeft, transform, leftDotPos);
@@ -211,7 +210,7 @@ internal class NoteListViewController : BSMLResourceViewController
         }
 
         // Add arrows to arrow-less notes
-        if (!customNote.Descriptor.DisableBaseNoteArrows && fakeNoteArrows != null)
+        if (!customNote.Descriptor.disableBaseNoteArrows && fakeNoteArrows != null)
         {
             if (noteLeft && noteRight)
             {
@@ -219,17 +218,18 @@ internal class NoteListViewController : BSMLResourceViewController
             }
         }
 
-        if (customNote.Descriptor.UsesNoteColor)
-        {
-            float colorStrength = customNote.Descriptor.NoteColorStrength;
-            var noteAColor = gameplaySetupViewController.colorSchemesSettings.GetSelectedColorScheme().saberAColor;
-            var noteBColor = gameplaySetupViewController.colorSchemesSettings.GetSelectedColorScheme().saberBColor;
-
-            Utils.ColorizeCustomNote(noteAColor, colorStrength, noteLeft);
-            Utils.ColorizeCustomNote(noteBColor, colorStrength, noteRight);
-            Utils.ColorizeCustomNote(noteBColor, colorStrength, noteDotRight);
-            Utils.ColorizeCustomNote(noteAColor, colorStrength, noteDotLeft);
-        }
+        // todo new colors stuffs
+        // if (customNote.Descriptor.UsesNoteColor)
+        // {
+        //     float colorStrength = customNote.Descriptor.NoteColorStrength;
+        //     var noteAColor = gameplaySetupViewController.colorSchemesSettings.GetSelectedColorScheme().saberAColor;
+        //     var noteBColor = gameplaySetupViewController.colorSchemesSettings.GetSelectedColorScheme().saberBColor;
+        //
+        //     Utils.ColorizeCustomNote(noteAColor, colorStrength, noteLeft);
+        //     Utils.ColorizeCustomNote(noteBColor, colorStrength, noteRight);
+        //     Utils.ColorizeCustomNote(noteBColor, colorStrength, noteDotRight);
+        //     Utils.ColorizeCustomNote(noteAColor, colorStrength, noteDotLeft);
+        // }
     }
 
     private GameObject CreatePreviewNote(GameObject baseNote, Transform transform, Vector3 localPosition)

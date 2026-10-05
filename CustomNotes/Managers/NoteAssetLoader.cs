@@ -43,7 +43,7 @@ internal class NoteAssetLoader : IInitializable, IDisposable
         Directory.CreateDirectory(NotesDirectory);
 
         CustomNoteFiles = Utils
-            .GetFileNames(NotesDirectory, ["*.bloq", "*.note"], SearchOption.AllDirectories, true)
+            .GetFileNames(NotesDirectory, ["*.bloq2"], SearchOption.AllDirectories, true)
             .ToList();
         Plugin.Log.Notice($"{CustomNoteFiles.Count} external notes found. Preparing to load.");
             

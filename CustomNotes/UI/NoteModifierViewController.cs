@@ -57,7 +57,7 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
         notesList.Clear();
         foreach (var customNote in noteAssetLoader.CustomNoteObjects)
         {
-            notesList.Add(customNote.Descriptor.NoteName);
+            notesList.Add(customNote.Descriptor.noteName);
         }
 
         if (notesDropdown != null)
@@ -72,7 +72,7 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
     {
         int selectedNote = noteAssetLoader.CustomNoteObjects
             .ToList()
-            .FindIndex(note => note.Descriptor.NoteName == selectedCell);
+            .FindIndex(note => note.Descriptor.noteName == selectedCell);
         noteAssetLoader.SelectedNoteIdx = selectedNote;
         config.LastNote = noteAssetLoader.CustomNoteObjects[selectedNote].FileName;
     }
@@ -92,7 +92,7 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
     private string SelectedNote =>
         // Only select if valid bloq is loaded
         noteAssetLoader.CustomNoteObjects[noteAssetLoader.SelectedNoteIdx].ErrorMessage == null ? "Default" 
-            : noteAssetLoader.CustomNoteObjects[noteAssetLoader.SelectedNoteIdx].Descriptor.NoteName;
+            : noteAssetLoader.CustomNoteObjects[noteAssetLoader.SelectedNoteIdx].Descriptor.noteName;
 
     [UIValue("note-size")]
     public float NoteSize
