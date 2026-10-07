@@ -43,7 +43,7 @@ internal class NoteAssetLoader : IInitializable, IDisposable
         Directory.CreateDirectory(NotesDirectory);
 
         CustomNoteFiles = Utils
-            .GetFileNames(NotesDirectory, ["*.bloq2"], SearchOption.AllDirectories, true)
+            .GetFileNames(NotesDirectory, ["*.bloq", "*.note"], SearchOption.AllDirectories, true)
             .ToList();
         Plugin.Log.Notice($"{CustomNoteFiles.Count} external notes found. Preparing to load.");
             
@@ -98,24 +98,8 @@ internal class NoteAssetLoader : IInitializable, IDisposable
         return 0;
     }
         
-    public static GameObject LoadNotePrefab(AssetBundle assetBundle, string fileName)
-    {
-        var noteObject = assetBundle.LoadAsset<GameObject>("assets/_customnote.prefab");
-            
-        Plugin.Log.Debug($"Repairing shaders for {fileName}");
-        var shaderReplacementInfo = ShaderRepair.FixShadersOnGameObject(noteObject);
-
-        if (!shaderReplacementInfo.AllShadersReplaced)
-        {
-            Plugin.Log.Warn("Missing shader replacement data:");
-            foreach (var shaderName in shaderReplacementInfo.MissingShaderNames)
-            {
-                Plugin.Log.Warn($"- {shaderName}");
-            }
-        }
-            
-        return noteObject;
-    } 
+    public static GameObject LoadNotePrefab(AssetBundle assetBundle, string fileName) => 
+        assetBundle.LoadAsset<GameObject>("assets/_customnote.prefab");
 
     private static List<CustomNote> LoadCustomNotes(IEnumerable<string> customNoteFiles) => 
         customNoteFiles.Prepend("DefaultNotes").Select(CustomNote.Load).ToList();

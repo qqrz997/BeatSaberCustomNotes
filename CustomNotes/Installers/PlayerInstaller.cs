@@ -1,4 +1,4 @@
-﻿using CustomNotes.Managers;
+using CustomNotes.Managers;
 using CustomNotes.Utilities;
 using SiraUtil.Extras;
 using SiraUtil.Objects;

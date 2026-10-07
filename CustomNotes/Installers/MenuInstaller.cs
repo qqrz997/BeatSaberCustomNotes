@@ -15,6 +15,5 @@ internal class MenuInstaller : Installer
         Container.BindInterfacesAndSelfTo<NoteModifierViewController>().AsSingle();
         Container.BindInterfacesTo<CustomNotesViewManager>().AsSingle();
         Container.BindInterfacesTo<MenuButtonManager>().AsSingle();
-        Container.BindInterfacesTo<NoteTester>().AsSingle();
     }
 }
