@@ -145,7 +145,7 @@ internal class NoteListViewController : BSMLResourceViewController
         if (fakeNoteArrows == null)
         {
             byte[] resource = Utils.LoadFromResource("CustomNotes.Resources.Notes.cn_arrowplaceholder.bloq");
-            fakeNoteArrows = CustomNote.LoadInternal(resource, "cn_arrowplaceholder.bloq");
+            fakeNoteArrows = NoteAssetLoader.LoadInternal(resource, "cn_arrowplaceholder.bloq");
         }
 
         if (preview == null)
