@@ -21,7 +21,7 @@ internal class NotePreviewViewController : BSMLResourceViewController
         }
 
         errorDescription.gameObject.SetActive(true);
-        errorDescription.SetText($"{customNote.Descriptor?.NoteName}:\n\n{Utils.SafeUnescape(customNote
+        errorDescription.SetText($"{customNote.Descriptor?.NoteName}:\n\n{Utils .SafeUnescape(customNote
             .ErrorMessage)}");
     }
 }
