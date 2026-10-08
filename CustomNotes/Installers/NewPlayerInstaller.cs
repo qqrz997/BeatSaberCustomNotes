@@ -76,24 +76,24 @@ internal class NewPlayerInstaller : Installer
             : new BasicNoteRegistration(RedecorateNote, DecorationPriority)));
                 
         MaterialSwapper.GetMaterials();
-        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.NoteLeft);
-        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.NoteRight);
-        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.NoteDotLeft);
-        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.NoteDotRight);
-        Utils.AddMaterialPropertyBlockController(customNote.NoteLeft);
-        Utils.AddMaterialPropertyBlockController(customNote.NoteRight);
-        Utils.AddMaterialPropertyBlockController(customNote.NoteDotLeft);
-        Utils.AddMaterialPropertyBlockController(customNote.NoteDotRight);
+        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.Left.NoteArrow);
+        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.Right.NoteArrow);
+        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.Left.NoteDot);
+        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.Right.NoteDot);
+        Utils.AddMaterialPropertyBlockController(customNote.Left.NoteArrow);
+        Utils.AddMaterialPropertyBlockController(customNote.Right.NoteArrow);
+        Utils.AddMaterialPropertyBlockController(customNote.Left.NoteDot);
+        Utils.AddMaterialPropertyBlockController(customNote.Right.NoteDot);
 
         Container.BindMemoryPool<CustomNoteInstance, NoteArrowPool>()
             .WithId(SaberType.SaberA)
             .WithInitialSize(25)
-            .FromComponentInNewPrefab(NotePrefabContainer(customNote.NoteLeft));
+            .FromComponentInNewPrefab(NotePrefabContainer(customNote.Left.NoteArrow));
             
         Container.BindMemoryPool<CustomNoteInstance, NoteArrowPool>()
             .WithId(SaberType.SaberB)
             .WithInitialSize(25)
-            .FromComponentInNewPrefab(NotePrefabContainer(customNote.NoteRight));
+            .FromComponentInNewPrefab(NotePrefabContainer(customNote.Right.NoteArrow));
             
         // Container.BindMemoryPool<SiraPrefabContainer, NoteDotPool>()
         //     .WithId(SaberType.SaberA)

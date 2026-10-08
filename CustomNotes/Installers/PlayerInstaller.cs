@@ -74,39 +74,39 @@ internal class PlayerInstaller : Installer
             : new BasicNoteRegistration(RedecorateNote, DecorationPriority)));
                 
         MaterialSwapper.GetMaterials();
-        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.NoteLeft);
-        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.NoteRight);
-        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.NoteDotLeft);
-        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.NoteDotRight);
-        Utils.AddMaterialPropertyBlockController(customNote.NoteLeft);
-        Utils.AddMaterialPropertyBlockController(customNote.NoteRight);
-        Utils.AddMaterialPropertyBlockController(customNote.NoteDotLeft);
-        Utils.AddMaterialPropertyBlockController(customNote.NoteDotRight);
+        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.Left.NoteArrow);
+        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.Right.NoteArrow);
+        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.Left.NoteDot);
+        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.Right.NoteDot);
+        Utils.AddMaterialPropertyBlockController(customNote.Left.NoteArrow);
+        Utils.AddMaterialPropertyBlockController(customNote.Right.NoteArrow);
+        Utils.AddMaterialPropertyBlockController(customNote.Left.NoteDot);
+        Utils.AddMaterialPropertyBlockController(customNote.Right.NoteDot);
 
         Container.BindMemoryPool<SiraPrefabContainer, SiraPrefabContainer.Pool>()
             .WithId(Protocol.LeftArrowPool)
             .WithInitialSize(25)
-            .FromComponentInNewPrefab(NotePrefabContainer(customNote.NoteLeft));
+            .FromComponentInNewPrefab(NotePrefabContainer(customNote.Left.NoteArrow));
             
         Container.BindMemoryPool<SiraPrefabContainer, SiraPrefabContainer.Pool>()
             .WithId(Protocol.RightArrowPool)
             .WithInitialSize(25)
-            .FromComponentInNewPrefab(NotePrefabContainer(customNote.NoteRight));
+            .FromComponentInNewPrefab(NotePrefabContainer(customNote.Right.NoteArrow));
             
-        if (customNote.NoteDotLeft != null)
+        if (customNote.Left.NoteDot != null)
         {
             Container.BindMemoryPool<SiraPrefabContainer, SiraPrefabContainer.Pool>()
                 .WithId(Protocol.LeftDotPool)
                 .WithInitialSize(10)
-                .FromComponentInNewPrefab(NotePrefabContainer(customNote.NoteDotLeft));
+                .FromComponentInNewPrefab(NotePrefabContainer(customNote.Left.NoteDot));
         }
 
-        if (customNote.NoteDotRight != null)
+        if (customNote.Right.NoteDot != null)
         {
             Container.BindMemoryPool<SiraPrefabContainer, SiraPrefabContainer.Pool>()
                 .WithId(Protocol.RightDotPool)
                 .WithInitialSize(10)
-                .FromComponentInNewPrefab(NotePrefabContainer(customNote.NoteDotRight));
+                .FromComponentInNewPrefab(NotePrefabContainer(customNote.Right.NoteDot));
         }
 
         #endregion
@@ -119,14 +119,14 @@ internal class PlayerInstaller : Installer
             return bombNoteController;
         }, DecorationPriority));
 
-        if (customNote.NoteBomb != null)
+        if (customNote.Bomb != null)
         {
             MaterialSwapper.GetMaterials();
-            MaterialSwapper.ReplaceMaterialsForGameObject(customNote.NoteBomb);
+            MaterialSwapper.ReplaceMaterialsForGameObject(customNote.Bomb);
             Container.BindMemoryPool<SiraPrefabContainer, SiraPrefabContainer.Pool>()
                 .WithId(Protocol.BombPool)
                 .WithInitialSize(10)
-                .FromComponentInNewPrefab(NotePrefabContainer(customNote.NoteBomb));
+                .FromComponentInNewPrefab(NotePrefabContainer(customNote.Bomb));
         }
 
         #endregion
@@ -153,18 +153,18 @@ internal class PlayerInstaller : Installer
             return burstSliderGameNoteController;
         }, DecorationPriority));
 
-        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.BurstSliderLeft);
-        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.BurstSliderRight);
-        Utils.AddMaterialPropertyBlockController(customNote.BurstSliderLeft);
-        Utils.AddMaterialPropertyBlockController(customNote.BurstSliderRight);
+        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.Left.ChainSegment);
+        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.Right.ChainSegment);
+        Utils.AddMaterialPropertyBlockController(customNote.Left.ChainSegment);
+        Utils.AddMaterialPropertyBlockController(customNote.Right.ChainSegment);
 
         Container.BindMemoryPool<SiraPrefabContainer, SiraPrefabContainer.Pool>()
             .WithId(Protocol.LeftBurstSliderPool).WithInitialSize(40)
-            .FromComponentInNewPrefab(NotePrefabContainer(customNote.BurstSliderLeft));
+            .FromComponentInNewPrefab(NotePrefabContainer(customNote.Left.ChainSegment));
             
         Container.BindMemoryPool<SiraPrefabContainer, SiraPrefabContainer.Pool>()
             .WithId(Protocol.RightBurstSliderPool).WithInitialSize(40)
-            .FromComponentInNewPrefab(NotePrefabContainer(customNote.BurstSliderRight));
+            .FromComponentInNewPrefab(NotePrefabContainer(customNote.Right.ChainSegment));
 
         #endregion
 
@@ -191,30 +191,30 @@ internal class PlayerInstaller : Installer
             return gameNoteController;
         }, DecorationPriority));
 
-        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.BurstSliderHeadLeft);
-        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.BurstSliderHeadRight);
-        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.BurstSliderHeadDotLeft);
-        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.BurstSliderHeadDotRight);
-        Utils.AddMaterialPropertyBlockController(customNote.BurstSliderHeadLeft);
-        Utils.AddMaterialPropertyBlockController(customNote.BurstSliderHeadRight);
-        Utils.AddMaterialPropertyBlockController(customNote.BurstSliderHeadDotLeft);
-        Utils.AddMaterialPropertyBlockController(customNote.BurstSliderHeadDotRight);
+        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.Left.ChainArrow);
+        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.Right.ChainArrow);
+        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.Left.ChainDot);
+        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.Right.ChainDot);
+        Utils.AddMaterialPropertyBlockController(customNote.Left.ChainArrow);
+        Utils.AddMaterialPropertyBlockController(customNote.Right.ChainArrow);
+        Utils.AddMaterialPropertyBlockController(customNote.Left.ChainDot);
+        Utils.AddMaterialPropertyBlockController(customNote.Right.ChainDot);
 
         Container.BindMemoryPool<SiraPrefabContainer, SiraPrefabContainer.Pool>()
             .WithId(Protocol.LeftBurstSliderHeadPool).WithInitialSize(10)
-            .FromComponentInNewPrefab(NotePrefabContainer(customNote.BurstSliderHeadLeft));
+            .FromComponentInNewPrefab(NotePrefabContainer(customNote.Left.ChainArrow));
             
         Container.BindMemoryPool<SiraPrefabContainer, SiraPrefabContainer.Pool>()
             .WithId(Protocol.RightBurstSliderHeadPool).WithInitialSize(10)
-            .FromComponentInNewPrefab(NotePrefabContainer(customNote.BurstSliderHeadRight));
+            .FromComponentInNewPrefab(NotePrefabContainer(customNote.Right.ChainArrow));
             
         Container.BindMemoryPool<SiraPrefabContainer, SiraPrefabContainer.Pool>()
             .WithId(Protocol.LeftBurstSliderHeadDotPool).WithInitialSize(10)
-            .FromComponentInNewPrefab(NotePrefabContainer(customNote.BurstSliderHeadDotLeft));
+            .FromComponentInNewPrefab(NotePrefabContainer(customNote.Left.ChainDot));
             
         Container.BindMemoryPool<SiraPrefabContainer, SiraPrefabContainer.Pool>()
             .WithId(Protocol.RightBurstSliderHeadDotPool).WithInitialSize(10)
-            .FromComponentInNewPrefab(NotePrefabContainer(customNote.BurstSliderHeadDotRight));
+            .FromComponentInNewPrefab(NotePrefabContainer(customNote.Right.ChainDot));
             
         #endregion
 

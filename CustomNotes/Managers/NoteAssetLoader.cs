@@ -98,7 +98,7 @@ internal class NoteAssetLoader : IInitializable, IDisposable
         return 0;
     }
     
-    public static CustomNote LoadInternal(byte[] noteData, string name)
+    public static ICustomNote LoadInternal(byte[] noteData, string name)
     {
         try
         {
@@ -113,7 +113,7 @@ internal class NoteAssetLoader : IInitializable, IDisposable
             Plugin.Log.Warn("Problem encountered getting the AssetBundle from a resource");
             Plugin.Log.Warn(ex);
 
-            return new("DefaultNotes",
+            return new CustomNote("DefaultNotes",
                 $@"File: 'internalResource\\{name}'" +
                 "\n\nAn internal asset has failed to load." +
                 "\n\nThis shouldn't have happened and should be reported!" +
@@ -141,7 +141,7 @@ internal class NoteAssetLoader : IInitializable, IDisposable
             Plugin.Log.Warn($"Problem encountered when loading '{Path.GetFileNameWithoutExtension(fileName)}'");
             Plugin.Log.Warn(ex);
 
-            return new("DefaultNotes",
+            return new CustomNote("DefaultNotes",
                 $"File: '{fileName}'" +
                 "\n\nThis file failed to load." +
                 "\n\nThis may have been caused by having duplicated files, another note with the" +
@@ -184,7 +184,7 @@ internal class NoteAssetLoader : IInitializable, IDisposable
             : burstSliderHeadRight != null ? burstSliderHeadRight.gameObject 
             : noteDotRight;
 
-        return new(fileName,
+        return new CustomNote(fileName,
             assetBundle,
             descriptor,
             new(noteLeft, noteDotLeft, burstSliderHeadLeft, burstSliderHeadDotLeft, burstSliderLeft),

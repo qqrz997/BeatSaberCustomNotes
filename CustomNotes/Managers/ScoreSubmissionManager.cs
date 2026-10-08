@@ -21,9 +21,9 @@ internal class ScoreSubmissionManager : IInitializable
     {
         var activeNote = noteAssetLoader.CustomNoteObjects[noteAssetLoader.SelectedNoteIdx];
 
-        if (activeNote.NoteBomb != null)
+        if (activeNote.Bomb != null)
         {
-            MaterialSwapper.ReplaceMaterialsForGameObject(activeNote.NoteBomb);
+            MaterialSwapper.ReplaceMaterialsForGameObject(activeNote.Bomb);
         }
 
         if (submission == null)

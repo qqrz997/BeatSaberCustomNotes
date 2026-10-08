@@ -1,36 +1,13 @@
-﻿using System;
-using System.IO;
-using CustomNotes.Managers;
-using CustomNotes.Utilities;
+﻿using CustomNotes.Utilities;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
 namespace CustomNotes.Models;
 
-internal class NoteObjects
+internal class CustomNote : ICustomNote
 {
-    public NoteObjects(GameObject noteArrow, 
-        GameObject noteDot,
-        GameObject chainArrow, 
-        GameObject chainDot,
-        GameObject chainSegment)
-    {
-        NoteArrow = noteArrow;
-        NoteDot = noteDot;
-        ChainArrow = chainArrow;
-        ChainDot = chainDot;
-        ChainSegment = chainSegment;
-    }
-
-    public GameObject NoteArrow { get; }
-    public GameObject NoteDot { get; }
-    public GameObject ChainArrow { get; }
-    public GameObject ChainDot { get; }
-    public GameObject ChainSegment { get; }
-}
-
-internal class CustomNote
-{
+    private readonly AssetBundle assetBundle;
+    
     public CustomNote(string fileName,
         AssetBundle assetBundle,
         NoteDescriptor descriptor,
@@ -38,35 +15,21 @@ internal class CustomNote
         NoteObjects rightNotes,
         GameObject bomb)
     {
+        this.assetBundle = assetBundle;
         FileName = fileName;
-        AssetBundle = assetBundle;
         Descriptor = descriptor;
-        NoteLeft = leftNotes.NoteArrow;
-        NoteRight = rightNotes.NoteArrow;
-        NoteDotLeft = leftNotes.NoteDot;
-        NoteDotRight = rightNotes.NoteDot;
-        BurstSliderHeadLeft = leftNotes.ChainArrow;
-        BurstSliderHeadRight = rightNotes.ChainArrow;
-        BurstSliderHeadDotLeft = leftNotes.ChainDot;
-        BurstSliderHeadDotRight = rightNotes.ChainDot;
-        BurstSliderLeft = leftNotes.ChainSegment;
-        BurstSliderRight = rightNotes.ChainSegment;
+        Left = leftNotes;
+        Right = rightNotes;
+        Bomb = bomb;
     }
     
-    public string FileName { get; private set; }
-    public AssetBundle AssetBundle { get; }
-    public NoteDescriptor Descriptor { get; private set; }
-    public GameObject NoteLeft { get; }
-    public GameObject NoteRight { get; }
-    public GameObject NoteDotLeft { get; }
-    public GameObject NoteDotRight { get; }
-    public GameObject NoteBomb { get; }
-    public GameObject BurstSliderLeft { get; }
-    public GameObject BurstSliderRight { get; }
-    public GameObject BurstSliderHeadLeft { get; }
-    public GameObject BurstSliderHeadRight { get; }
-    public GameObject BurstSliderHeadDotLeft { get; }
-    public GameObject BurstSliderHeadDotRight { get; }
+    public string FileName { get; }
+    public NoteDescriptor Descriptor { get; }
+    public NoteObjects Left { get; }
+    public NoteObjects Right { get; }
+    public GameObject Bomb { get; }
+
+    public bool HasArrows => Descriptor.DisableBaseNoteArrows;
 
     public string ErrorMessage { get; private set; } = string.Empty;
 
@@ -74,7 +37,7 @@ internal class CustomNote
     
     public void Destroy()
     {
-        if (AssetBundle != null) AssetBundle.Unload(true);
+        if (assetBundle != null) assetBundle.Unload(true);
         if (Descriptor != null) Object.Destroy(Descriptor);
     }
 

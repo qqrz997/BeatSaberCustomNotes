@@ -34,7 +34,7 @@ internal class NoteListViewController : BSMLResourceViewController
     private GameObject noteBomb;
 
     // NoteArrows
-    private CustomNote fakeNoteArrows;
+    private ICustomNote fakeNoteArrows;
     private GameObject fakeLeftArrow;
     private GameObject fakeLeftDot;
     private GameObject fakeRightArrow;
@@ -194,39 +194,36 @@ internal class NoteListViewController : BSMLResourceViewController
         isGeneratingPreview = false;
     }
 
-    private void InitializePreviewNotes(CustomNote customNote, Transform transform)
+    private void InitializePreviewNotes(ICustomNote customNote, Transform transform)
     {
         // Position previewer based on the CustomNote having a NoteBomb
-        preview.transform.position = customNote.NoteBomb ? new(2.60f, 0.90f, 2.50f) : new Vector3(2.75f, 0.9f, 2.25f);
+        preview.transform.position = customNote.Bomb ? new(2.60f, 0.90f, 2.50f) : new Vector3(2.75f, 0.9f, 2.25f);
 
-        noteLeft = CreatePreviewNote(customNote.NoteLeft, transform, leftArrowPos);
-        noteDotLeft = CreatePreviewNote(customNote.NoteDotLeft, transform, leftDotPos);
-        noteRight = CreatePreviewNote(customNote.NoteRight, transform, rightArrowPos);
-        noteDotRight = CreatePreviewNote(customNote.NoteDotRight, transform, rightDotPos);
-        noteBomb = CreatePreviewNote(customNote.NoteBomb, transform, bombPos);
+        noteLeft = CreatePreviewNote(customNote.Left.NoteArrow, transform, leftArrowPos);
+        noteDotLeft = CreatePreviewNote(customNote.Left.NoteDot, transform, leftDotPos);
+        noteRight = CreatePreviewNote(customNote.Right.NoteArrow, transform, rightArrowPos);
+        noteDotRight = CreatePreviewNote(customNote.Right.NoteDot, transform, rightDotPos);
+        noteBomb = CreatePreviewNote(customNote.Bomb, transform, bombPos);
 
         // Fake the Note Dots if no CustomNote Dot existed in the CustomNote
         if (noteLeft && !noteDotLeft)
         {
-            noteDotLeft = CreatePreviewNote(customNote.NoteLeft, transform, leftDotPos);
+            noteDotLeft = CreatePreviewNote(customNote.Left.NoteArrow, transform, leftDotPos);
         }
         if (noteRight && !noteDotRight)
         {
-            noteDotRight = CreatePreviewNote(customNote.NoteRight, transform, rightDotPos);
+            noteDotRight = CreatePreviewNote(customNote.Right.NoteArrow, transform, rightDotPos);
         }
 
         // Add arrows to arrow-less notes
-        if (!customNote.Descriptor.DisableBaseNoteArrows && fakeNoteArrows != null)
+        if (!customNote.HasArrows && fakeNoteArrows != null && noteLeft && noteRight)
         {
-            if (noteLeft && noteRight)
-            {
-                AddNoteArrows(fakeNoteArrows, transform);
-            }
+            AddNoteArrows(fakeNoteArrows, transform);
         }
 
-        if (customNote.Descriptor.UsesNoteColor)
+        if (customNote is CustomNote cn && cn.Descriptor.UsesNoteColor)
         {
-            float colorStrength = customNote.Descriptor.NoteColorStrength;
+            float colorStrength = cn.Descriptor.NoteColorStrength;
             var noteAColor = gameplaySetupViewController.colorSchemesSettings.GetSelectedColorScheme().saberAColor;
             var noteBColor = gameplaySetupViewController.colorSchemesSettings.GetSelectedColorScheme().saberBColor;
         
@@ -250,12 +247,12 @@ internal class NoteListViewController : BSMLResourceViewController
         return previewNoteObject;
     }
 
-    private void AddNoteArrows(CustomNote customNote, Transform transform)
+    private void AddNoteArrows(ICustomNote customNote, Transform transform)
     {
-        fakeLeftArrow = CreatePreviewNote(customNote.NoteLeft, transform, leftArrowPos);
-        fakeLeftDot = CreatePreviewNote(customNote.NoteDotLeft, transform, leftDotPos);
-        fakeRightArrow = CreatePreviewNote(customNote.NoteRight, transform, rightArrowPos);
-        fakeRightDot = CreatePreviewNote(customNote.NoteDotRight, transform, rightDotPos);
+        fakeLeftArrow = CreatePreviewNote(customNote.Left.NoteArrow, transform, leftArrowPos);
+        fakeLeftDot = CreatePreviewNote(customNote.Left.NoteDot, transform, leftDotPos);
+        fakeRightArrow = CreatePreviewNote(customNote.Right.NoteArrow, transform, rightArrowPos);
+        fakeRightDot = CreatePreviewNote(customNote.Right.NoteDot, transform, rightDotPos);
     }
 
     private void PositionPreviewNote(Vector3 vector, GameObject noteObject)
