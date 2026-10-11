@@ -12,16 +12,16 @@ internal class NotePreviewViewController : BSMLResourceViewController
 
     [UIComponent("error-description")] private readonly TextPageScrollView errorDescription = null!;
 
-    public void OnNoteWasChanged(CustomNote customNote)
+    public void OnNoteWasChanged(CustomNoteData customNote)
     {
-        if (string.IsNullOrWhiteSpace(customNote.ErrorMessage))
+        if (string.IsNullOrWhiteSpace(customNote.Metadata.ErrorMessage))
         {
             errorDescription.gameObject.SetActive(false);
             return;
         }
 
         errorDescription.gameObject.SetActive(true);
-        errorDescription.SetText($"{customNote.Descriptor?.NoteName}:\n\n{Utils .SafeUnescape(customNote
-            .ErrorMessage)}");
+        errorDescription.SetText($"{customNote.Metadata.Info.Name}:\n\n" +
+                                 $"{Utils .SafeUnescape(customNote.Metadata.ErrorMessage)}");
     }
 }

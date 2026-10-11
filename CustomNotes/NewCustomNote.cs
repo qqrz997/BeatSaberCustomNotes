@@ -2,14 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using AssetComponents.Components.Notes;
 using AssetComponents.Models;
 using CustomNotes.Managers;
 using CustomNotes.Utilities;
 using Newtonsoft.Json;
 using UnityEngine;
-using Object = UnityEngine.Object;
 using NNoteDescriptor = AssetComponents.Components.Notes.NoteDescriptor;
+using Object = UnityEngine.Object;
 
 namespace CustomNotes.Models;
 

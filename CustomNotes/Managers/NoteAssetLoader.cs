@@ -2,38 +2,39 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using CustomNotes.Models;
 using IPA.Utilities;
+using SiraUtil.Zenject;
 using UnityEngine;
-using Zenject;
-using Utils = CustomNotes.Utilities.Utils;
 using Object = UnityEngine.Object;
+using Utils = CustomNotes.Utilities.Utils;
 
 namespace CustomNotes.Managers;
 
-internal class NoteAssetLoader : IInitializable, IDisposable
+internal class NoteAssetLoader : IAsyncInitializable, IDisposable
 {
     private readonly PluginConfig config;
+    private readonly NoteFileManager noteFileManager;
 
-    private NoteAssetLoader(PluginConfig config)
+    private NoteAssetLoader(PluginConfig config, NoteFileManager noteFileManager)
     {
         this.config = config;
+        this.noteFileManager = noteFileManager;
     }
 
     private bool isLoaded;
+    private NoteFileInfo[] customNoteFiles = [];
 
     public static string NotesDirectory { get; } = Path.Combine(UnityGame.InstallPath, "CustomNotes");
 
-    public List<CustomNote> CustomNoteObjects { get; private set; } = [];
-    public List<string> CustomNoteFiles { get; private set; } = [];
-
-    public int SelectedNoteIdx { get; set; }
-    public bool CustomNoteSelected => SelectedNoteIdx != 0;
+    public Dictionary<string, CustomNoteData> LoadedCustomNotes { get; private set; } = [];
 
     /// <summary>
     /// Load all CustomNotes 
     /// </summary>
-    public void Initialize()
+    public async Task InitializeAsync(CancellationToken token)
     {
         if (isLoaded)
         {
@@ -42,15 +43,12 @@ internal class NoteAssetLoader : IInitializable, IDisposable
 
         Directory.CreateDirectory(NotesDirectory);
 
-        CustomNoteFiles = Utils
-            .GetFileNames(NotesDirectory, ["*.bloq", "*.note"], SearchOption.AllDirectories, true)
-            .ToList();
-        Plugin.Log.Notice($"{CustomNoteFiles.Count} external notes found. Preparing to load.");
+        customNoteFiles = await noteFileManager.ReloadAllFiles(token, null);
+        Plugin.Log.Notice($"{customNoteFiles.Length} external notes found. Preparing to load.");
             
-        CustomNoteObjects = LoadCustomNotes(CustomNoteFiles);
-        Plugin.Log.Notice($"{CustomNoteObjects.Count - 1} total custom notes loaded.");
+        LoadedCustomNotes = LoadCustomNotes(customNoteFiles).ToDictionary(x => x.Metadata.File.Hash);
+        Plugin.Log.Notice($"{LoadedCustomNotes.Count} total custom notes loaded.");
 
-        SelectedNoteIdx = GetSelectedNoteIndex();
         isLoaded = true;
     }
 
@@ -59,137 +57,117 @@ internal class NoteAssetLoader : IInitializable, IDisposable
     /// </summary>
     public void Dispose()
     {
-        foreach (var customNote in CustomNoteObjects)
-        {
-            customNote.Destroy();
-        }
+        foreach (var (_, customNote) in LoadedCustomNotes)
+            customNote.Dispose();
+        LoadedCustomNotes.Clear();
         isLoaded = false;
-        SelectedNoteIdx = 0;
-        CustomNoteObjects.Clear();
-        CustomNoteFiles.Clear();
     }
 
     /// <summary>
     /// Reload all CustomNotes
     /// </summary>
-    internal void Reload()
+    internal async void Reload()
     {
         Plugin.Log.Debug("Reloading the NoteAssetLoader");
 
         Dispose();
-        Initialize();
+        await InitializeAsync(CancellationToken.None);
     }
 
     private int GetSelectedNoteIndex()
     {
-        if (string.IsNullOrWhiteSpace(config.LastNote))
+        if (!LoadedCustomNotes.ContainsKey(config.LastNote))
         {
             return 0;
         }
-            
-        for (int i = 0; i < CustomNoteObjects.Count; i++)
+
+        int i = 0;
+        foreach (var (_, customNote) in LoadedCustomNotes)
         {
-            if (CustomNoteObjects[i].FileName == config.LastNote)
-            {
+            if (customNote.Metadata.File.Hash == config.LastNote)
                 return i;
-            }
+            i++;
         }
             
         return 0;
-    }
-    
-    public static ICustomNote LoadInternal(byte[] noteData, string name)
-    {
-        try
-        {
-            if (noteData is null or []) throw new ArgumentNullException(nameof(noteData), "noteData is null.");
-            if (name is null or []) throw new ArgumentNullException(nameof(name), "note name is null.");
-            
-            var assetBundle = AssetBundle.LoadFromMemory(noteData);
-            return LoadFromBundle(assetBundle, name);
-        }
-        catch (Exception ex)
-        {
-            Plugin.Log.Warn("Problem encountered getting the AssetBundle from a resource");
-            Plugin.Log.Warn(ex);
-
-            return new CustomNote("DefaultNotes",
-                $@"File: 'internalResource\\{name}'" +
-                "\n\nAn internal asset has failed to load." +
-                "\n\nThis shouldn't have happened and should be reported!" +
-                " Remember to include the log related to this incident.");
-        }
     }
         
     public static GameObject LoadNotePrefab(AssetBundle assetBundle) => 
         assetBundle.LoadAsset<GameObject>("assets/_customnote.prefab");
 
-    private static List<CustomNote> LoadCustomNotes(IEnumerable<string> customNoteFiles) => 
-        customNoteFiles.Select(LoadCustomNote).Prepend(CustomNote.Default).ToList();
+    private static IEnumerable<CustomNoteData> LoadCustomNotes(IEnumerable<NoteFileInfo> customNoteFiles) => 
+        customNoteFiles.Select(LoadCustomNote);
     
-    private static CustomNote LoadCustomNote(string fileName)
+    private static CustomNoteData LoadCustomNote(NoteFileInfo file)
     {
         try
         {
-            var filePath = Path.Combine(NotesDirectory, fileName);
-            var assetBundle = AssetBundle.LoadFromFile(filePath);
-
-            return LoadFromBundle(assetBundle, fileName);
+            var assetBundle = AssetBundle.LoadFromFile(file.FileInfo.FullName);
+            return LoadFromBundle(assetBundle, file);
         }
         catch (Exception ex)
         {
-            Plugin.Log.Warn($"Problem encountered when loading '{Path.GetFileNameWithoutExtension(fileName)}'");
+            Plugin.Log.Warn($"Problem encountered when loading '{file.FileInfo.Name}'");
             Plugin.Log.Warn(ex);
 
-            return new CustomNote("DefaultNotes",
-                $"File: '{fileName}'" +
-                "\n\nThis file failed to load." +
-                "\n\nThis may have been caused by having duplicated files, another note with the" +
-                " same name already exists or that the custom note is simply just broken." +
-                "\n\nThe best thing is probably just to delete it!");
+            var message = $"File: '{file.FileInfo.Name}'" +
+                          "\n\nThis file failed to load." +
+                          "\n\nThis may have been caused by having duplicated files, another note with the" +
+                          " same name already exists or that the custom note is simply just broken." +
+                          "\n\nThe best thing is probably just to delete it!";
+            return CustomNoteData.Error(file, message);
         }
     }
 
-    private static CustomNote LoadFromBundle(AssetBundle assetBundle, string fileName)
+    private static CustomNoteData LoadFromBundle(AssetBundle assetBundle, NoteFileInfo file)
     {
         var noteObject = LoadNotePrefab(assetBundle);
 
         var descriptor = noteObject.GetComponent<NoteDescriptor>();
         descriptor.Icon ??= Utils.GetDefaultCustomIcon();
 
-        var noteLeft = noteObject.transform.Find("NoteLeft").gameObject;
-        var noteRight = noteObject.transform.Find("NoteRight").gameObject;
+        var noteArrowLeft = noteObject.transform.Find("NoteLeft").gameObject;
+        var noteArrowRight = noteObject.transform.Find("NoteRight").gameObject;
         var noteDotLeftTransform = noteObject.transform.Find("NoteDotLeft");
         var noteDotRightTransform = noteObject.transform.Find("NoteDotRight");
-        var noteDotLeft = noteDotLeftTransform != null ? noteDotLeftTransform.gameObject : noteLeft;
-        var noteDotRight = noteDotRightTransform != null ? noteDotRightTransform.gameObject : noteRight;
+        var noteDotLeft = noteDotLeftTransform != null ? noteDotLeftTransform.gameObject : noteArrowLeft;
+        var noteDotRight = noteDotRightTransform != null ? noteDotRightTransform.gameObject : noteArrowRight;
         var noteBomb = noteObject.transform.Find("NoteBomb")?.gameObject;
 
-        var burstSliderLeft = GetBurstSlider(noteObject, noteDotLeft, "BurstSliderLeft");
-        var burstSliderRight = GetBurstSlider(noteObject, noteDotRight, "BurstSliderRight");
+        var chainSegmentLeft = GetBurstSlider(noteObject, noteDotLeft, "BurstSliderLeft");
+        var chainSegmentRight = GetBurstSlider(noteObject, noteDotRight, "BurstSliderRight");
 
         var burstSliderHeadLeftT = noteObject.transform.Find("BurstSliderHeadLeft");
         var burstSliderHeadRightT = noteObject.transform.Find("BurstSliderHeadRight");
-        var burstSliderHeadLeft = burstSliderHeadLeftT != null ? burstSliderHeadLeftT.gameObject : noteLeft;
-        var burstSliderHeadRight = burstSliderHeadRightT != null ? burstSliderHeadRightT.gameObject : noteRight;
+        var chainArrowLeft = burstSliderHeadLeftT != null ? burstSliderHeadLeftT.gameObject : noteArrowLeft;
+        var chainArrowRight = burstSliderHeadRightT != null ? burstSliderHeadRightT.gameObject : noteArrowRight;
         
         var burstSliderHeadDotLeftT = noteObject.transform.Find("BurstSliderHeadDotLeft");
         var burstSliderHeadDotRightT = noteObject.transform.Find("BurstSliderHeadDotRight");
-        var burstSliderHeadDotLeft = 
+        var chainDotLeft = 
             burstSliderHeadDotLeftT != null ? burstSliderHeadDotLeftT.gameObject 
-            : burstSliderHeadLeft != null ? burstSliderHeadLeft.gameObject 
+            : chainArrowLeft != null ? chainArrowLeft.gameObject 
             : noteDotLeft;
-        var burstSliderHeadDotRight = 
+        var chainDotRight = 
             burstSliderHeadDotRightT != null ? burstSliderHeadDotRightT.gameObject 
-            : burstSliderHeadRight != null ? burstSliderHeadRight.gameObject 
+            : chainArrowRight != null ? chainArrowRight.gameObject 
             : noteDotRight;
 
-        return new CustomNote(fileName,
-            assetBundle,
-            descriptor,
-            new(noteLeft, noteDotLeft, burstSliderHeadLeft, burstSliderHeadDotLeft, burstSliderLeft),
-            new(noteRight, noteDotRight, burstSliderHeadRight, burstSliderHeadDotRight, burstSliderRight),
-            noteBomb);
+        var noteInfo = new NoteInfo(descriptor.NoteName, descriptor.AuthorName, descriptor.Icon);
+        var metadata = new NoteMetadata(file, noteInfo, string.Empty);
+        
+        var leftPrefabs = new NotePrefabs(
+            noteArrowLeft, noteDotLeft, chainArrowLeft, chainDotLeft, chainSegmentLeft, 
+            !descriptor.DisableBaseNoteArrows, descriptor.NoteColorStrength);
+        
+        var rightPrefabs = new NotePrefabs(
+            noteArrowRight, noteDotRight, chainArrowRight, chainDotRight, chainSegmentRight, 
+            !descriptor.DisableBaseNoteArrows, descriptor.NoteColorStrength);
+        
+        var customNotePrefab = new CustomNotePrefab(
+            leftPrefabs, rightPrefabs, noteBomb, descriptor.UsesNoteColor, descriptor.NoteColorStrength);
+        
+        return new(assetBundle, metadata, customNotePrefab);
     }
     
     private static GameObject GetBurstSlider(GameObject prefab, GameObject dotPrefab, string sliderPrefabName)

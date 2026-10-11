@@ -1,7 +1,6 @@
 ﻿using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
 using CustomNotes.Models;
-using CustomNotes.Utilities;
 using HMUI;
 using UnityEngine;
 using Zenject;
@@ -19,7 +18,7 @@ internal class NoteDetailsViewController : BSMLResourceViewController
     [UIComponent("note-description")] private readonly TextPageScrollView noteDescription = null;
     [UIObject("disable-april-fools")] private readonly GameObject disableAprilFoolsCheckbox = null!;
 
-    public void OnNoteWasChanged(CustomNote customNote)
+    public void OnNoteWasChanged(CustomNoteData customNote)
     {
         // todo remove descriptions
         noteDescription.SetText("custom asset description is currently deprecated");

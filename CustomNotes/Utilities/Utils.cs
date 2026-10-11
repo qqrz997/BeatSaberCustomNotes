@@ -1,7 +1,7 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEngine;
-using System.Collections.Generic;
 using static IPA.Loader.PluginManager;
 using static SongCore.Collections;
 
@@ -9,62 +9,6 @@ namespace CustomNotes.Utilities;
 
 internal static class Utils
 {
-    /// <summary>
-    /// Colorize a Note based on a ColorManager and CustomNote configuration
-    /// </summary>
-    /// <param name="color">Color</param>
-    /// <param name="colorStrength">Color strength</param>
-    /// <param name="noteObject">Note to colorize</param>
-    public static void ColorizeCustomNote(Color color, float colorStrength, GameObject noteObject)
-    {
-        if (noteObject == null)
-        {
-            return;
-        }
-
-        var noteColor = color * colorStrength;
-        var childTransforms = noteObject.GetComponentsInChildren<Transform>();
-            
-        foreach (var transform in childTransforms)
-        {
-            if (transform.GetComponent<DisableNoteColorOnGameobject>() != null)
-            {
-                continue;
-            }
-
-            if (transform.TryGetComponent<Renderer>(out var renderer))
-            {
-                renderer.material.SetColor(MaterialProps.Color, noteColor);
-            }
-        }
-            
-        if (noteObject.TryGetComponent<MaterialPropertyBlockController>(out var materialPropertyBlockController))
-        {
-            // Set the color of material property block controllers, for the replaced note shader
-            materialPropertyBlockController.materialPropertyBlock.SetColor(MaterialProps.Color, noteColor);
-            materialPropertyBlockController.ApplyChanges();
-        }
-    }
-
-    /// <summary>
-    /// Adds a MaterialPropertyBlockController to the root of the gameObject. Only selects renderers with specific shaders.
-    /// </summary>
-    /// <param name="gameObject"></param>
-    public static void AddMaterialPropertyBlockController(GameObject gameObject)
-    {
-        var rendererList = gameObject.GetComponentsInChildren<Renderer>()
-            .Where(renderer => 
-                renderer.GetComponent<DisableNoteColorOnGameobject>() == null
-                && renderer.material.shader.name == "Custom/NoteHD")
-            .ToArray();
-
-        if (rendererList.Length > 0)
-        {
-            var newController = gameObject.AddComponent<MaterialPropertyBlockController>();
-            newController._renderers = rendererList;
-        }
-    }
-
     public static byte[] LoadFromResource(string resourcePath)
     {
         using var stream = Plugin.ExecutingAssembly.GetManifestResourceStream(resourcePath);

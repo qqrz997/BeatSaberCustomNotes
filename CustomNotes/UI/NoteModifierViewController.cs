@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Components.Settings;
 using BeatSaberMarkupLanguage.GameplaySetup;
 using CustomNotes.Managers;
+using CustomNotes.Models;
 using Zenject;
 
 namespace CustomNotes.UI;
@@ -55,26 +55,20 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
     public void SetupList()
     {
         notesList.Clear();
-        foreach (var customNote in noteAssetLoader.CustomNoteObjects)
+        notesList.Add("Default");
+        foreach (var (_, customNote) in noteAssetLoader.LoadedCustomNotes)
         {
-            notesList.Add(customNote.Descriptor.NoteName);
+            notesList.Add(new DropdownListItem(customNote));
         }
 
-        if (notesDropdown != null)
-        {
-            notesDropdown.Values = notesList;
-            notesDropdown.UpdateChoices();
-        }
+        notesDropdown.Values = notesList;
+        notesDropdown.UpdateChoices();
     }
 
     [UIAction("note-selected")]
-    public void OnSelect(string selectedCell)
+    public void OnSelect(object selectedCell)
     {
-        int selectedNote = noteAssetLoader.CustomNoteObjects
-            .ToList()
-            .FindIndex(note => note.Descriptor.NoteName == selectedCell);
-        noteAssetLoader.SelectedNoteIdx = selectedNote;
-        config.LastNote = noteAssetLoader.CustomNoteObjects[selectedNote].FileName;
+        config.LastNote = selectedCell is DropdownListItem item ? item.NoteData.Metadata.File.Hash : null;
     }
 
     [UIValue("mod-enabled")]
@@ -88,11 +82,15 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
         }
     }
 
-    [UIValue("selected-note")]
-    private string SelectedNote =>
-        // Only select if valid bloq is loaded
-        noteAssetLoader.CustomNoteObjects[noteAssetLoader.SelectedNoteIdx].ErrorMessage == null ? "Default" 
-            : noteAssetLoader.CustomNoteObjects[noteAssetLoader.SelectedNoteIdx].Descriptor.NoteName;
+    [UIValue("selected-note")] 
+    private object DropdownSelection => GetSelectedNote();
+    private object GetSelectedNote()
+    {
+        foreach (var value in notesDropdown.Values)
+            if (value is DropdownListItem item && item.NoteData.Metadata.File.Hash == config.LastNote)
+                return value;
+        return "Default";
+    }
 
     [UIValue("note-size")]
     public float NoteSize
@@ -125,5 +123,12 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
             config.AutoDisable = value;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AutoDisable)));
         }
+    }
+    
+    private class DropdownListItem
+    {
+        public DropdownListItem(CustomNoteData noteData) => NoteData = noteData;
+        public CustomNoteData NoteData { get; }
+        public override string ToString() => NoteData.Metadata.Info.Name;
     }
 }

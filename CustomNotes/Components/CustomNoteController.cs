@@ -3,7 +3,6 @@ using CustomNotes.Managers;
 using CustomNotes.Models;
 using CustomNotes.Utilities;
 using SiraUtil.Interfaces;
-using SiraUtil.Objects;
 using UnityEngine;
 using Zenject;
 
@@ -12,24 +11,23 @@ namespace CustomNotes.Components;
 internal class CustomNoteController : MonoBehaviour, IColorable, INoteControllerNoteWasCutEvent, INoteControllerNoteWasMissedEvent, INoteControllerDidInitEvent, INoteControllerNoteDidDissolveEvent
 {
     private PluginConfig config = null!;
-    private CustomNote customNote = null!;
+    private CustomNoteData customNote = null!;
 
     private Transform noteCube = null!;
     private GameNoteController gameNoteController = null!;
     private CustomNoteColorNoteVisuals customNoteColorNoteVisuals = null!;
 
-    private GameObject activeNote;
-    private SiraPrefabContainer siraContainer;
-    private SiraPrefabContainer.Pool activePool;
+    private NoteInstanceContainer activeContainer;
+    private NoteInstanceContainer.Pool activePool;
 
-    private SiraPrefabContainer.Pool leftDotNotePool;
-    private SiraPrefabContainer.Pool rightDotNotePool;
-    private SiraPrefabContainer.Pool leftArrowNotePool;
-    private SiraPrefabContainer.Pool rightArrowNotePool;
-    private SiraPrefabContainer.Pool leftBurstSliderHeadPool;
-    private SiraPrefabContainer.Pool rightBurstSliderHeadPool;
-    private SiraPrefabContainer.Pool leftBurstSliderHeadDotPool;
-    private SiraPrefabContainer.Pool rightBurstSliderHeadDotPool;
+    private NoteInstanceContainer.Pool leftDotNotePool;
+    private NoteInstanceContainer.Pool rightDotNotePool;
+    private NoteInstanceContainer.Pool leftArrowNotePool;
+    private NoteInstanceContainer.Pool rightArrowNotePool;
+    private NoteInstanceContainer.Pool leftBurstSliderHeadPool;
+    private NoteInstanceContainer.Pool rightBurstSliderHeadPool;
+    private NoteInstanceContainer.Pool leftBurstSliderHeadDotPool;
+    private NoteInstanceContainer.Pool rightBurstSliderHeadDotPool;
 
     public Color Color
     {
@@ -40,17 +38,19 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
     [Inject]
     internal void Init(
         PluginConfig config,
-        NoteAssetLoader noteAssetLoader,
-        [Inject(Id = Protocol.LeftArrowPool)] SiraPrefabContainer.Pool leftArrowNotePool,
-        [Inject(Id = Protocol.RightArrowPool)] SiraPrefabContainer.Pool rightArrowNotePool,
-        [InjectOptional(Id = Protocol.LeftDotPool)] SiraPrefabContainer.Pool leftDotNotePool,
-        [InjectOptional(Id = Protocol.RightDotPool)] SiraPrefabContainer.Pool rightDotNotePool,
-        [Inject(Id = Protocol.LeftBurstSliderHeadPool)] SiraPrefabContainer.Pool leftBurstSliderHeadPool,
-        [Inject(Id = Protocol.RightBurstSliderHeadPool)] SiraPrefabContainer.Pool rightBurstSliderHeadPool,
-        [Inject(Id = Protocol.LeftBurstSliderHeadDotPool)] SiraPrefabContainer.Pool leftBurstSliderHeadDotPool,
-        [Inject(Id = Protocol.RightBurstSliderHeadDotPool)] SiraPrefabContainer.Pool rightBurstSliderHeadDotPool)
+        CustomNoteData customNote,
+        [Inject(Id = Protocol.LeftArrowPool)] NoteInstanceContainer.Pool leftArrowNotePool,
+        [Inject(Id = Protocol.RightArrowPool)] NoteInstanceContainer.Pool rightArrowNotePool,
+        [InjectOptional(Id = Protocol.LeftDotPool)] NoteInstanceContainer.Pool leftDotNotePool,
+        [InjectOptional(Id = Protocol.RightDotPool)] NoteInstanceContainer.Pool rightDotNotePool,
+        [Inject(Id = Protocol.LeftBurstSliderHeadPool)] NoteInstanceContainer.Pool leftBurstSliderHeadPool,
+        [Inject(Id = Protocol.RightBurstSliderHeadPool)] NoteInstanceContainer.Pool rightBurstSliderHeadPool,
+        [Inject(Id = Protocol.LeftBurstSliderHeadDotPool)] NoteInstanceContainer.Pool leftBurstSliderHeadDotPool,
+        [Inject(Id = Protocol.RightBurstSliderHeadDotPool)] NoteInstanceContainer.Pool rightBurstSliderHeadDotPool)
     {
         this.config = config;
+        this.customNote = customNote;
+        
         this.leftArrowNotePool = leftArrowNotePool;
         this.rightArrowNotePool = rightArrowNotePool;
 
@@ -61,8 +61,6 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
         this.rightBurstSliderHeadPool = rightBurstSliderHeadPool;
         this.leftBurstSliderHeadDotPool = leftBurstSliderHeadDotPool;
         this.rightBurstSliderHeadDotPool = rightBurstSliderHeadDotPool;
-
-        customNote = noteAssetLoader.CustomNoteObjects[noteAssetLoader.SelectedNoteIdx];
 
         gameNoteController = GetComponent<GameNoteController>();
         customNoteColorNoteVisuals = gameObject.GetComponent<CustomNoteColorNoteVisuals>();
@@ -90,16 +88,13 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
 
     public void HandleNoteControllerNoteWasMissed(NoteController noteController)
     {
-        if (siraContainer != null)
-        {
-            siraContainer.transform.SetParent(null);
+        activeContainer.transform.SetParent(null);
             
-            if (noteController.noteData.colorType != ColorType.None)
-            {
-                siraContainer.Prefab.SetActive(false);
-                activePool?.Despawn(siraContainer);
-                siraContainer = null;
-            }
+        if (noteController.noteData.colorType != ColorType.None)
+        {
+            activeContainer.gameObject.SetActive(false);
+            activePool?.Despawn(activeContainer);
+            activeContainer = null;
         }
     }
 
@@ -120,40 +115,36 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
         }
     }
 
-    private void SpawnThenParent(SiraPrefabContainer.Pool noteModelPool)
+    private void SpawnThenParent(NoteInstanceContainer.Pool noteModelPool)
     {
         activePool = noteModelPool;
-        siraContainer = noteModelPool.Spawn();
-        
-        activeNote = siraContainer.Prefab;
-        activeNote.SetLayerRecursively(config.HmdOnly ? VisibilityLayer.HmdOnlyAndReflected : VisibilityLayer.Note);
-        activeNote.transform.localPosition = Vector3.zero;
-        activeNote.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * config.GetNoteSize();
-        activeNote.SetActive(true);
-        
-        siraContainer.transform.SetParent(noteCube);
-        siraContainer.transform.localPosition = Vector3.zero;
-        siraContainer.transform.localRotation = Quaternion.identity;
-        siraContainer.transform.localScale = Vector3.one;
-    }
+        activeContainer = noteModelPool.Spawn();
 
-    protected void SetActiveThenColor(GameObject note, Color color)
-    {
-        note.SetActive(true);
-        if (customNote.Descriptor.UsesNoteColor)
-        {
-            SetColor(color, true);
-        }
+        var go = activeContainer.instance.gameObject;
+        go.SetLayerRecursively(config.HmdOnly ? VisibilityLayer.HmdOnlyAndReflected : VisibilityLayer.Note);
+        go.transform.localPosition = Vector3.zero;
+        go.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * config.GetNoteSize();
+        go.SetActive(true);
+        
+        activeContainer.transform.SetParent(noteCube);
+        activeContainer.transform.localPosition = Vector3.zero;
+        activeContainer.transform.localRotation = Quaternion.identity;
+        activeContainer.transform.localScale = Vector3.one;
     }
 
     private void Visuals_DidInit(ColorNoteVisuals visuals, NoteControllerBase noteController)
     {
-        SetActiveThenColor(activeNote, ((CustomNoteColorNoteVisuals)visuals)._noteColor);
+        activeContainer.instance.gameObject.SetActive(true);
+        if (customNote.Prefab.Colorable)
+        {
+            SetColor(visuals._noteColor, true);
+        }
+
         // Hide certain parts of the default note which is not required
         if (!config.HmdOnly)
         {
             customNoteColorNoteVisuals.SetBaseGameVisualsLayer(VisibilityLayer.Note);
-            if (customNote.Descriptor.DisableBaseNoteArrows)
+            if (!activeContainer.instance.UseBaseArrows)
             {
                 customNoteColorNoteVisuals.TurnOffVisuals();
             }
@@ -167,7 +158,7 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
 
         // HMDOnly code
         customNoteColorNoteVisuals.SetBaseGameVisualsLayer(VisibilityLayer.DesktopOnlyAndReflected);
-        if (!customNote.Descriptor.DisableBaseNoteArrows)
+        if (activeContainer.instance.UseBaseArrows)
         {
             if (!config.NoteSizeEquals(1))
             {
@@ -204,11 +195,10 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
 
     public void SetColor(Color color, bool updateMatBlocks)
     {
-        if (activeNote != null)
-        {
-            customNoteColorNoteVisuals.SetColor(color, updateMatBlocks);
-            Utils.ColorizeCustomNote(color, customNote.Descriptor.NoteColorStrength, activeNote);
-        }
+        if (activeContainer == null) return;
+        customNoteColorNoteVisuals.SetColor(color, updateMatBlocks);
+        Plugin.Log.Info($"color: {color}, mult: {activeContainer.instance.ColorMultiplier}");
+        activeContainer.instance.SetColor(color * activeContainer.instance.ColorMultiplier);
     }
 
     public void HandleNoteControllerNoteWasCut(NoteController nc, in NoteCutInfo _)

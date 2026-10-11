@@ -1,10 +1,11 @@
+using System.Reflection;
+using CustomNotes.Components;
 using CustomNotes.Managers;
+using CustomNotes.Models;
 using CustomNotes.Utilities;
 using SiraUtil.Extras;
 using SiraUtil.Objects;
 using SiraUtil.Objects.Beatmap;
-using System.Reflection;
-using CustomNotes.Components;
 using UnityEngine;
 using Zenject;
 
@@ -27,11 +28,10 @@ internal class PlayerInstaller : Installer
 
     public override void InstallBindings()
     {
-        if (!config.Enabled || !noteAssetLoader.CustomNoteSelected)
+        if (!config.Enabled || !noteAssetLoader.LoadedCustomNotes.TryGetValue(config.LastNote, out var customNote))
         {
             return;
         }
-            
         bool ghostNotes = gameplayCoreSceneSetupData.gameplayModifiers.ghostNotes;
         bool disappearingArrows = gameplayCoreSceneSetupData.gameplayModifiers.disappearingArrows;
         bool smallCubes = gameplayCoreSceneSetupData.gameplayModifiers.smallCubes;
@@ -45,94 +45,93 @@ internal class PlayerInstaller : Installer
         bool autoDisable = config.AutoDisable && isIncompatibleMode;
             
         bool disable = autoDisable || (isMultiplayer && (ghostNotes || disappearingArrows));
-
-        Plugin.Log.Debug($"ghostNotes: {ghostNotes}\n" +
-                         $"disappearingArrows: {disappearingArrows}\n" +
-                         $"smallCubes: {smallCubes}\n" +
-                         $"proMode: {proMode}\n" +
-                         $"isMultiplayer: {isMultiplayer}\n" +
-                         $"isNoodle: {isNoodle}\n" +
-                         $"isIncompatibleMode: {isIncompatibleMode}\n" +
-                         $"autoDisable: {autoDisable}\n" +
-                         $"disable: {disable}\n");
             
         if (disable)
         {
-            Plugin.Log.Debug("CustomNotes is disabled");
+            Plugin.Log.Debug("CustomNotes is disabled\n" +
+                            $"ghostNotes: {ghostNotes}\n" +
+                            $"disappearingArrows: {disappearingArrows}\n" +
+                            $"smallCubes: {smallCubes}\n" +
+                            $"proMode: {proMode}\n" +
+                            $"isMultiplayer: {isMultiplayer}\n" +
+                            $"isNoodle: {isNoodle}\n" +
+                            $"autoDisable: {autoDisable}");
             return;
         }
 
         Container.BindInterfacesTo<WatermarkManager>().AsSingle();
         Container.BindInterfacesTo<ScoreSubmissionManager>().AsSingle();
-            
-        var customNote = noteAssetLoader.CustomNoteObjects[noteAssetLoader.SelectedNoteIdx];
 
+        Container.BindInstance(customNote).AsSingle();
+        
+        var prefab = customNote.Prefab;
+        
         #region Note Setup
+
+        var leftNoteArrow = prefab.Left.NoteArrow.Instantiate();
+        var rightNoteArrow = prefab.Right.NoteArrow.Instantiate();
+        var leftNoteDot =  prefab.Left.NoteDot.Instantiate();
+        var rightNoteDot =  prefab.Right.NoteDot.Instantiate();
 
         Container.RegisterRedecorator((RedecoratorRegistration)(proMode
             ? new ProModeNoteRegistration(RedecorateNote, DecorationPriority)
             : new BasicNoteRegistration(RedecorateNote, DecorationPriority)));
                 
         MaterialSwapper.GetMaterials();
-        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.Left.NoteArrow);
-        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.Right.NoteArrow);
-        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.Left.NoteDot);
-        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.Right.NoteDot);
-        Utils.AddMaterialPropertyBlockController(customNote.Left.NoteArrow);
-        Utils.AddMaterialPropertyBlockController(customNote.Right.NoteArrow);
-        Utils.AddMaterialPropertyBlockController(customNote.Left.NoteDot);
-        Utils.AddMaterialPropertyBlockController(customNote.Right.NoteDot);
+        MaterialSwapper.ReplaceMaterialsForGameObject(leftNoteArrow.gameObject);
+        MaterialSwapper.ReplaceMaterialsForGameObject(rightNoteArrow.gameObject);
+        MaterialSwapper.ReplaceMaterialsForGameObject(leftNoteDot.gameObject);
+        MaterialSwapper.ReplaceMaterialsForGameObject(rightNoteDot.gameObject);
 
-        Container.BindMemoryPool<SiraPrefabContainer, SiraPrefabContainer.Pool>()
+        Container.BindMemoryPool<NoteInstanceContainer, NoteInstanceContainer.Pool>()
             .WithId(Protocol.LeftArrowPool)
             .WithInitialSize(25)
-            .FromComponentInNewPrefab(NotePrefabContainer(customNote.Left.NoteArrow));
+            .FromComponentInNewPrefab(NoteInstanceContainer.Create(leftNoteArrow));
             
-        Container.BindMemoryPool<SiraPrefabContainer, SiraPrefabContainer.Pool>()
+        Container.BindMemoryPool<NoteInstanceContainer, NoteInstanceContainer.Pool>()
             .WithId(Protocol.RightArrowPool)
             .WithInitialSize(25)
-            .FromComponentInNewPrefab(NotePrefabContainer(customNote.Right.NoteArrow));
+            .FromComponentInNewPrefab(NoteInstanceContainer.Create(rightNoteArrow));
             
-        if (customNote.Left.NoteDot != null)
-        {
-            Container.BindMemoryPool<SiraPrefabContainer, SiraPrefabContainer.Pool>()
-                .WithId(Protocol.LeftDotPool)
-                .WithInitialSize(10)
-                .FromComponentInNewPrefab(NotePrefabContainer(customNote.Left.NoteDot));
-        }
+        Container.BindMemoryPool<NoteInstanceContainer, NoteInstanceContainer.Pool>()
+            .WithId(Protocol.LeftDotPool)
+            .WithInitialSize(10)
+            .FromComponentInNewPrefab(NoteInstanceContainer.Create(leftNoteDot));
 
-        if (customNote.Right.NoteDot != null)
-        {
-            Container.BindMemoryPool<SiraPrefabContainer, SiraPrefabContainer.Pool>()
-                .WithId(Protocol.RightDotPool)
-                .WithInitialSize(10)
-                .FromComponentInNewPrefab(NotePrefabContainer(customNote.Right.NoteDot));
-        }
+        Container.BindMemoryPool<NoteInstanceContainer, NoteInstanceContainer.Pool>()
+            .WithId(Protocol.RightDotPool)
+            .WithInitialSize(10)
+            .FromComponentInNewPrefab(NoteInstanceContainer.Create(rightNoteDot));
 
         #endregion
 
         #region Bomb Setup
 
+        var bomb = prefab.Bomb.Instantiate();
+        
         Container.RegisterRedecorator(new BombNoteRegistration(bombNoteController =>
         {
             bombNoteController.gameObject.AddComponent<CustomBombController>();
             return bombNoteController;
         }, DecorationPriority));
 
-        if (customNote.Bomb != null)
+        if (bomb != null)
         {
             MaterialSwapper.GetMaterials();
-            MaterialSwapper.ReplaceMaterialsForGameObject(customNote.Bomb);
-            Container.BindMemoryPool<SiraPrefabContainer, SiraPrefabContainer.Pool>()
+            MaterialSwapper.ReplaceMaterialsForGameObject(bomb.gameObject);
+            Container.BindMemoryPool<NoteInstanceContainer, NoteInstanceContainer.Pool>()
                 .WithId(Protocol.BombPool)
                 .WithInitialSize(10)
-                .FromComponentInNewPrefab(NotePrefabContainer(customNote.Bomb));
+                .FromComponentInNewPrefab(NoteInstanceContainer.Create(bomb));
         }
 
         #endregion
 
         #region Burst Slider Setup
-
+        
+        var leftChainSegment = prefab.Left.ChainSegment.Instantiate();
+        var rightChainSegment = prefab.Right.ChainSegment.Instantiate();
+        
         Container.RegisterRedecorator(new BurstSliderNoteRegistration(burstSliderGameNoteController =>
         {
             burstSliderGameNoteController.gameObject.AddComponent<CustomBurstSliderController>();
@@ -153,22 +152,25 @@ internal class PlayerInstaller : Installer
             return burstSliderGameNoteController;
         }, DecorationPriority));
 
-        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.Left.ChainSegment);
-        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.Right.ChainSegment);
-        Utils.AddMaterialPropertyBlockController(customNote.Left.ChainSegment);
-        Utils.AddMaterialPropertyBlockController(customNote.Right.ChainSegment);
+        MaterialSwapper.ReplaceMaterialsForGameObject(leftChainSegment.gameObject);
+        MaterialSwapper.ReplaceMaterialsForGameObject(rightChainSegment.gameObject);
 
-        Container.BindMemoryPool<SiraPrefabContainer, SiraPrefabContainer.Pool>()
+        Container.BindMemoryPool<NoteInstanceContainer, NoteInstanceContainer.Pool>()
             .WithId(Protocol.LeftBurstSliderPool).WithInitialSize(40)
-            .FromComponentInNewPrefab(NotePrefabContainer(customNote.Left.ChainSegment));
+            .FromComponentInNewPrefab(NoteInstanceContainer.Create(leftChainSegment));
             
-        Container.BindMemoryPool<SiraPrefabContainer, SiraPrefabContainer.Pool>()
+        Container.BindMemoryPool<NoteInstanceContainer, NoteInstanceContainer.Pool>()
             .WithId(Protocol.RightBurstSliderPool).WithInitialSize(40)
-            .FromComponentInNewPrefab(NotePrefabContainer(customNote.Right.ChainSegment));
+            .FromComponentInNewPrefab(NoteInstanceContainer.Create(rightChainSegment));
 
         #endregion
 
         #region Burst Slider Head Setup
+
+        var leftChainArrow = prefab.Left.ChainArrow.Instantiate();
+        var rightChainArrow = prefab.Right.ChainArrow.Instantiate();
+        var leftChainDot = prefab.Left.ChainDot.Instantiate();
+        var rightChainDot = prefab.Right.ChainDot.Instantiate();
 
         Container.RegisterRedecorator(new BurstSliderHeadNoteRegistration(gameNoteController =>
         {
@@ -191,30 +193,26 @@ internal class PlayerInstaller : Installer
             return gameNoteController;
         }, DecorationPriority));
 
-        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.Left.ChainArrow);
-        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.Right.ChainArrow);
-        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.Left.ChainDot);
-        MaterialSwapper.ReplaceMaterialsForGameObject(customNote.Right.ChainDot);
-        Utils.AddMaterialPropertyBlockController(customNote.Left.ChainArrow);
-        Utils.AddMaterialPropertyBlockController(customNote.Right.ChainArrow);
-        Utils.AddMaterialPropertyBlockController(customNote.Left.ChainDot);
-        Utils.AddMaterialPropertyBlockController(customNote.Right.ChainDot);
+        MaterialSwapper.ReplaceMaterialsForGameObject(leftChainArrow.gameObject);
+        MaterialSwapper.ReplaceMaterialsForGameObject(rightChainArrow.gameObject);
+        MaterialSwapper.ReplaceMaterialsForGameObject(leftChainDot.gameObject);
+        MaterialSwapper.ReplaceMaterialsForGameObject(rightChainDot.gameObject);
 
-        Container.BindMemoryPool<SiraPrefabContainer, SiraPrefabContainer.Pool>()
+        Container.BindMemoryPool<NoteInstanceContainer, NoteInstanceContainer.Pool>()
             .WithId(Protocol.LeftBurstSliderHeadPool).WithInitialSize(10)
-            .FromComponentInNewPrefab(NotePrefabContainer(customNote.Left.ChainArrow));
+            .FromComponentInNewPrefab(NoteInstanceContainer.Create(leftChainArrow));
             
-        Container.BindMemoryPool<SiraPrefabContainer, SiraPrefabContainer.Pool>()
+        Container.BindMemoryPool<NoteInstanceContainer, NoteInstanceContainer.Pool>()
             .WithId(Protocol.RightBurstSliderHeadPool).WithInitialSize(10)
-            .FromComponentInNewPrefab(NotePrefabContainer(customNote.Right.ChainArrow));
+            .FromComponentInNewPrefab(NoteInstanceContainer.Create(rightChainArrow));
             
-        Container.BindMemoryPool<SiraPrefabContainer, SiraPrefabContainer.Pool>()
+        Container.BindMemoryPool<NoteInstanceContainer, NoteInstanceContainer.Pool>()
             .WithId(Protocol.LeftBurstSliderHeadDotPool).WithInitialSize(10)
-            .FromComponentInNewPrefab(NotePrefabContainer(customNote.Left.ChainDot));
+            .FromComponentInNewPrefab(NoteInstanceContainer.Create(leftChainDot));
             
-        Container.BindMemoryPool<SiraPrefabContainer, SiraPrefabContainer.Pool>()
+        Container.BindMemoryPool<NoteInstanceContainer, NoteInstanceContainer.Pool>()
             .WithId(Protocol.RightBurstSliderHeadDotPool).WithInitialSize(10)
-            .FromComponentInNewPrefab(NotePrefabContainer(customNote.Right.ChainDot));
+            .FromComponentInNewPrefab(NoteInstanceContainer.Create(rightChainDot));
             
         #endregion
 
@@ -254,12 +252,5 @@ internal class PlayerInstaller : Installer
         Object.Destroy(originalNoteVisuals);
 
         return gameNoteController;
-    }
-
-    private static SiraPrefabContainer NotePrefabContainer(GameObject initialPrefab)
-    {
-        var prefab = new GameObject($"{initialPrefab.name}SiraContainer").AddComponent<SiraPrefabContainer>();
-        prefab.Prefab = initialPrefab;
-        return prefab;
     }
 }

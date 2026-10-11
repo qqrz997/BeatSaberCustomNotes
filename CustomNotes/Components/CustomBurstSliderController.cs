@@ -3,7 +3,6 @@ using CustomNotes.Managers;
 using CustomNotes.Models;
 using CustomNotes.Utilities;
 using SiraUtil.Interfaces;
-using SiraUtil.Objects;
 using UnityEngine;
 using Zenject;
 
@@ -14,27 +13,26 @@ internal class CustomBurstSliderController : MonoBehaviour, IColorable, INoteCon
     private PluginConfig config = null!;
 
     private Transform noteCube = null!;
-    private CustomNote customNote = null!;
+    private CustomNoteData customNote = null!;
     private BurstSliderGameNoteController burstSliderGameNoteController = null!;
     private CustomNoteColorNoteVisuals customNoteColorNoteVisuals = null!;
 
-    private GameObject activeNote;
-    private SiraPrefabContainer siraContainer;
-    private SiraPrefabContainer.Pool activeSliderPool;
-    private SiraPrefabContainer.Pool leftBurstSliderPool;
-    private SiraPrefabContainer.Pool rightBurstSliderPool;
+    private NoteInstanceContainer activeContainer;
+    private NoteInstanceContainer.Pool activeSliderPool;
+    private NoteInstanceContainer.Pool leftBurstSliderPool;
+    private NoteInstanceContainer.Pool rightBurstSliderPool;
 
     [Inject]
     internal void Init(PluginConfig config,
-        NoteAssetLoader noteAssetLoader,
-        [Inject(Id = Protocol.LeftBurstSliderPool)] SiraPrefabContainer.Pool leftBurstSliderPool,
-        [Inject(Id = Protocol.RightBurstSliderPool)] SiraPrefabContainer.Pool rightBurstSliderPool)
+        CustomNoteData customNote,
+        [Inject(Id = Protocol.LeftBurstSliderPool)] NoteInstanceContainer.Pool leftBurstSliderPool,
+        [Inject(Id = Protocol.RightBurstSliderPool)] NoteInstanceContainer.Pool rightBurstSliderPool)
     {
         this.config = config;
+        this.customNote = customNote;
+
         this.leftBurstSliderPool = leftBurstSliderPool;
         this.rightBurstSliderPool = rightBurstSliderPool;
-
-        customNote = noteAssetLoader.CustomNoteObjects[noteAssetLoader.SelectedNoteIdx];
 
         customNoteColorNoteVisuals = gameObject.GetComponent<CustomNoteColorNoteVisuals>();
         customNoteColorNoteVisuals.enabled = true;
@@ -68,15 +66,15 @@ internal class CustomBurstSliderController : MonoBehaviour, IColorable, INoteCon
 
     public void HandleNoteControllerNoteWasMissed(NoteController noteController)
     {
-        if (siraContainer != null)
+        if (activeContainer != null)
         {
-            siraContainer.transform.SetParent(null);
+            activeContainer.transform.SetParent(null);
 
             if (noteController.noteData.colorType != ColorType.None)
             {
-                siraContainer.Prefab.SetActive(false);
-                activeSliderPool?.Despawn(siraContainer);
-                siraContainer = null;
+                activeContainer.gameObject.SetActive(false);
+                activeSliderPool?.Despawn(activeContainer);
+                activeContainer = null;
             }
         }
     }
@@ -84,24 +82,24 @@ internal class CustomBurstSliderController : MonoBehaviour, IColorable, INoteCon
     public void HandleNoteControllerDidInit(NoteControllerBase noteController)
     {
         activeSliderPool = noteController.noteData.colorType == ColorType.ColorA ? leftBurstSliderPool : rightBurstSliderPool;
-        siraContainer = activeSliderPool.Spawn();
+        activeContainer = activeSliderPool.Spawn();
 
-        activeNote = siraContainer.Prefab;
-        activeNote.SetLayerRecursively(config.HmdOnly ? VisibilityLayer.HmdOnlyAndReflected : VisibilityLayer.Note);
-        activeNote.transform.localPosition = Vector3.zero;
-        activeNote.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * config.GetNoteSize();
-        activeNote.SetActive(true);
+        var go = activeContainer.instance.gameObject;
+        go.SetLayerRecursively(config.HmdOnly ? VisibilityLayer.HmdOnlyAndReflected : VisibilityLayer.Note);
+        go.transform.localPosition = Vector3.zero;
+        go.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * config.GetNoteSize();
+        go.gameObject.SetActive(true);
             
-        siraContainer.transform.SetParent(noteCube);
-        siraContainer.transform.localRotation = Quaternion.identity;
-        siraContainer.transform.localScale = Vector3.one;
-        siraContainer.transform.localPosition = Vector3.zero;
+        activeContainer.transform.SetParent(noteCube);
+        activeContainer.transform.localRotation = Quaternion.identity;
+        activeContainer.transform.localScale = Vector3.one;
+        activeContainer.transform.localPosition = Vector3.zero;
     }
 
-    protected void SetActiveThenColor(GameObject note, Color color)
+    protected void SetActiveThenColor(NoteInstance note, Color color)
     {
-        note.SetActive(true);
-        if (customNote.Descriptor.UsesNoteColor)
+        note.gameObject.SetActive(true);
+        if (customNote.Prefab.Colorable)
         {
             SetColor(color, true);
         }
@@ -109,13 +107,13 @@ internal class CustomBurstSliderController : MonoBehaviour, IColorable, INoteCon
 
     private void Visuals_DidInit(ColorNoteVisuals visuals, NoteControllerBase noteController)
     {
-        SetActiveThenColor(activeNote, ((CustomNoteColorNoteVisuals)visuals)._noteColor);
+        SetActiveThenColor(activeContainer.instance, ((CustomNoteColorNoteVisuals)visuals)._noteColor);
             
         // Hide certain parts of the default note which is not required
         if (!config.HmdOnly)
         {
             customNoteColorNoteVisuals.SetBaseGameVisualsLayer(VisibilityLayer.Note);
-            if (customNote.Descriptor.DisableBaseNoteArrows)
+            if (!activeContainer.instance.UseBaseArrows)
             {
                 customNoteColorNoteVisuals.TurnOffVisuals();
             }
@@ -129,7 +127,7 @@ internal class CustomBurstSliderController : MonoBehaviour, IColorable, INoteCon
 
         // HMDOnly code
         customNoteColorNoteVisuals.SetBaseGameVisualsLayer(VisibilityLayer.DesktopOnlyAndReflected);
-        if (!customNote.Descriptor.DisableBaseNoteArrows)
+        if (activeContainer.instance.UseBaseArrows)
         {
             if (!config.NoteSizeEquals(1))
             {
@@ -166,11 +164,9 @@ internal class CustomBurstSliderController : MonoBehaviour, IColorable, INoteCon
 
     public void SetColor(Color color, bool updateMatBlocks)
     {
-        if (activeNote != null)
-        {
-            customNoteColorNoteVisuals.SetColor(color, updateMatBlocks);
-            Utils.ColorizeCustomNote(color, customNote.Descriptor.NoteColorStrength, activeNote);
-        }
+        if (activeContainer == null) return;
+        customNoteColorNoteVisuals.SetColor(color, updateMatBlocks);
+        activeContainer.instance.SetColor(color * activeContainer.instance.ColorMultiplier);
     }
 
     public void HandleNoteControllerNoteWasCut(NoteController nc, in NoteCutInfo _)

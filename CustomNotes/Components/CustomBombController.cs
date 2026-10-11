@@ -1,6 +1,6 @@
 ﻿using CameraUtils.Core;
+using CustomNotes.Models;
 using CustomNotes.Utilities;
-using SiraUtil.Objects;
 using UnityEngine;
 using Zenject;
 
@@ -14,13 +14,13 @@ internal class CustomBombController : MonoBehaviour, INoteControllerDidInitEvent
     private MeshRenderer vanillaBombRenderer = null!;
     private MeshRenderer fakeBombRenderer;
 
-    private SiraPrefabContainer siraContainer;
-    private SiraPrefabContainer.Pool bombPool;
+    private NoteInstanceContainer activeContainer;
+    private NoteInstanceContainer.Pool bombPool;
 
     [Inject]
     private void Init(
         PluginConfig config, 
-        [InjectOptional(Id = Protocol.BombPool)] SiraPrefabContainer.Pool bombContainerPool)
+        [InjectOptional(Id = Protocol.BombPool)] NoteInstanceContainer.Pool bombContainerPool)
     {
         this.config = config;
 
@@ -61,25 +61,25 @@ internal class CustomBombController : MonoBehaviour, INoteControllerDidInitEvent
 
     private void DidFinish()
     {
-        siraContainer.Prefab.SetActive(false);
-        siraContainer.transform.SetParent(null);
-        bombPool.Despawn(siraContainer);
+        activeContainer.instance.gameObject.SetActive(false);
+        activeContainer.transform.SetParent(null);
+        bombPool.Despawn(activeContainer);
     }
 
     public void HandleNoteControllerDidInit(NoteControllerBase noteController)
     {
-        siraContainer = bombPool.Spawn();
+        activeContainer = bombPool.Spawn();
         
-        var activeNoteBomb = siraContainer.Prefab;
-        activeNoteBomb.SetLayerRecursively(config.HmdOnly ? VisibilityLayer.HmdOnlyAndReflected : VisibilityLayer.Note);
-        activeNoteBomb.transform.localPosition = Vector3.zero;
-        activeNoteBomb.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * config.GetNoteSize();
-        activeNoteBomb.SetActive(true);
+        var go = activeContainer.instance.gameObject;
+        go.SetLayerRecursively(config.HmdOnly ? VisibilityLayer.HmdOnlyAndReflected : VisibilityLayer.Note);
+        go.transform.localPosition = Vector3.zero;
+        go.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * config.GetNoteSize();
+        go.SetActive(true);
             
-        siraContainer.transform.SetParent(vanillaBombRenderer.transform);
-        siraContainer.transform.localPosition = Vector3.zero;
-        siraContainer.transform.localRotation = Quaternion.identity;
-        siraContainer.transform.localScale = Vector3.one;
+        activeContainer.transform.SetParent(vanillaBombRenderer.transform);
+        activeContainer.transform.localPosition = Vector3.zero;
+        activeContainer.transform.localRotation = Quaternion.identity;
+        activeContainer.transform.localScale = Vector3.one;
     }
 
     protected void OnDestroy()

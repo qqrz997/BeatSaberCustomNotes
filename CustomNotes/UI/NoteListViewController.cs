@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Components;
 using BeatSaberMarkupLanguage.Parser;
@@ -20,6 +21,9 @@ internal class NoteListViewController : BSMLResourceViewController
     [Inject] private readonly PluginConfig config = null!;
     [Inject] private readonly NoteAssetLoader noteAssetLoader = null!;
     [Inject] private readonly GameplaySetupViewController gameplaySetupViewController = null!;
+
+    private readonly Dictionary<CustomListTableData.CustomCellInfo, string> cellValueMap = new();
+    private readonly Dictionary<string, int> valueIndexMap = new();
  
     public override string ResourceName => "CustomNotes.Resources.BSML.noteList.bsml";
 
@@ -27,14 +31,13 @@ internal class NoteListViewController : BSMLResourceViewController
     private GameObject preview;
 
     // Notes
-    private GameObject noteLeft;
-    private GameObject noteDotLeft;
-    private GameObject noteRight;
-    private GameObject noteDotRight;
-    private GameObject noteBomb;
+    private NoteInstance leftNoteArrow;
+    private NoteInstance leftNoteDot;
+    private NoteInstance rightNoteArrow;
+    private NoteInstance rightNoteDot;
+    private NoteInstance noteBomb;
 
     // NoteArrows
-    private ICustomNote fakeNoteArrows;
     private GameObject fakeLeftArrow;
     private GameObject fakeLeftDot;
     private GameObject fakeRightArrow;
@@ -47,12 +50,7 @@ internal class NoteListViewController : BSMLResourceViewController
     private readonly Vector3 rightArrowPos = new(1.5f, 0.0f, 0.0f);
     private readonly Vector3 bombPos = new(3.0f, 0.75f, 0.0f);
     
-    // private readonly Vector3 leftDotPos = new(0.0f, 0.6f, 0.0f);
-    // private readonly Vector3 rightDotPos = new(0.6f, 0.6f, 0.0f);
-    // private readonly Vector3 rightArrowPos = new(0.6f, 0.0f, 0.0f);
-    // private readonly Vector3 bombPos = new(1.2f, 0.3f, 0.0f);
-
-    public Action<CustomNote> CustomNoteChanged;
+    public Action<CustomNoteData> CustomNoteChanged;
     public Action CustomNotesReloaded;
         
     [UIParams] private readonly BSMLParserParams parserParams = null!;
@@ -61,30 +59,18 @@ internal class NoteListViewController : BSMLResourceViewController
     [UIComponent("openedText")] private readonly TextMeshProUGUI openedText = null!;
     [UIComponent("donateButton")] private readonly Button donateButton = null!;
 
-    [UIAction("noteSelect")]
-    public void Select(TableView _, int row)
-    {
-        noteAssetLoader.SelectedNoteIdx = row;
-        config.LastNote = noteAssetLoader.CustomNoteObjects[row].FileName;
-
-        GenerateNotePreview(row);
-    }
-
     [UIAction("reloadNotes")]
     public void ReloadNotes()
     {
         noteAssetLoader.Reload();
         SetupList();
-        Select(customListTableData.TableView, noteAssetLoader.SelectedNoteIdx);
+        Select(customListTableData.TableView, GetSelectedIndex());
         CustomNotesReloaded?.Invoke();
     }
 
     [UIAction("donateClicked")]
     public void DonateClicked()
     {
-        //button.interactable = false;
-        //linkOpened.gameObject.SetActive(true);
-        //StartCoroutine(SecondRemove(button));
         parserParams.EmitEvent("close-patreonModal");
         openedText.gameObject.SetActive(true);
         donateButton.interactable = false;
@@ -101,11 +87,7 @@ internal class NoteListViewController : BSMLResourceViewController
     [UIAction("donateHelpClicked")]
     public void DonateHelpClicked()
     {
-        //button.interactable = false;
-        //linkOpened.gameObject.SetActive(true);
-        //StartCoroutine(SecondRemove(button));
         parserParams.EmitEvent("open-patreonModal");
-        //Application.OpenURL("https://www.patreon.com/bobbievr");
     }
 
     private IEnumerator DonateActiveAgain()
@@ -114,24 +96,44 @@ internal class NoteListViewController : BSMLResourceViewController
         donateButton.interactable = true;
         openedText.gameObject.SetActive(false);
     }
+    
+    [UIAction("noteSelect")]
+    public void Select(TableView _, int row)
+    {
+        var cell = customListTableData.Data[row];
+        var hash = cellValueMap.GetValueOrDefault(cell, null);
+        config.LastNote = hash;
+        
+        var selectedNote = hash is null ? null : noteAssetLoader.LoadedCustomNotes.GetValueOrDefault(hash, null);
+        GenerateNotePreview(selectedNote);
+    }
 
     [UIAction("#post-parse")]
     public void SetupList()
     {
         customListTableData.Data.Clear();
 
-        foreach (var customNote in noteAssetLoader.CustomNoteObjects)
+        var defIcon = Utils.GetDefaultIcon();
+        var defSprite = Sprite.Create(defIcon, new(0, 0, defIcon.width, defIcon.height), new(0.5f, 0.5f));
+        customListTableData.Data.Add(new("Default", "Beat Games", defSprite));
+
+        int i = 1;
+        foreach (var (hash, customNote) in noteAssetLoader.LoadedCustomNotes)
         {
-            var icon = customNote.Descriptor.Icon;
-            var name = customNote.Descriptor.NoteName;
-            var subName = customNote.Descriptor.AuthorName;
+            var icon = customNote.Metadata.Info.Icon;
+            var name = customNote.Metadata.Info.Name;
+            var subName = customNote.Metadata.Info.Author;
             var sprite = Sprite.Create(icon, new(0, 0, icon.width, icon.height), new(0.5f, 0.5f));
-            customListTableData.Data.Add(new(name, subName, sprite));
+            var cell = new CustomListTableData.CustomCellInfo(name, subName, sprite);
+            customListTableData.Data.Add(cell);
+            valueIndexMap.Add(hash, i);
+            cellValueMap.Add(cell, hash);
+            i++;
         }
 
         customListTableData.TableView.ReloadData();
-        int selectedNote = noteAssetLoader.SelectedNoteIdx;
-
+        
+        int selectedNote = GetSelectedIndex();
         customListTableData.TableView.ScrollToCellWithIdx(selectedNote, TableView.ScrollPositionType.Beginning, false) ;
         customListTableData.TableView.SelectCellWithIdx(selectedNote);
     }
@@ -142,11 +144,11 @@ internal class NoteListViewController : BSMLResourceViewController
 
         openedText.gameObject.SetActive(false);
 
-        if (fakeNoteArrows == null)
-        {
-            byte[] resource = Utils.LoadFromResource("CustomNotes.Resources.Notes.cn_arrowplaceholder.bloq");
-            fakeNoteArrows = NoteAssetLoader.LoadInternal(resource, "cn_arrowplaceholder.bloq");
-        }
+        // if (fakeNoteArrows == null)
+        // {
+        //     byte[] resource = Utils.LoadFromResource("CustomNotes.Resources.Notes.cn_arrowplaceholder.bloq");
+        //     fakeNoteArrows = NoteAssetLoader.LoadInternal(resource, "cn_arrowplaceholder.bloq");
+        // }
 
         if (preview == null)
         {
@@ -155,7 +157,7 @@ internal class NoteListViewController : BSMLResourceViewController
             preview.transform.Rotate(0.0f, 57.0f, 0.0f);
         }
 
-        int selectedNote = noteAssetLoader.SelectedNoteIdx;
+        int selectedNote = GetSelectedIndex();
         customListTableData.TableView.SelectCellWithIdx(selectedNote);
         Select(customListTableData.TableView, selectedNote);
     }
@@ -166,7 +168,10 @@ internal class NoteListViewController : BSMLResourceViewController
         ClearPreview();
     }
 
-    private void GenerateNotePreview(int selectedNote)
+    private int GetSelectedIndex() =>
+        config.LastNote == null ? 0 : valueIndexMap.GetValueOrDefault(config.LastNote, 0);
+
+    private void GenerateNotePreview(CustomNoteData note)
     {
         if (isGeneratingPreview)
         {
@@ -178,12 +183,11 @@ internal class NoteListViewController : BSMLResourceViewController
         try
         {
             ClearNotes();
-
-            var currentNote = noteAssetLoader.CustomNoteObjects[selectedNote];
-            if (currentNote != null)
+            
+            if (note != null)
             {
-                CustomNoteChanged?.Invoke(currentNote);
-                InitializePreviewNotes(currentNote, preview.transform);
+                CustomNoteChanged?.Invoke(note);
+                InitializePreviewNotes(note.Prefab, preview.transform);
             }
         }
         catch (Exception ex)
@@ -194,74 +198,69 @@ internal class NoteListViewController : BSMLResourceViewController
         isGeneratingPreview = false;
     }
 
-    private void InitializePreviewNotes(ICustomNote customNote, Transform transform)
+    private void InitializePreviewNotes(CustomNotePrefab prefab, Transform transform)
     {
+        leftNoteArrow = prefab.Left.NoteArrow.Instantiate();
+        rightNoteArrow = prefab.Right.NoteArrow.Instantiate();
+        leftNoteDot = prefab.Left.NoteDot.Instantiate();
+        rightNoteDot = prefab.Right.NoteDot.Instantiate();
+        noteBomb = prefab.Bomb.Instantiate();
+        
         // Position previewer based on the CustomNote having a NoteBomb
-        preview.transform.position = customNote.Bomb ? new(2.60f, 0.90f, 2.50f) : new Vector3(2.75f, 0.9f, 2.25f);
+        preview.transform.position = noteBomb != null ? new(2.60f, 0.90f, 2.50f) : new Vector3(2.75f, 0.9f, 2.25f);
 
-        noteLeft = CreatePreviewNote(customNote.Left.NoteArrow, transform, leftArrowPos);
-        noteDotLeft = CreatePreviewNote(customNote.Left.NoteDot, transform, leftDotPos);
-        noteRight = CreatePreviewNote(customNote.Right.NoteArrow, transform, rightArrowPos);
-        noteDotRight = CreatePreviewNote(customNote.Right.NoteDot, transform, rightDotPos);
-        noteBomb = CreatePreviewNote(customNote.Bomb, transform, bombPos);
+        SetPreviewPosition(leftNoteArrow, transform, leftArrowPos);
+        SetPreviewPosition(rightNoteArrow, transform, rightArrowPos);
+        SetPreviewPosition(leftNoteDot, transform, leftDotPos);
+        SetPreviewPosition(rightNoteDot, transform, rightDotPos);
+        SetPreviewPosition(noteBomb, transform, bombPos);
 
         // Fake the Note Dots if no CustomNote Dot existed in the CustomNote
-        if (noteLeft && !noteDotLeft)
-        {
-            noteDotLeft = CreatePreviewNote(customNote.Left.NoteArrow, transform, leftDotPos);
-        }
-        if (noteRight && !noteDotRight)
-        {
-            noteDotRight = CreatePreviewNote(customNote.Right.NoteArrow, transform, rightDotPos);
-        }
+        // if (leftNoteArrow && !leftNoteDot)
+        // {
+        //     leftNoteDot = SetPreviewPosition(prefab.Left.NoteArrow.Instantiate().GameObject, transform, leftDotPos);
+        // }
+        // if (rightNoteArrow && !rightNoteDot)
+        // {
+        //     rightNoteDot = SetPreviewPosition(prefab.Right.NoteArrow.Instantiate().GameObject, transform, rightDotPos);
+        // }
 
         // Add arrows to arrow-less notes
-        if (!customNote.HasArrows && fakeNoteArrows != null && noteLeft && noteRight)
-        {
-            AddNoteArrows(fakeNoteArrows, transform);
-        }
+        // if (!customNote.HasArrows && fakeNoteArrows != null && noteLeft && noteRight)
+        // {
+        //     AddNoteArrows(fakeNoteArrows, transform);
+        // }
 
-        if (customNote is CustomNote cn && cn.Descriptor.UsesNoteColor)
-        {
-            float colorStrength = cn.Descriptor.NoteColorStrength;
-            var noteAColor = gameplaySetupViewController.colorSchemesSettings.GetSelectedColorScheme().saberAColor;
-            var noteBColor = gameplaySetupViewController.colorSchemesSettings.GetSelectedColorScheme().saberBColor;
-        
-            Utils.ColorizeCustomNote(noteAColor, colorStrength, noteLeft);
-            Utils.ColorizeCustomNote(noteBColor, colorStrength, noteRight);
-            Utils.ColorizeCustomNote(noteBColor, colorStrength, noteDotRight);
-            Utils.ColorizeCustomNote(noteAColor, colorStrength, noteDotLeft);
-        }
+        float colorStrength = 1f; // cn.Descriptor.NoteColorStrength;
+        var noteAColor = gameplaySetupViewController.colorSchemesSettings.GetSelectedColorScheme().saberAColor;
+        var noteBColor = gameplaySetupViewController.colorSchemesSettings.GetSelectedColorScheme().saberBColor;
+    
+        leftNoteArrow.SetColor(noteAColor * colorStrength);
+        rightNoteArrow.SetColor(noteBColor * colorStrength);
+        leftNoteDot.SetColor(noteAColor * colorStrength);
+        rightNoteDot.SetColor(noteBColor * colorStrength);
     }
 
-    private GameObject CreatePreviewNote(GameObject baseNote, Transform transform, Vector3 localPosition)
+    private void SetPreviewPosition(NoteInstance note, Transform parent, Vector3 localPosition)
     {
-        if (baseNote == null)
-        {
-            return null;
-        }
-            
-        var previewNoteObject = Instantiate(baseNote, transform);
-        PositionPreviewNote(localPosition, previewNoteObject);
-            
-        return previewNoteObject;
+        if (note == null) return;
+        note.gameObject.transform.SetParent(parent, false);
+        PositionPreviewNote(localPosition, note.gameObject);
     }
 
-    private void AddNoteArrows(ICustomNote customNote, Transform transform)
-    {
-        fakeLeftArrow = CreatePreviewNote(customNote.Left.NoteArrow, transform, leftArrowPos);
-        fakeLeftDot = CreatePreviewNote(customNote.Left.NoteDot, transform, leftDotPos);
-        fakeRightArrow = CreatePreviewNote(customNote.Right.NoteArrow, transform, rightArrowPos);
-        fakeRightDot = CreatePreviewNote(customNote.Right.NoteDot, transform, rightDotPos);
-    }
+    // private void AddNoteArrows(ICustomNote customNote, Transform transform)
+    // {
+    //     fakeLeftArrow = CreatePreviewNote(customNote.Left.NoteArrow, transform, leftArrowPos);
+    //     fakeLeftDot = CreatePreviewNote(customNote.Left.NoteDot, transform, leftDotPos);
+    //     fakeRightArrow = CreatePreviewNote(customNote.Right.NoteArrow, transform, rightArrowPos);
+    //     fakeRightDot = CreatePreviewNote(customNote.Right.NoteDot, transform, rightDotPos);
+    // }
 
     private void PositionPreviewNote(Vector3 vector, GameObject noteObject)
     {
-        if (noteObject != null)
-        {
-            noteObject.transform.localPosition = vector;
-            noteObject.transform.localScale *= config.GetNoteSize();
-        }
+        if (noteObject == null) return;
+        noteObject.transform.localPosition = vector;
+        noteObject.transform.localScale *= config.GetNoteSize();
     }
 
     private void ClearPreview()
@@ -272,41 +271,42 @@ internal class NoteListViewController : BSMLResourceViewController
 
     private void ClearNotes()
     {
-        DestroyGameObject(ref noteLeft);
-        DestroyGameObject(ref noteDotLeft);
-        DestroyGameObject(ref noteRight);
-        DestroyGameObject(ref noteDotRight);
-        DestroyGameObject(ref noteBomb);
-
+        DestroyNote(ref leftNoteArrow);
+        DestroyNote(ref rightNoteArrow);
+        DestroyNote(ref leftNoteDot);
+        DestroyNote(ref rightNoteDot);
+        DestroyNote(ref noteBomb);
         DestroyGameObject(ref fakeLeftArrow);
         DestroyGameObject(ref fakeLeftDot);
         DestroyGameObject(ref fakeRightArrow);
         DestroyGameObject(ref fakeRightDot);
     }
 
-    private static void DestroyGameObject(ref GameObject gameObject)
+    private static void DestroyNote(ref NoteInstance note)
     {
-        if (gameObject)
-        {
-            Destroy(gameObject);
-            gameObject = null;
-        }
+        if (!note) return;
+        Destroy(note.gameObject);
+        note = null;
+    }
+    
+    private static void DestroyGameObject(ref GameObject o)
+    {
+        if (!o) return;
+        Destroy(o);
+        o = null;
     }
         
     private static void ScalePreviewNote(GameObject note, float scale)
     {
-        if (note)
-        {
-            note.transform.localScale = new Vector3(1,1,1) * scale;
-        }
+        if (note) note.transform.localScale = new Vector3(1,1,1) * scale;
     }
     public void ScalePreviewNotes(float scale)
     {
-        ScalePreviewNote(noteLeft, scale);
-        ScalePreviewNote(noteDotLeft, scale);
-        ScalePreviewNote(noteRight, scale);
-        ScalePreviewNote(noteDotRight, scale);
-        ScalePreviewNote(noteBomb, scale);
+        ScalePreviewNote(leftNoteArrow.gameObject, scale);
+        ScalePreviewNote(leftNoteDot.gameObject, scale);
+        ScalePreviewNote(rightNoteArrow.gameObject, scale);
+        ScalePreviewNote(rightNoteDot.gameObject, scale);
+        ScalePreviewNote(noteBomb.gameObject, scale);
 
         ScalePreviewNote(fakeLeftArrow, scale);
         ScalePreviewNote(fakeLeftDot, scale);
