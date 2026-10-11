@@ -41,7 +41,6 @@ internal class NoteInstance : MonoBehaviour
     
     public void SetColor(Color color)
     {
-        Plugin.Log.Info($"Setting color to {color}");
         materialPropertyBlock ??= new();
         materialPropertyBlock.SetColor(MaterialProps.Color, color);
 
