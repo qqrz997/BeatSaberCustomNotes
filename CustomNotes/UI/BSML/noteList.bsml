@@ -5,8 +5,8 @@
 
     <vertical child-control-height='false' ignore-layout='true' anchor-pos-x='60' anchor-pos-y='-7'>
       <horizontal horizontal-fit='PreferredSize'>
-        <button id='donateButton' text='Donate' on-click='donateClicked' pref-width='17.5'/>
-        <primary-button text='?' on-click='donateHelpClicked' pref-width='10'/>
+        <button id='donateButton' text='Donate' on-click='DonateButtonClicked' pref-width='17.5'/>
+        <primary-button text='?' on-click='DonateHelpButtonClicked' pref-width='10'/>
       </horizontal>
     </vertical>
 
@@ -15,11 +15,11 @@
     </vertical>
 
     <vertical pad-left='50'>
-      <list id='noteList' expand-cell='true' select-cell='noteSelect' show-scrollbar='true' />
+      <list id='noteList' expand-cell='true' select-cell='NoteListCellSelected' show-scrollbar='true' />
     </vertical>
 
     <vertical child-control-height='false' horizontal-fit='PreferredSize'>
-      <button text='Reload all notes' on-click='reloadNotes' pref-width='27.5'/>
+      <button text='Reload all notes' on-click='ReloadButtonClicked' pref-width='27.5'/>
     </vertical>
 
     <modal id='patreonModal' show-event='open-patreonModal' hide-event='close-patreonModal,closeAllModals' move-to-center='true' size-delta-y='45' size-delta-x='80'>
@@ -36,8 +36,8 @@
         </vertical>
 
         <horizontal pref-width='50' horizontal-fit='PreferredSize' vertical-fit='PreferredSize' spacing='2' anchor-pos-y='50' >
-          <button id='closeButton' on-click='closePressed' text='Close' pad='0' pref-height='8' pref-width='20' anchor-pos-y='25'/>
-          <button id='modalDonateButton' on-click='donateClicked' text='Donate' pad='0' pref-height='8' pref-width='30' anchor-pos-y='25'/>
+          <button id='closeButton' on-click='CloseButtonClicked' text='Close' pad='0' pref-height='8' pref-width='20' anchor-pos-y='25'/>
+          <button id='modalDonateButton' on-click='DonateButtonClicked' text='Donate' pad='0' pref-height='8' pref-width='30' anchor-pos-y='25'/>
         </horizontal>
       </vertical>
     </modal>

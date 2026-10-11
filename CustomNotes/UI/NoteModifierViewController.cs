@@ -65,13 +65,11 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
         notesDropdown.UpdateChoices();
     }
 
-    [UIAction("note-selected")]
-    public void OnSelect(object selectedCell)
+    public void SelectionChanged(object selectedCell)
     {
         config.LastNote = selectedCell is DropdownListItem item ? item.NoteData.Metadata.File.Hash : null;
     }
 
-    [UIValue("mod-enabled")]
     public bool ModEnabled
     {
         get => config.Enabled;
@@ -82,8 +80,7 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
         }
     }
 
-    [UIValue("selected-note")] 
-    private object DropdownSelection => GetSelectedNote();
+    private object DropdownValue => GetSelectedNote();
     private object GetSelectedNote()
     {
         foreach (var value in notesDropdown.Values)
@@ -92,7 +89,6 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
         return "Default";
     }
 
-    [UIValue("note-size")]
     public float NoteSize
     {
         get => config.NoteSize;
@@ -103,7 +99,6 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
         }
     }
 
-    [UIValue("hmd-only")]
     public bool HmdOnly
     {
         get => config.HmdOnly;
@@ -114,7 +109,6 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
         }
     }
 
-    [UIValue("auto-disable")]
     public bool AutoDisable
     {
         get => config.AutoDisable;

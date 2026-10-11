@@ -15,21 +15,16 @@ internal class NoteDetailsViewController : BSMLAutomaticViewController
     [Inject] private readonly PluginConfig config = null!;
     [Inject] private readonly NoteListViewController listViewController = null!;
 
-    [UIComponent("note-description")] private readonly TextPageScrollView noteDescription = null;
-    [UIObject("disable-april-fools")] private readonly GameObject disableAprilFoolsCheckbox = null!;
+    [UIObject("DisableAprilFools")] private readonly GameObject disableAprilFoolsCheckbox = null!;
 
     public void OnNoteWasChanged(CustomNoteData customNote)
     {
-        // todo remove descriptions
-        noteDescription.SetText("custom asset description is currently deprecated");
-
         NotifyPropertyChanged(nameof(ModEnabled));
         NotifyPropertyChanged(nameof(NoteSize));
         NotifyPropertyChanged(nameof(HmdOnly));
         NotifyPropertyChanged(nameof(AutoDisable));
     }
 
-    [UIValue("mod-enabled")]
     public bool ModEnabled
     {
         get => config.Enabled;
@@ -40,7 +35,6 @@ internal class NoteDetailsViewController : BSMLAutomaticViewController
         }
     }
 
-    [UIValue("note-size")]
     public float NoteSize
     {
         get => config.NoteSize;
@@ -52,7 +46,6 @@ internal class NoteDetailsViewController : BSMLAutomaticViewController
         }
     }
 
-    [UIValue("hmd-only")]
     public bool HmdOnly 
     {
         get => config.HmdOnly;
@@ -63,7 +56,6 @@ internal class NoteDetailsViewController : BSMLAutomaticViewController
         }
     }
 
-    [UIValue("auto-disable")]
     public bool AutoDisable
     {
         get => config.AutoDisable;
@@ -74,7 +66,6 @@ internal class NoteDetailsViewController : BSMLAutomaticViewController
         }
     }
 
-    [UIValue("disable-april-fools")]
     public bool DisableAprilFools
     {
         get => config.DisableAprilFools;

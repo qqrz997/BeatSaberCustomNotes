@@ -58,18 +58,22 @@ internal class NoteListViewController : BSMLAutomaticViewController
     [UIComponent("noteList")] private readonly CustomListTableData customListTableData = null!;
     [UIComponent("openedText")] private readonly TextMeshProUGUI openedText = null!;
     [UIComponent("donateButton")] private readonly Button donateButton = null!;
-
-    [UIAction("reloadNotes")]
-    public void ReloadNotes()
+    
+    [UIAction("#post-parse")]
+    public void PostParse()
+    {
+        SetupList();
+    }
+    
+    public void ReloadButtonClicked()
     {
         noteAssetLoader.Reload();
         SetupList();
-        Select(customListTableData.TableView, GetSelectedIndex());
+        NoteListCellSelected(customListTableData.TableView, GetSelectedIndex());
         CustomNotesReloaded?.Invoke();
     }
 
-    [UIAction("donateClicked")]
-    public void DonateClicked()
+    public void DonateButtonClicked()
     {
         parserParams.EmitEvent("close-patreonModal");
         openedText.gameObject.SetActive(true);
@@ -78,14 +82,12 @@ internal class NoteListViewController : BSMLAutomaticViewController
         StartCoroutine(DonateActiveAgain());
     }
 
-    [UIAction("closePressed")]
-    public void ClosePressed()
+    public void CloseButtonClicked()
     {
         parserParams.EmitEvent("close-patreonModal");
     }
 
-    [UIAction("donateHelpClicked")]
-    public void DonateHelpClicked()
+    public void DonateHelpButtonClicked()
     {
         parserParams.EmitEvent("open-patreonModal");
     }
@@ -97,8 +99,7 @@ internal class NoteListViewController : BSMLAutomaticViewController
         openedText.gameObject.SetActive(false);
     }
     
-    [UIAction("noteSelect")]
-    public void Select(TableView _, int row)
+    public void NoteListCellSelected(TableView _, int row)
     {
         var cell = customListTableData.Data[row];
         var hash = cellValueMap.GetValueOrDefault(cell, null);
@@ -107,8 +108,7 @@ internal class NoteListViewController : BSMLAutomaticViewController
         var selectedNote = hash is null ? null : noteAssetLoader.LoadedCustomNotes.GetValueOrDefault(hash, null);
         GenerateNotePreview(selectedNote);
     }
-
-    [UIAction("#post-parse")]
+    
     public void SetupList()
     {
         customListTableData.Data.Clear();
@@ -159,7 +159,7 @@ internal class NoteListViewController : BSMLAutomaticViewController
 
         int selectedNote = GetSelectedIndex();
         customListTableData.TableView.SelectCellWithIdx(selectedNote);
-        Select(customListTableData.TableView, selectedNote);
+        NoteListCellSelected(customListTableData.TableView, selectedNote);
     }
 
     protected override void DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling)
