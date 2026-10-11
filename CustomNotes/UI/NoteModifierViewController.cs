@@ -51,13 +51,19 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
         gameplaySetup.RemoveTab("Custom Notes");
     }
 
-    internal void ParentControllerActivated()
+    public void ParentControllerActivated()
     {
+        noteAssetLoader.CustomNotesChanged += CustomNotesChanged;
         if (parsed) notesDropdown.ReceiveValue();
         PropertyChanged?.Invoke(this, new(nameof(ModEnabled)));
         PropertyChanged?.Invoke(this, new(nameof(NoteSize)));
         PropertyChanged?.Invoke(this, new(nameof(HmdOnly)));
         PropertyChanged?.Invoke(this, new(nameof(AutoDisable)));
+    }
+
+    public void ParentControllerDeactivated()
+    {
+        noteAssetLoader.CustomNotesChanged -= CustomNotesChanged;
     }
 
     public void SetupList()
@@ -127,6 +133,11 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
             config.AutoDisable = value;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AutoDisable)));
         }
+    }
+
+    private void CustomNotesChanged(IEnumerable<CustomNoteData> noteData)
+    {
+        SetupList();
     }
     
     private class DropdownListItem

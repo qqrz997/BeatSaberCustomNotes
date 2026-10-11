@@ -31,6 +31,8 @@ internal class NoteAssetLoader : IAsyncInitializable, IDisposable
 
     public Dictionary<string, CustomNoteData> LoadedCustomNotes { get; private set; } = [];
 
+    public event Action<IEnumerable<CustomNoteData>> CustomNotesChanged; 
+
     /// <summary>
     /// Load all CustomNotes 
     /// </summary>
@@ -48,6 +50,8 @@ internal class NoteAssetLoader : IAsyncInitializable, IDisposable
             
         LoadedCustomNotes = LoadCustomNotes(customNoteFiles).ToDictionary(x => x.Metadata.File.Hash);
         Plugin.Log.Notice($"{LoadedCustomNotes.Count} total custom notes loaded.");
+        
+        CustomNotesChanged?.Invoke(LoadedCustomNotes.Values);
 
         isLoaded = true;
     }
@@ -60,13 +64,14 @@ internal class NoteAssetLoader : IAsyncInitializable, IDisposable
         foreach (var (_, customNote) in LoadedCustomNotes)
             customNote.Dispose();
         LoadedCustomNotes.Clear();
+        CustomNotesChanged?.Invoke(LoadedCustomNotes.Values);
         isLoaded = false;
     }
 
     /// <summary>
     /// Reload all CustomNotes
     /// </summary>
-    internal async void Reload()
+    internal async Task Reload()
     {
         Plugin.Log.Debug("Reloading the NoteAssetLoader");
 
@@ -74,24 +79,6 @@ internal class NoteAssetLoader : IAsyncInitializable, IDisposable
         await InitializeAsync(CancellationToken.None);
     }
 
-    private int GetSelectedNoteIndex()
-    {
-        if (!LoadedCustomNotes.ContainsKey(config.LastNote))
-        {
-            return 0;
-        }
-
-        int i = 0;
-        foreach (var (_, customNote) in LoadedCustomNotes)
-        {
-            if (customNote.Metadata.File.Hash == config.LastNote)
-                return i;
-            i++;
-        }
-            
-        return 0;
-    }
-        
     public static GameObject LoadNotePrefab(AssetBundle assetBundle) => 
         assetBundle.LoadAsset<GameObject>("assets/_customnote.prefab");
 
@@ -107,8 +94,7 @@ internal class NoteAssetLoader : IAsyncInitializable, IDisposable
         }
         catch (Exception ex)
         {
-            Plugin.Log.Warn($"Problem encountered when loading '{file.FileInfo.Name}'");
-            Plugin.Log.Warn(ex);
+            Plugin.Log.Warn($"Problem encountered when loading '{file.FileInfo.Name}'\n{ex}");
 
             var message = $"File: '{file.FileInfo.Name}'" +
                           "\n\nThis file failed to load." +

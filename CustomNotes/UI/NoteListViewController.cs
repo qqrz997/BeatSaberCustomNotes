@@ -27,7 +27,7 @@ internal class NoteListViewController : BSMLAutomaticViewController
     private readonly Dictionary<CustomListTableData.CustomCellInfo, string> cellValueMap = new();
     private readonly Dictionary<string, int> valueIndexMap = new();
 
-    private bool isGeneratingPreview;
+    private bool isReloading;
     private GameObject preview;
 
     // Notes
@@ -51,7 +51,6 @@ internal class NoteListViewController : BSMLAutomaticViewController
     private readonly Vector3 bombPos = new(3.0f, 0.75f, 0.0f);
     
     public Action<CustomNoteData> CustomNoteChanged;
-    public Action CustomNotesReloaded;
         
     [UIParams] private readonly BSMLParserParams parserParams = null!;
         
@@ -64,13 +63,40 @@ internal class NoteListViewController : BSMLAutomaticViewController
     {
         SetupList();
     }
-    
-    public void ReloadButtonClicked()
+
+    protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
     {
-        noteAssetLoader.Reload();
+        base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
+
+        noteAssetLoader.CustomNotesChanged += CustomNotesChanged;
+        openedText.gameObject.SetActive(false);
+
+        int selectedNote = GetSelectedIndex();
+        customListTableData.TableView.SelectCellWithIdx(selectedNote);
+        NoteListCellSelected(customListTableData.TableView, selectedNote);
+    }
+
+    protected override void DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling)
+    {
+        base.DidDeactivate(removedFromHierarchy, screenSystemDisabling);
+        noteAssetLoader.CustomNotesChanged -= CustomNotesChanged;
+        ClearPreview();
+    }
+    
+    public async void ReloadButtonClicked()
+    {
+        try
+        {
+            isReloading = true;
+            await noteAssetLoader.Reload();
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.Warn($"Problem encountered during reload\n{ex}");
+        }
+        isReloading = false;
+        
         SetupList();
-        NoteListCellSelected(customListTableData.TableView, GetSelectedIndex());
-        CustomNotesReloaded?.Invoke();
     }
 
     public void DonateButtonClicked()
@@ -101,6 +127,8 @@ internal class NoteListViewController : BSMLAutomaticViewController
     
     public void NoteListCellSelected(TableView _, int row)
     {
+        if (row < 0 || row >= customListTableData.Data.Count)
+            return;
         var cell = customListTableData.Data[row];
         var hash = cellValueMap.GetValueOrDefault(cell, null);
         config.LastNote = hash;
@@ -112,23 +140,28 @@ internal class NoteListViewController : BSMLAutomaticViewController
     public void SetupList()
     {
         customListTableData.Data.Clear();
+        valueIndexMap.Clear();
+        cellValueMap.Clear();
 
-        var defIcon = Utils.GetDefaultIcon();
-        var defSprite = Sprite.Create(defIcon, new(0, 0, defIcon.width, defIcon.height), new(0.5f, 0.5f));
-        customListTableData.Data.Add(new("Default", "Beat Games", defSprite));
-
-        int i = 1;
-        foreach (var (hash, customNote) in noteAssetLoader.LoadedCustomNotes)
+        if (!isReloading)
         {
-            var icon = customNote.Metadata.Info.Icon;
-            var name = customNote.Metadata.Info.Name;
-            var subName = customNote.Metadata.Info.Author;
-            var sprite = Sprite.Create(icon, new(0, 0, icon.width, icon.height), new(0.5f, 0.5f));
-            var cell = new CustomListTableData.CustomCellInfo(name, subName, sprite);
-            customListTableData.Data.Add(cell);
-            valueIndexMap.Add(hash, i);
-            cellValueMap.Add(cell, hash);
-            i++;
+            var defIcon = Utils.GetDefaultIcon();
+            var defSprite = Sprite.Create(defIcon, new(0, 0, defIcon.width, defIcon.height), new(0.5f, 0.5f));
+            customListTableData.Data.Add(new("Default", "Beat Games", defSprite));
+
+            int i = 1;
+            foreach (var (hash, customNote) in noteAssetLoader.LoadedCustomNotes)
+            {
+                var icon = customNote.Metadata.Info.Icon;
+                var name = customNote.Metadata.Info.Name;
+                var subName = customNote.Metadata.Info.Author;
+                var sprite = Sprite.Create(icon, new(0, 0, icon.width, icon.height), new(0.5f, 0.5f));
+                var cell = new CustomListTableData.CustomCellInfo(name, subName, sprite);
+                customListTableData.Data.Add(cell);
+                valueIndexMap.Add(hash, i);
+                cellValueMap.Add(cell, hash);
+                i++;
+            }
         }
 
         customListTableData.TableView.ReloadData();
@@ -138,12 +171,34 @@ internal class NoteListViewController : BSMLAutomaticViewController
         customListTableData.TableView.SelectCellWithIdx(selectedNote);
     }
 
-    protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
+    private void CustomNotesChanged(IEnumerable<CustomNoteData> noteData)
     {
-        base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
+        SetupList();
+    }
 
-        openedText.gameObject.SetActive(false);
+    private int GetSelectedIndex() =>
+        config.LastNote == null ? 0 : valueIndexMap.GetValueOrDefault(config.LastNote, 0);
 
+    private void GenerateNotePreview(CustomNoteData note)
+    {
+        try
+        {
+            ClearNotes();
+            
+            if (note != null)
+            {
+                CustomNoteChanged?.Invoke(note);
+                InitializePreviewNotes(note.Prefab);
+            }
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.Error(ex);
+        }
+    }
+
+    private void InitializePreviewNotes(CustomNotePrefab prefab)
+    {
         // if (fakeNoteArrows == null)
         // {
         //     byte[] resource = Utils.LoadFromResource("CustomNotes.Resources.Notes.cn_arrowplaceholder.bloq");
@@ -156,50 +211,7 @@ internal class NoteListViewController : BSMLAutomaticViewController
             preview.transform.localScale = new(0.3f, 0.3f, 0.3f);
             preview.transform.Rotate(0.0f, 57.0f, 0.0f);
         }
-
-        int selectedNote = GetSelectedIndex();
-        customListTableData.TableView.SelectCellWithIdx(selectedNote);
-        NoteListCellSelected(customListTableData.TableView, selectedNote);
-    }
-
-    protected override void DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling)
-    {
-        base.DidDeactivate(removedFromHierarchy, screenSystemDisabling);
-        ClearPreview();
-    }
-
-    private int GetSelectedIndex() =>
-        config.LastNote == null ? 0 : valueIndexMap.GetValueOrDefault(config.LastNote, 0);
-
-    private void GenerateNotePreview(CustomNoteData note)
-    {
-        if (isGeneratingPreview)
-        {
-            return;
-        }
-
-        isGeneratingPreview = true;
-            
-        try
-        {
-            ClearNotes();
-            
-            if (note != null)
-            {
-                CustomNoteChanged?.Invoke(note);
-                InitializePreviewNotes(note.Prefab, preview.transform);
-            }
-        }
-        catch (Exception ex)
-        {
-            Plugin.Log.Error(ex);
-        }
-
-        isGeneratingPreview = false;
-    }
-
-    private void InitializePreviewNotes(CustomNotePrefab prefab, Transform transform)
-    {
+        
         leftNoteArrow = prefab.Left.NoteArrow.Instantiate();
         rightNoteArrow = prefab.Right.NoteArrow.Instantiate();
         leftNoteDot = prefab.Left.NoteDot.Instantiate();
@@ -209,26 +221,26 @@ internal class NoteListViewController : BSMLAutomaticViewController
         // Position previewer based on the CustomNote having a NoteBomb
         preview.transform.position = noteBomb != null ? new(2.60f, 0.90f, 2.50f) : new Vector3(2.75f, 0.9f, 2.25f);
 
-        SetPreviewPosition(leftNoteArrow, transform, leftArrowPos);
-        SetPreviewPosition(rightNoteArrow, transform, rightArrowPos);
-        SetPreviewPosition(leftNoteDot, transform, leftDotPos);
-        SetPreviewPosition(rightNoteDot, transform, rightDotPos);
-        SetPreviewPosition(noteBomb, transform, bombPos);
+        SetPreviewPosition(leftNoteArrow, preview.transform, leftArrowPos);
+        SetPreviewPosition(rightNoteArrow, preview.transform, rightArrowPos);
+        SetPreviewPosition(leftNoteDot, preview.transform, leftDotPos);
+        SetPreviewPosition(rightNoteDot, preview.transform, rightDotPos);
+        SetPreviewPosition(noteBomb, preview.transform, bombPos);
 
         // Fake the Note Dots if no CustomNote Dot existed in the CustomNote
         // if (leftNoteArrow && !leftNoteDot)
         // {
-        //     leftNoteDot = SetPreviewPosition(prefab.Left.NoteArrow.Instantiate().GameObject, transform, leftDotPos);
+        //     leftNoteDot = SetPreviewPosition(prefab.Left.NoteArrow.Instantiate().GameObject, preview.transform, leftDotPos);
         // }
         // if (rightNoteArrow && !rightNoteDot)
         // {
-        //     rightNoteDot = SetPreviewPosition(prefab.Right.NoteArrow.Instantiate().GameObject, transform, rightDotPos);
+        //     rightNoteDot = SetPreviewPosition(prefab.Right.NoteArrow.Instantiate().GameObject, preview.transform, rightDotPos);
         // }
 
         // Add arrows to arrow-less notes
         // if (!customNote.HasArrows && fakeNoteArrows != null && noteLeft && noteRight)
         // {
-        //     AddNoteArrows(fakeNoteArrows, transform);
+        //     AddNoteArrows(fakeNoteArrows, preview.transform);
         // }
 
         float colorStrength = 1f; // cn.Descriptor.NoteColorStrength;
@@ -300,6 +312,7 @@ internal class NoteListViewController : BSMLAutomaticViewController
     {
         if (note) note.transform.localScale = new Vector3(1,1,1) * scale;
     }
+    
     public void ScalePreviewNotes(float scale)
     {
         ScalePreviewNote(leftNoteArrow.gameObject, scale);

@@ -19,23 +19,23 @@ internal class CustomNotesViewManager : IInitializable, IDisposable
 
     public void Initialize()
     {
-        noteListViewController.CustomNotesReloaded += NoteListViewController_CustomNotesReloaded;
-        gameplaySetupViewController.didActivateEvent += GameplaySetupViewController_DidActivateEvent;
+        gameplaySetupViewController.didActivateEvent += GameplaySetupViewControllerDidActivateEvent;
+        gameplaySetupViewController.didDeactivateEvent += GameplaySetupViewControllerDidDeactivateEvent;
     }
 
     public void Dispose()
     {
-        noteListViewController.CustomNotesReloaded -= NoteListViewController_CustomNotesReloaded;
-        gameplaySetupViewController.didActivateEvent -= GameplaySetupViewController_DidActivateEvent;
+        gameplaySetupViewController.didActivateEvent -= GameplaySetupViewControllerDidActivateEvent;
+        gameplaySetupViewController.didDeactivateEvent -= GameplaySetupViewControllerDidDeactivateEvent;
     }
 
-    private void NoteListViewController_CustomNotesReloaded()
-    {
-        noteModifierViewController.SetupList();
-    }
-
-    private void GameplaySetupViewController_DidActivateEvent(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
+    private void GameplaySetupViewControllerDidActivateEvent(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
     {
         noteModifierViewController.ParentControllerActivated();
+    }
+
+    private void GameplaySetupViewControllerDidDeactivateEvent(bool removedFromHierarchy, bool screenSystemDisabling)
+    {
+        noteModifierViewController.ParentControllerDeactivated();
     }
 }
