@@ -55,8 +55,6 @@ internal class NoteListViewController : BSMLAutomaticViewController
     [UIParams] private readonly BSMLParserParams parserParams = null!;
         
     [UIComponent("noteList")] private readonly CustomListTableData customListTableData = null!;
-    [UIComponent("openedText")] private readonly TextMeshProUGUI openedText = null!;
-    [UIComponent("donateButton")] private readonly Button donateButton = null!;
     
     [UIAction("#post-parse")]
     public void PostParse()
@@ -69,7 +67,6 @@ internal class NoteListViewController : BSMLAutomaticViewController
         base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
 
         noteAssetLoader.CustomNotesChanged += CustomNotesChanged;
-        openedText.gameObject.SetActive(false);
 
         int selectedNote = GetSelectedIndex();
         customListTableData.TableView.SelectCellWithIdx(selectedNote);
@@ -99,32 +96,6 @@ internal class NoteListViewController : BSMLAutomaticViewController
         SetupList();
     }
 
-    public void DonateButtonClicked()
-    {
-        parserParams.EmitEvent("close-patreonModal");
-        openedText.gameObject.SetActive(true);
-        donateButton.interactable = false;
-        Application.OpenURL("https://www.patreon.com/bobbievr");
-        StartCoroutine(DonateActiveAgain());
-    }
-
-    public void CloseButtonClicked()
-    {
-        parserParams.EmitEvent("close-patreonModal");
-    }
-
-    public void DonateHelpButtonClicked()
-    {
-        parserParams.EmitEvent("open-patreonModal");
-    }
-
-    private IEnumerator DonateActiveAgain()
-    {
-        yield return new WaitForSeconds(3);
-        donateButton.interactable = true;
-        openedText.gameObject.SetActive(false);
-    }
-    
     public void NoteListCellSelected(TableView _, int row)
     {
         if (row < 0 || row >= customListTableData.Data.Count)
