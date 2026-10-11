@@ -25,11 +25,12 @@ internal static class MaterialSwapper
                     continue;
                 }
 
-                materials[i] = new(replacement)
+                var newMaterial = new Material(replacement);
+                if (oldMaterial.HasColor(MaterialProps.Color))
                 {
-                    color = oldMaterial.color
-                };
-                
+                    newMaterial.SetColor(MaterialProps.Color, oldMaterial.GetColor(MaterialProps.Color));
+                }
+                materials[i] = newMaterial;
                 changed = true;
             }
 
