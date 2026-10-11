@@ -45,10 +45,10 @@ internal class NoteListViewController : BSMLAutomaticViewController
 
     // NotePositions (Local to the previewer)
     private readonly Vector3 leftArrowPos = new(0.0f, 0.0f, 0.0f);
-    private readonly Vector3 leftDotPos = new(0.0f, 1.5f, 0.0f);
-    private readonly Vector3 rightDotPos = new(1.5f, 1.5f, 0.0f);
-    private readonly Vector3 rightArrowPos = new(1.5f, 0.0f, 0.0f);
-    private readonly Vector3 bombPos = new(3.0f, 0.75f, 0.0f);
+    private readonly Vector3 leftDotPos = new(0.0f, 0.6f, 0.0f);
+    private readonly Vector3 rightDotPos = new(0.6f, 0.6f, 0.0f);
+    private readonly Vector3 rightArrowPos = new(0.6f, 0.0f, 0.0f);
+    private readonly Vector3 bombPos = new(1.2f, 0.3f, 0.0f);
     
     public Action<CustomNoteData> CustomNoteChanged;
         
@@ -179,8 +179,8 @@ internal class NoteListViewController : BSMLAutomaticViewController
         if (preview == null)
         {
             preview = new("NotePreviewContainer");
-            preview.transform.localScale = new(0.3f, 0.3f, 0.3f);
-            preview.transform.Rotate(0.0f, 57.0f, 0.0f);
+            preview.transform.position = new(1.55f, 0.7f, 3.25f);
+            preview.transform.rotation = Quaternion.Euler(0.0f, 28.0f, 0.0f);
         }
         
         leftNoteArrow = prefab.Left.NoteArrow.Instantiate();
@@ -188,9 +188,6 @@ internal class NoteListViewController : BSMLAutomaticViewController
         leftNoteDot = prefab.Left.NoteDot.Instantiate();
         rightNoteDot = prefab.Right.NoteDot.Instantiate();
         noteBomb = prefab.Bomb.Instantiate();
-        
-        // Position previewer based on the CustomNote having a NoteBomb
-        preview.transform.position = noteBomb != null ? new(2.60f, 0.90f, 2.50f) : new Vector3(2.75f, 0.9f, 2.25f);
 
         SetPreviewPosition(leftNoteArrow, preview.transform, leftArrowPos);
         SetPreviewPosition(rightNoteArrow, preview.transform, rightArrowPos);
@@ -228,7 +225,8 @@ internal class NoteListViewController : BSMLAutomaticViewController
     {
         if (note == null) return;
         note.gameObject.transform.SetParent(parent, false);
-        PositionPreviewNote(localPosition, note.gameObject);
+        note.gameObject.transform.localPosition = localPosition;
+        note.gameObject.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * config.GetNoteSize();
     }
 
     // private void AddNoteArrows(ICustomNote customNote, Transform transform)
@@ -238,13 +236,6 @@ internal class NoteListViewController : BSMLAutomaticViewController
     //     fakeRightArrow = CreatePreviewNote(customNote.Right.NoteArrow, transform, rightArrowPos);
     //     fakeRightDot = CreatePreviewNote(customNote.Right.NoteDot, transform, rightDotPos);
     // }
-
-    private void PositionPreviewNote(Vector3 vector, GameObject noteObject)
-    {
-        if (noteObject == null) return;
-        noteObject.transform.localPosition = vector;
-        noteObject.transform.localScale *= config.GetNoteSize();
-    }
 
     private void ClearPreview()
     {
