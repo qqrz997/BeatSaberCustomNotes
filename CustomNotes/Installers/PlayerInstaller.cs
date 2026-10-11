@@ -76,12 +76,6 @@ internal class PlayerInstaller : Installer
         Container.RegisterRedecorator((RedecoratorRegistration)(proMode
             ? new ProModeNoteRegistration(RedecorateNote, DecorationPriority)
             : new BasicNoteRegistration(RedecorateNote, DecorationPriority)));
-                
-        MaterialSwapper.GetMaterials();
-        MaterialSwapper.ReplaceMaterialsForGameObject(leftNoteArrow.gameObject);
-        MaterialSwapper.ReplaceMaterialsForGameObject(rightNoteArrow.gameObject);
-        MaterialSwapper.ReplaceMaterialsForGameObject(leftNoteDot.gameObject);
-        MaterialSwapper.ReplaceMaterialsForGameObject(rightNoteDot.gameObject);
 
         Container.BindMemoryPool<NoteInstanceContainer, NoteInstanceContainer.Pool>()
             .WithId(Protocol.LeftArrowPool)
@@ -117,8 +111,6 @@ internal class PlayerInstaller : Installer
 
         if (bomb != null)
         {
-            MaterialSwapper.GetMaterials();
-            MaterialSwapper.ReplaceMaterialsForGameObject(bomb.gameObject);
             Container.BindMemoryPool<NoteInstanceContainer, NoteInstanceContainer.Pool>()
                 .WithId(Protocol.BombPool)
                 .WithInitialSize(10)
@@ -151,9 +143,6 @@ internal class PlayerInstaller : Installer
 
             return burstSliderGameNoteController;
         }, DecorationPriority));
-
-        MaterialSwapper.ReplaceMaterialsForGameObject(leftChainSegment.gameObject);
-        MaterialSwapper.ReplaceMaterialsForGameObject(rightChainSegment.gameObject);
 
         Container.BindMemoryPool<NoteInstanceContainer, NoteInstanceContainer.Pool>()
             .WithId(Protocol.LeftBurstSliderPool).WithInitialSize(40)
@@ -192,11 +181,6 @@ internal class PlayerInstaller : Installer
 
             return gameNoteController;
         }, DecorationPriority));
-
-        MaterialSwapper.ReplaceMaterialsForGameObject(leftChainArrow.gameObject);
-        MaterialSwapper.ReplaceMaterialsForGameObject(rightChainArrow.gameObject);
-        MaterialSwapper.ReplaceMaterialsForGameObject(leftChainDot.gameObject);
-        MaterialSwapper.ReplaceMaterialsForGameObject(rightChainDot.gameObject);
 
         Container.BindMemoryPool<NoteInstanceContainer, NoteInstanceContainer.Pool>()
             .WithId(Protocol.LeftBurstSliderHeadPool).WithInitialSize(10)

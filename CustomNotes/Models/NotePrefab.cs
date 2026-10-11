@@ -1,3 +1,4 @@
+using CustomNotes.Utilities;
 using UnityEngine;
 
 namespace CustomNotes.Models;
@@ -22,7 +23,8 @@ internal class NotePrefab
         if (noteModelPrefab == null)
             return null;
 
-        var gameObject = Object.Instantiate(noteModelPrefab); 
+        var gameObject = Object.Instantiate(noteModelPrefab);
+        MaterialSwapper.ReplaceMaterialsForGameObject(gameObject);
         return NoteInstance.AddTo(gameObject, useBaseArrows, colorMultiplier);
     }
 }

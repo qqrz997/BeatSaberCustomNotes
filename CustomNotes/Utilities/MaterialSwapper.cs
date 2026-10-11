@@ -5,14 +5,7 @@ namespace CustomNotes.Utilities;
 
 internal class MaterialSwapper
 {
-    private static IEnumerable<Material> allMaterials;
-
-    public static void GetMaterials()
-    {
-        // This object should be created in the Menu Scene
-        // Grab materials from Menu Scene objects
-        allMaterials = Resources.FindObjectsOfTypeAll<Material>();
-    }
+    private static Material[] allMaterials;
 
     public static void ReplaceMaterialsForGameObject(GameObject gameObject)
     {
@@ -25,7 +18,7 @@ internal class MaterialSwapper
         }
     }
 
-    public static void ReplaceAllMaterialsForGameObjectChildren(GameObject gameObject, Material material, string materialToReplaceName = "")
+    private static void ReplaceAllMaterialsForGameObjectChildren(GameObject gameObject, Material material, string materialToReplaceName = "")
     {
         foreach (var renderer in gameObject.GetComponentsInChildren<Renderer>(true))
         {
@@ -33,13 +26,13 @@ internal class MaterialSwapper
         }
     }
 
-    public static void ReplaceAllMaterialsForGameObject(GameObject gameObject, Material material, string materialToReplaceName = "")
+    private static void ReplaceAllMaterialsForGameObject(GameObject gameObject, Material material, string materialToReplaceName = "")
     {
         var renderer = gameObject.GetComponent<Renderer>();
         var materialsCopy = renderer.materials;
         bool materialsDidChange = false;
 
-        for (int i = 0; i < renderer.materials.Length; i++)
+        for (int i = 0; i < materialsCopy.Length; i++)
         {
             if (materialsCopy[i].name == materialToReplaceName || materialToReplaceName == "")
             {

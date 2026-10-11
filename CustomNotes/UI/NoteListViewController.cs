@@ -142,21 +142,12 @@ internal class NoteListViewController : BSMLAutomaticViewController
 
     private void InitializePreviewNotes(CustomNoteData note)
     {
-        if (note == null)
-        {
-            preview.ShowDefaultNotes();
-        }
-        else
-        {
-            var prefab = note.Prefab;
+        preview.LeftNoteArrow.SetNote(note?.Prefab.Left.NoteArrow.Instantiate());
+        preview.RightNoteArrow.SetNote(note?.Prefab.Right.NoteArrow.Instantiate());
+        preview.LeftNoteDot.SetNote(note?.Prefab.Left.NoteDot.Instantiate());
+        preview.RightNoteDot.SetNote(note?.Prefab.Right.NoteDot.Instantiate());
+        preview.NoteBomb.SetNote(note?.Prefab.Bomb.Instantiate());
 
-            preview.LeftNoteArrow.SetNote(prefab.Left.NoteArrow.Instantiate());
-            preview.RightNoteArrow.SetNote(prefab.Right.NoteArrow.Instantiate());
-            preview.LeftNoteDot.SetNote(prefab.Left.NoteDot.Instantiate());
-            preview.RightNoteDot.SetNote(prefab.Right.NoteDot.Instantiate());
-            preview.NoteBomb.SetNote(prefab.Bomb.Instantiate());
-        }
-    
         var leftColor = gameplaySetupViewController.colorSchemesSettings.GetSelectedColorScheme().saberAColor;
         var rightColor = gameplaySetupViewController.colorSchemesSettings.GetSelectedColorScheme().saberBColor;
         var colorMultiplier = note?.Prefab.ColorMultiplier ?? 1f;

@@ -6,15 +6,11 @@ namespace CustomNotes.UI;
 
 internal class NotePreview
 {
-    private readonly GameResourcesManager gameResourcesManager;
-    
     private static readonly Vector3 PreviewPosition = new(1.55f, 0.7f, 3.25f);
     private static readonly Vector3 PreviewRotation = new(0f, 28f, 0f);
     
     public NotePreview(GameResourcesManager gameResourcesManager)
     {
-        this.gameResourcesManager = gameResourcesManager;
-        
         var transform = new GameObject("NotePreviewContainer").transform;
         transform.SetPositionAndRotation(PreviewPosition, Quaternion.Euler(PreviewRotation));
 
@@ -47,15 +43,6 @@ internal class NotePreview
         RightNoteArrow.SetScale(scale);
         RightNoteDot.SetScale(scale);
         NoteBomb.SetScale(scale);
-    }
-
-    public void ShowDefaultNotes()
-    {
-        LeftNoteArrow.ShowDefaultNote();
-        LeftNoteDot.ShowDefaultNote();
-        RightNoteArrow.ShowDefaultNote();
-        RightNoteDot.ShowDefaultNote();
-        NoteBomb.ShowDefaultNote();
     }
 
     public void ClearNotes()
@@ -91,17 +78,12 @@ internal class NotePreview
             
             if (note == null)
             {
+                defaultNote.GameObject.SetActive(true);
                 return;
             }
 
             note.transform.SetParent(container, false);
             note.transform.localPosition = Vector3.zero;
-        }
-
-        public void ShowDefaultNote()
-        {
-            if (note) note.gameObject.SetActive(false);
-            defaultNote.GameObject.SetActive(true);
         }
 
         public void SetColor(Color color, float multiplier)
