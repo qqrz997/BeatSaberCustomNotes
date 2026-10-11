@@ -13,6 +13,13 @@ internal class MaterialSwapper
 
         foreach (var currentMaterial in allMaterials)
         {
+            if (currentMaterial == null)
+            {
+                allMaterials = null;
+                ReplaceMaterialsForGameObject(gameObject);
+                break;
+            }
+            
             string materialName = currentMaterial.name.ToLower() + "_replace (Instance)";
             ReplaceAllMaterialsForGameObjectChildren(gameObject, currentMaterial, materialName);
         }
