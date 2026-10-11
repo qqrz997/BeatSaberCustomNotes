@@ -16,7 +16,9 @@ using Zenject;
 
 namespace CustomNotes.UI;
 
-internal class NoteListViewController : BSMLResourceViewController
+[HotReload(RelativePathToLayout = "./BSML/noteList.bsml")]
+[ViewDefinition("CustomNotes.UI.BSML.noteList.bsml")]
+internal class NoteListViewController : BSMLAutomaticViewController
 {
     [Inject] private readonly PluginConfig config = null!;
     [Inject] private readonly NoteAssetLoader noteAssetLoader = null!;
@@ -24,8 +26,6 @@ internal class NoteListViewController : BSMLResourceViewController
 
     private readonly Dictionary<CustomListTableData.CustomCellInfo, string> cellValueMap = new();
     private readonly Dictionary<string, int> valueIndexMap = new();
- 
-    public override string ResourceName => "CustomNotes.Resources.BSML.noteList.bsml";
 
     private bool isGeneratingPreview;
     private GameObject preview;

@@ -6,10 +6,10 @@ using HMUI;
 
 namespace CustomNotes.UI;
 
-internal class NotePreviewViewController : BSMLResourceViewController
+[HotReload(RelativePathToLayout = "./BSML/notePreview.bsml")]
+[ViewDefinition("CustomNotes.UI.BSML.notePreview.bsml")]
+internal class NotePreviewViewController : BSMLAutomaticViewController
 {
-    public override string ResourceName => "CustomNotes.Resources.BSML.notePreview.bsml";
-
     [UIComponent("error-description")] private readonly TextPageScrollView errorDescription = null!;
 
     public void OnNoteWasChanged(CustomNoteData customNote)

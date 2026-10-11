@@ -8,10 +8,10 @@ using static IPA.Utilities.Utils;
 
 namespace CustomNotes.UI;
 
-internal class NoteDetailsViewController : BSMLResourceViewController
+[HotReload(RelativePathToLayout = "./BSML/noteDetails.bsml")]
+[ViewDefinition("CustomNotes.UI.BSML.noteDetails.bsml")]
+internal class NoteDetailsViewController : BSMLAutomaticViewController
 {
-    public override string ResourceName => "CustomNotes.Resources.BSML.noteDetails.bsml";
-
     [Inject] private readonly PluginConfig config = null!;
     [Inject] private readonly NoteListViewController listViewController = null!;
 
