@@ -20,17 +20,15 @@ internal class NoteListViewController : BSMLAutomaticViewController
     [Inject] private readonly PluginConfig config = null!;
     [Inject] private readonly NoteAssetLoader noteAssetLoader = null!;
     [Inject] private readonly GameplaySetupViewController gameplaySetupViewController = null!;
+    [Inject] private readonly NotePreview preview = null!;
+    [Inject] private readonly GameResourcesManager gameResourcesManager = null!;
 
     private readonly Dictionary<CustomListTableData.CustomCellInfo, string> cellValueMap = new();
     private readonly Dictionary<string, int> valueIndexMap = new();
 
     private bool isReloading;
     
-    private readonly NotePreview preview = new();
-    
     public Action<CustomNoteData> CustomNoteChanged;
-        
-    [UIParams] private readonly BSMLParserParams parserParams = null!;
         
     [UIComponent("noteList")] private readonly CustomListTableData customListTableData = null!;
     
@@ -86,11 +84,13 @@ internal class NoteListViewController : BSMLAutomaticViewController
         config.LastNote = hash;
         
         var selectedNote = hash is null ? null : noteAssetLoader.LoadedCustomNotes.GetValueOrDefault(hash, null);
+
         if (selectedNote != null)
         {
             CustomNoteChanged?.Invoke(selectedNote);
-            InitializePreviewNotes(selectedNote.Prefab);
         }
+        
+        InitializePreviewNotes(selectedNote);
     }
     
     public void SetupList()
@@ -140,27 +140,32 @@ internal class NoteListViewController : BSMLAutomaticViewController
     private int GetSelectedIndex() =>
         config.LastNote == null ? 0 : valueIndexMap.GetValueOrDefault(config.LastNote, 0);
 
-    private void InitializePreviewNotes(CustomNotePrefab prefab)
+    private void InitializePreviewNotes(CustomNoteData note)
     {
-        var leftNoteArrow = prefab.Left.NoteArrow.Instantiate();
-        var rightNoteArrow = prefab.Right.NoteArrow.Instantiate();
-        var leftNoteDot = prefab.Left.NoteDot.Instantiate();
-        var rightNoteDot = prefab.Right.NoteDot.Instantiate();
-        var noteBomb = prefab.Bomb.Instantiate();
+        if (note == null)
+        {
+            preview.ShowDefaultNotes();
+        }
+        else
+        {
+            var prefab = note.Prefab;
 
-        float colorStrength = 1f; // cn.Descriptor.NoteColorStrength;
-        var noteAColor = gameplaySetupViewController.colorSchemesSettings.GetSelectedColorScheme().saberAColor;
-        var noteBColor = gameplaySetupViewController.colorSchemesSettings.GetSelectedColorScheme().saberBColor;
+            preview.LeftNoteArrow.SetNote(prefab.Left.NoteArrow.Instantiate());
+            preview.RightNoteArrow.SetNote(prefab.Right.NoteArrow.Instantiate());
+            preview.LeftNoteDot.SetNote(prefab.Left.NoteDot.Instantiate());
+            preview.RightNoteDot.SetNote(prefab.Right.NoteDot.Instantiate());
+            preview.NoteBomb.SetNote(prefab.Bomb.Instantiate());
+        }
     
-        leftNoteArrow.SetColor(noteAColor * colorStrength);
-        rightNoteArrow.SetColor(noteBColor * colorStrength);
-        leftNoteDot.SetColor(noteAColor * colorStrength);
-        rightNoteDot.SetColor(noteBColor * colorStrength);
+        var leftColor = gameplaySetupViewController.colorSchemesSettings.GetSelectedColorScheme().saberAColor;
+        var rightColor = gameplaySetupViewController.colorSchemesSettings.GetSelectedColorScheme().saberBColor;
+        var colorMultiplier = note?.Prefab.ColorMultiplier ?? 1f;
+        
+        preview.LeftNoteArrow.SetColor(leftColor, colorMultiplier);
+        preview.RightNoteArrow.SetColor(rightColor, colorMultiplier);
+        preview.LeftNoteDot.SetColor(leftColor, colorMultiplier);
+        preview.RightNoteDot.SetColor(rightColor, colorMultiplier);
 
-        preview.LeftNoteArrow.SetNote(leftNoteArrow, config.NoteSize);
-        preview.RightNoteArrow.SetNote(rightNoteArrow, config.NoteSize);
-        preview.LeftNoteDot.SetNote(leftNoteDot, config.NoteSize);
-        preview.RightNoteDot.SetNote(rightNoteDot, config.NoteSize);
-        preview.NoteBomb.SetNote(noteBomb, config.NoteSize);
+        ScalePreviewNotes(config.NoteSize);
     }
 }
