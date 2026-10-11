@@ -24,7 +24,7 @@ internal class NotePrefab
             return null;
 
         var gameObject = Object.Instantiate(noteModelPrefab);
-        MaterialSwapper.ReplaceMaterialsForGameObject(gameObject);
+        gameObject.ReplaceSwappableMaterials();
         return NoteInstance.AddTo(gameObject, useBaseArrows, colorMultiplier);
     }
 }
