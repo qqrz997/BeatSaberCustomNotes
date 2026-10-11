@@ -26,16 +26,24 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
         this.noteAssetLoader = noteAssetLoader;
         this.gameplaySetup = gameplaySetup;
     }
-        
+
+    private bool parsed;
+    
     [UIValue("notes-list")] private readonly List<object> notesList = [];
     [UIComponent("notes-dropdown")] private readonly DropDownListSetting notesDropdown = null!;
 
     public event PropertyChangedEventHandler PropertyChanged;
 
+    [UIAction("#post-parse")]
+    public void PostParse()
+    {
+        parsed = true;
+    }
+    
     public void Initialize()
     {
         SetupList();
-        gameplaySetup.AddTab("Custom Notes", "CustomNotes.Resources.BSML.noteModifier.bsml", this);
+        gameplaySetup.AddTab("Custom Notes", "CustomNotes.UI.BSML.noteModifier.bsml", this);
     }
 
     public void Dispose()
@@ -45,7 +53,7 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
 
     internal void ParentControllerActivated()
     {
-        notesDropdown?.ReceiveValue();
+        if (parsed) notesDropdown.ReceiveValue();
         PropertyChanged?.Invoke(this, new(nameof(ModEnabled)));
         PropertyChanged?.Invoke(this, new(nameof(NoteSize)));
         PropertyChanged?.Invoke(this, new(nameof(HmdOnly)));
@@ -54,6 +62,8 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
 
     public void SetupList()
     {
+        if (!parsed) return;
+        
         notesList.Clear();
         notesList.Add("Default");
         foreach (var (_, customNote) in noteAssetLoader.LoadedCustomNotes)
