@@ -9,7 +9,7 @@ internal class DefaultNoteModel : INoteModel
     private readonly MeshRenderer[] arrowRenderers;
     private readonly MeshRenderer[] dotRenderers;
     
-    public DefaultNoteModel(GameObject notePrefab)
+    public DefaultNoteModel(GameObject notePrefab, bool active)
     {
         var instance = Object.Instantiate(notePrefab);
         
@@ -30,6 +30,7 @@ internal class DefaultNoteModel : INoteModel
             monoBehaviour.enabled = false;
 
         GameObject = noteCube.gameObject;
+        GameObject.SetActive(active);
         Transform = noteCube.transform;
     }
 

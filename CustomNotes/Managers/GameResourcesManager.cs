@@ -14,8 +14,8 @@ internal class GameResourcesManager
     private readonly GameObject bombNote = LoadResource<GameObject>(
         "Packages/com.beatgames.beatsaber.main.core/Prefabs/SongElements/Notes/BombNote.prefab");
 
-    public DefaultNoteModel CreateNormalGameNote() => new(normalGameNote);
-    public DefaultBombModel CreateBombNote() => new(bombNote);
+    public DefaultNoteModel CreateNormalGameNote(bool active) => new(normalGameNote, active);
+    public DefaultBombModel CreateBombNote(bool active) => new(bombNote, active);
 
     private static T LoadResource<T>(string label) where T : Object
     {

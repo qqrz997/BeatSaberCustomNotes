@@ -4,7 +4,7 @@ namespace CustomNotes.Models;
 
 internal class DefaultBombModel : INoteModel
 {
-    public DefaultBombModel(GameObject bombPrefab)
+    public DefaultBombModel(GameObject bombPrefab, bool active)
     {
         var instance = Object.Instantiate(bombPrefab);
         
@@ -18,6 +18,7 @@ internal class DefaultBombModel : INoteModel
             monoBehaviour.enabled = false;
         
         GameObject = mesh.gameObject;
+        GameObject.SetActive(active);
         Transform = mesh;
     }
     
