@@ -18,6 +18,7 @@ internal class NoteAssetLoader : IAsyncInitializable, IDisposable
 {
     private readonly NoteFileManager noteFileManager;
 
+    private readonly string notesDirectory = Path.Combine(UnityGame.InstallPath, "CustomNotes");
     private readonly Dictionary<string, CustomNoteData> loadedCustomNotes = [];
 
     private NoteAssetLoader(NoteFileManager noteFileManager)
@@ -28,7 +29,6 @@ internal class NoteAssetLoader : IAsyncInitializable, IDisposable
     private bool isLoaded;
     private NoteFileInfo[] customNoteFiles = [];
 
-    public static string NotesDirectory { get; } = Path.Combine(UnityGame.InstallPath, "CustomNotes");
     public IEnumerable<CustomNoteData> LoadedCustomNotes => loadedCustomNotes.Values;
 
     public event Action<IEnumerable<CustomNoteData>> CustomNotesChanged; 
@@ -43,7 +43,7 @@ internal class NoteAssetLoader : IAsyncInitializable, IDisposable
             return;
         }
 
-        Directory.CreateDirectory(NotesDirectory);
+        Directory.CreateDirectory(notesDirectory);
 
         customNoteFiles = await noteFileManager.ReloadAllFiles(token, null);
         Plugin.Log.Notice($"{customNoteFiles.Length} external notes found. Preparing to load.");
@@ -116,37 +116,27 @@ internal class NoteAssetLoader : IAsyncInitializable, IDisposable
 
     private static CustomNoteData LoadFromBundle(AssetBundle assetBundle, NoteFileInfo file)
     {
-        var noteObject = LoadNotePrefab(assetBundle);
+        var prefab = LoadNotePrefab(assetBundle);
 
-        var descriptor = noteObject.GetComponent<NoteDescriptor>();
+        var descriptor = prefab.GetComponent<NoteDescriptor>();
         descriptor.Icon ??= Utils.GetDefaultCustomIcon();
 
-        var noteArrowLeft = noteObject.transform.Find("NoteLeft").gameObject;
-        var noteArrowRight = noteObject.transform.Find("NoteRight").gameObject;
-        var noteDotLeftTransform = noteObject.transform.Find("NoteDotLeft");
-        var noteDotRightTransform = noteObject.transform.Find("NoteDotRight");
+        var noteArrowLeft = prefab.transform.Find("NoteLeft").gameObject;
+        var noteArrowRight = prefab.transform.Find("NoteRight").gameObject;
+        var noteDotLeftTransform = prefab.transform.Find("NoteDotLeft");
+        var noteDotRightTransform = prefab.transform.Find("NoteDotRight");
         var noteDotLeft = noteDotLeftTransform != null ? noteDotLeftTransform.gameObject : noteArrowLeft;
         var noteDotRight = noteDotRightTransform != null ? noteDotRightTransform.gameObject : noteArrowRight;
-        var noteBomb = noteObject.transform.Find("NoteBomb")?.gameObject;
+        var noteBomb = prefab.transform.Find("NoteBomb")?.gameObject;
 
-        var chainSegmentLeft = GetBurstSlider(noteObject, noteDotLeft, "BurstSliderLeft");
-        var chainSegmentRight = GetBurstSlider(noteObject, noteDotRight, "BurstSliderRight");
+        var chainSegmentLeft = GetBurstSlider(prefab, noteDotLeft, "BurstSliderLeft");
+        var chainSegmentRight = GetBurstSlider(prefab, noteDotRight, "BurstSliderRight");
 
-        var burstSliderHeadLeftT = noteObject.transform.Find("BurstSliderHeadLeft");
-        var burstSliderHeadRightT = noteObject.transform.Find("BurstSliderHeadRight");
-        var chainArrowLeft = burstSliderHeadLeftT != null ? burstSliderHeadLeftT.gameObject : noteArrowLeft;
-        var chainArrowRight = burstSliderHeadRightT != null ? burstSliderHeadRightT.gameObject : noteArrowRight;
+        var chainArrowLeft = GetBurstSliderHead(prefab, noteArrowLeft, "BurstSliderHeadLeft");
+        var chainArrowRight = GetBurstSliderHead(prefab, noteArrowRight, "BurstSliderHeadRight");
         
-        var burstSliderHeadDotLeftT = noteObject.transform.Find("BurstSliderHeadDotLeft");
-        var burstSliderHeadDotRightT = noteObject.transform.Find("BurstSliderHeadDotRight");
-        var chainDotLeft = 
-            burstSliderHeadDotLeftT != null ? burstSliderHeadDotLeftT.gameObject 
-            : chainArrowLeft != null ? chainArrowLeft.gameObject 
-            : noteDotLeft;
-        var chainDotRight = 
-            burstSliderHeadDotRightT != null ? burstSliderHeadDotRightT.gameObject 
-            : chainArrowRight != null ? chainArrowRight.gameObject 
-            : noteDotRight;
+        var chainDotLeft = GetBurstSliderHead(prefab, noteDotLeft, "BurstSliderHeadDotLeft");
+        var chainDotRight = GetBurstSliderHead(prefab, noteDotRight, "BurstSliderHeadDotRight");
 
         var noteInfo = new NoteInfo(descriptor.NoteName, descriptor.AuthorName, descriptor.Icon);
         var metadata = new NoteMetadata(file, noteInfo, string.Empty);
@@ -168,10 +158,7 @@ internal class NoteAssetLoader : IAsyncInitializable, IDisposable
     private static GameObject GetBurstSlider(GameObject prefab, GameObject dotPrefab, string sliderPrefabName)
     {
         var burstSlider = prefab.transform.Find(sliderPrefabName)?.gameObject;
-        if (burstSlider != null)
-        {
-            return burstSlider;
-        }
+        if (burstSlider != null) return burstSlider;
 
         burstSlider = new(sliderPrefabName);
         burstSlider.transform.SetParent(prefab.transform);
@@ -179,6 +166,21 @@ internal class NoteAssetLoader : IAsyncInitializable, IDisposable
         var model = Object.Instantiate(dotPrefab, burstSlider.transform, true);
         model.transform.localPosition = Vector3.zero;
         model.transform.localScale = model.transform.localScale with { y = model.transform.localScale.y / 4.5f };
+        
+        return burstSlider;
+    }
+
+    private static GameObject GetBurstSliderHead(GameObject prefab, GameObject fallbackPrefab, string sliderPrefabName)
+    {
+        var burstSlider = prefab.transform.Find(sliderPrefabName)?.gameObject;
+        if (burstSlider != null) return burstSlider;
+        
+        burstSlider = new(sliderPrefabName);
+        burstSlider.transform.SetParent(prefab.transform);
+        
+        var model = Object.Instantiate(fallbackPrefab, burstSlider.transform, true);
+        model.transform.localPosition = new(0f, 0.255f, 0f);
+        model.transform.localScale = model.transform.localScale with { y = 0.59f };
         
         return burstSlider;
     }
