@@ -134,6 +134,7 @@ internal class NotePreview
     {
         private readonly Transform container;
         private readonly INoteModel defaultNote;
+        private readonly DefaultNoteModel? defaultNoteModel;
 
         public PreviewNote(Transform parent, INoteModel defaultNote, string name, Vector3 localPosition)
         {
@@ -142,6 +143,8 @@ internal class NotePreview
             container.localPosition = localPosition;
             
             this.defaultNote = defaultNote;
+            if (defaultNote is DefaultNoteModel defaultNoteModel) 
+                this.defaultNoteModel = defaultNoteModel;
             defaultNote.Transform.SetParent(container, false);
         }
         
@@ -155,13 +158,14 @@ internal class NotePreview
             if (!note)
             {
                 defaultNote.GameObject.SetActive(true);
+                defaultNoteModel?.ShowNoteMesh = true;
                 return;
             }
 
             note.transform.SetParent(container, false);
             note.transform.localPosition = Vector3.zero;
 
-            if (note.UseBaseArrows && defaultNote is DefaultNoteModel defaultNoteModel)
+            if (note.UseBaseArrows && defaultNoteModel != null)
             {
                 defaultNoteModel.ShowNoteMesh = false;
                 defaultNoteModel.GameObject.SetActive(true);
