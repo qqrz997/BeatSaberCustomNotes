@@ -6,13 +6,13 @@ namespace CustomNotes.Managers;
 
 internal class CustomNotesViewManager : IInitializable, IDisposable
 {
-    private readonly NoteListViewController noteListViewController;
     private readonly NoteModifierViewController noteModifierViewController;
     private readonly GameplaySetupViewController gameplaySetupViewController;
 
-    private CustomNotesViewManager(NoteListViewController noteListViewController, NoteModifierViewController noteModifierViewController, GameplaySetupViewController gameplaySetupViewController)
+    private CustomNotesViewManager(
+        NoteModifierViewController noteModifierViewController,
+        GameplaySetupViewController gameplaySetupViewController)
     {
-        this.noteListViewController = noteListViewController;
         this.noteModifierViewController = noteModifierViewController;
         this.gameplaySetupViewController = gameplaySetupViewController;
     }

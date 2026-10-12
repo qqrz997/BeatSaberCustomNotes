@@ -1,5 +1,4 @@
 ﻿using CameraUtils.Core;
-using CustomNotes.Managers;
 using CustomNotes.Models;
 using CustomNotes.Utilities;
 using SiraUtil.Interfaces;

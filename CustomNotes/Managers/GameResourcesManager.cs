@@ -1,9 +1,7 @@
-using System.Collections.Generic;
 using CustomNotes.Models;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using Zenject;
 
 namespace CustomNotes.Managers;
 

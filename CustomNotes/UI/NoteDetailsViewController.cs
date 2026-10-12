@@ -1,7 +1,6 @@
 ﻿using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
 using CustomNotes.Models;
-using HMUI;
 using UnityEngine;
 using Zenject;
 using static IPA.Utilities.Utils;

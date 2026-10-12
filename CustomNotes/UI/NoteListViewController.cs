@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Components;
-using BeatSaberMarkupLanguage.Parser;
 using BeatSaberMarkupLanguage.ViewControllers;
 using CustomNotes.Managers;
 using CustomNotes.Models;
@@ -21,7 +20,6 @@ internal class NoteListViewController : BSMLAutomaticViewController
     [Inject] private readonly NoteAssetLoader noteAssetLoader = null!;
     [Inject] private readonly GameplaySetupViewController gameplaySetupViewController = null!;
     [Inject] private readonly NotePreview preview = null!;
-    [Inject] private readonly GameResourcesManager gameResourcesManager = null!;
 
     private readonly Dictionary<CustomListTableData.CustomCellInfo, string> cellValueMap = new();
     private readonly Dictionary<string, int> valueIndexMap = new();

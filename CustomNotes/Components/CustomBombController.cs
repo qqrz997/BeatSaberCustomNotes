@@ -18,7 +18,7 @@ internal class CustomBombController : MonoBehaviour, INoteControllerDidInitEvent
     private NoteInstanceContainer.Pool bombPool;
 
     [Inject]
-    private void Init(
+    public void Init(
         PluginConfig config, 
         [InjectOptional(Id = Protocol.BombPool)] NoteInstanceContainer.Pool bombContainerPool)
     {

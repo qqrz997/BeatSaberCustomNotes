@@ -66,21 +66,6 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
         noteAssetLoader.CustomNotesChanged -= CustomNotesChanged;
     }
 
-    public void SetupList()
-    {
-        if (!parsed) return;
-        
-        notesList.Clear();
-        notesList.Add("Default");
-        foreach (var customNote in noteAssetLoader.LoadedCustomNotes)
-        {
-            notesList.Add(new DropdownListItem(customNote));
-        }
-
-        notesDropdown.Values = notesList;
-        notesDropdown.UpdateChoices();
-    }
-
     public void SelectionChanged(object selectedCell)
     {
         config.LastNote = selectedCell is DropdownListItem item ? item.NoteData.Metadata.File.Hash : null;
@@ -96,7 +81,7 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
         }
     }
 
-    private object DropdownValue => GetSelectedNote();
+    public object DropdownValue => GetSelectedNote();
     private object GetSelectedNote()
     {
         foreach (var value in notesDropdown.Values)
@@ -138,6 +123,21 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
     private void CustomNotesChanged(IEnumerable<CustomNoteData> noteData)
     {
         SetupList();
+    }
+
+    private void SetupList()
+    {
+        if (!parsed) return;
+        
+        notesList.Clear();
+        notesList.Add("Default");
+        foreach (var customNote in noteAssetLoader.LoadedCustomNotes)
+        {
+            notesList.Add(new DropdownListItem(customNote));
+        }
+
+        notesDropdown.Values = notesList;
+        notesDropdown.UpdateChoices();
     }
     
     private class DropdownListItem
