@@ -129,14 +129,14 @@ internal class NoteAssetLoader : IAsyncInitializable, IDisposable
         var noteDotRight = noteDotRightTransform != null ? noteDotRightTransform.gameObject : noteArrowRight;
         var noteBomb = prefab.transform.Find("NoteBomb")?.gameObject;
 
-        var chainSegmentLeft = GetBurstSlider(prefab, noteDotLeft, "BurstSliderLeft");
-        var chainSegmentRight = GetBurstSlider(prefab, noteDotRight, "BurstSliderRight");
+        var chainSegmentLeft = GetSubPrefab(noteDotLeft, "BurstSliderLeft", Vector3.zero, new(1f, 0.225f, 1f));
+        var chainSegmentRight = GetSubPrefab(noteDotLeft, "BurstSliderRight", Vector3.zero, new(1f, 0.225f, 1f));
 
-        var chainArrowLeft = GetBurstSliderHead(prefab, noteArrowLeft, "BurstSliderHeadLeft");
-        var chainArrowRight = GetBurstSliderHead(prefab, noteArrowRight, "BurstSliderHeadRight");
+        var chainArrowLeft = GetSubPrefab(noteArrowLeft, "BurstSliderHeadLeft", new(0f, 0.255f, 0f), new(1f, 0.59f, 1f));
+        var chainArrowRight = GetSubPrefab(noteArrowRight, "BurstSliderHeadRight", new(0f, 0.255f, 0f), new(1f, 0.59f, 1f));
         
-        var chainDotLeft = GetBurstSliderHead(prefab, noteDotLeft, "BurstSliderHeadDotLeft");
-        var chainDotRight = GetBurstSliderHead(prefab, noteDotRight, "BurstSliderHeadDotRight");
+        var chainDotLeft = GetSubPrefab(noteDotLeft, "BurstSliderHeadDotLeft", new(0f, 0.255f, 0f), new(1f, 0.59f, 1f));
+        var chainDotRight = GetSubPrefab(noteDotRight, "BurstSliderHeadDotRight", new(0f, 0.255f, 0f), new(1f, 0.59f, 1f));
 
         var noteInfo = new NoteInfo(descriptor.NoteName, descriptor.AuthorName, descriptor.Icon);
         var metadata = new NoteMetadata(file, noteInfo, string.Empty);
@@ -153,35 +153,20 @@ internal class NoteAssetLoader : IAsyncInitializable, IDisposable
             leftPrefabs, rightPrefabs, noteBomb, descriptor.UsesNoteColor, descriptor.NoteColorStrength);
         
         return new(assetBundle, metadata, customNotePrefab);
-    }
-    
-    private static GameObject GetBurstSlider(GameObject prefab, GameObject dotPrefab, string sliderPrefabName)
-    {
-        var burstSlider = prefab.transform.Find(sliderPrefabName)?.gameObject;
-        if (burstSlider != null) return burstSlider;
 
-        burstSlider = new(sliderPrefabName);
-        burstSlider.transform.SetParent(prefab.transform);
+        GameObject GetSubPrefab(GameObject fallback, string subPrefabName, Vector3 position, Vector3 scale)
+        {
+            var subPrefab = prefab.transform.Find(subPrefabName)?.gameObject;
+            if (subPrefab != null) return subPrefab;
+
+            subPrefab = new(subPrefabName);
+            subPrefab.transform.SetParent(prefab.transform);
             
-        var model = Object.Instantiate(dotPrefab, burstSlider.transform, true);
-        model.transform.localPosition = Vector3.zero;
-        model.transform.localScale = model.transform.localScale with { y = model.transform.localScale.y / 4.5f };
+            var model = Object.Instantiate(fallback, subPrefab.transform, true);
+            model.transform.localPosition = position;
+            model.transform.localScale = scale;
         
-        return burstSlider;
-    }
-
-    private static GameObject GetBurstSliderHead(GameObject prefab, GameObject fallbackPrefab, string sliderPrefabName)
-    {
-        var burstSlider = prefab.transform.Find(sliderPrefabName)?.gameObject;
-        if (burstSlider != null) return burstSlider;
-        
-        burstSlider = new(sliderPrefabName);
-        burstSlider.transform.SetParent(prefab.transform);
-        
-        var model = Object.Instantiate(fallbackPrefab, burstSlider.transform, true);
-        model.transform.localPosition = new(0f, 0.255f, 0f);
-        model.transform.localScale = model.transform.localScale with { y = 0.59f };
-        
-        return burstSlider;
+            return subPrefab;
+        }
     }
 }
