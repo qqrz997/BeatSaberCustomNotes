@@ -21,6 +21,7 @@ internal class NoteInstance : MonoBehaviour
         noteInstance.colorMultiplier = colorMultiplier;
         return noteInstance;
     }
+    
     private MaterialPropertyBlockController? materialPropertyBlockController;
 
     public bool UseBaseArrows => useBaseArrows;

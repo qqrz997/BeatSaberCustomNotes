@@ -6,6 +6,7 @@ namespace CustomNotes.Models;
 internal class DefaultNoteModel : INoteModel
 {
     private readonly MaterialPropertyBlockController[] materialPropertyBlockControllers;
+    private readonly MeshRenderer noteRenderer;
     private readonly MeshRenderer[] arrowRenderers;
     private readonly MeshRenderer[] dotRenderers;
     
@@ -19,6 +20,7 @@ internal class DefaultNoteModel : INoteModel
 
         var colorVisuals = instance.GetComponent<ColorNoteVisuals>();
         materialPropertyBlockControllers = colorVisuals._materialPropertyBlockControllers;
+        noteRenderer = noteCube.GetComponent<MeshRenderer>();
         arrowRenderers = colorVisuals._arrowMeshRenderers;
         dotRenderers = colorVisuals._circleMeshRenderers;
         
@@ -35,6 +37,7 @@ internal class DefaultNoteModel : INoteModel
     }
 
     private bool showDot;
+    private bool showNoteMesh;
 
     public GameObject GameObject { get; }
     public Transform Transform { get; }
@@ -43,6 +46,12 @@ internal class DefaultNoteModel : INoteModel
     {
         get => showDot;
         set => SetShowDot(value);
+    }
+
+    public bool ShowNoteMesh
+    {
+        get => showNoteMesh;
+        set => SetNoteEnabled(value);
     }
 
     public void SetColor(Color color)
@@ -59,5 +68,11 @@ internal class DefaultNoteModel : INoteModel
         showDot = value;
         foreach (var arrowRenderer in arrowRenderers) arrowRenderer.enabled = !showDot;
         foreach (var dotRenderer in dotRenderers) dotRenderer.enabled = showDot;
+    }
+
+    private void SetNoteEnabled(bool value)
+    {
+        showNoteMesh = value;
+        noteRenderer.enabled = showNoteMesh;
     }
 }

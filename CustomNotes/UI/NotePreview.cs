@@ -160,6 +160,12 @@ internal class NotePreview
 
             note.transform.SetParent(container, false);
             note.transform.localPosition = Vector3.zero;
+
+            if (note.UseBaseArrows && defaultNote is DefaultNoteModel defaultNoteModel)
+            {
+                defaultNoteModel.ShowNoteMesh = false;
+                defaultNoteModel.GameObject.SetActive(true);
+            }
         }
 
         public void SetColor(Color color, float multiplier)
