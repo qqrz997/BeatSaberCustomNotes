@@ -28,7 +28,7 @@ internal class PlayerInstaller : Installer
 
     public override void InstallBindings()
     {
-        if (!config.Enabled || !noteAssetLoader.LoadedCustomNotes.TryGetValue(config.LastNote, out var customNote))
+        if (!config.Enabled || !noteAssetLoader.TryGetCustomNote(config.LastNote, out var customNote))
         {
             return;
         }

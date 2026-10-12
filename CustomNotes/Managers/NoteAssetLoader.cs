@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -15,12 +16,12 @@ namespace CustomNotes.Managers;
 
 internal class NoteAssetLoader : IAsyncInitializable, IDisposable
 {
-    private readonly PluginConfig config;
     private readonly NoteFileManager noteFileManager;
 
-    private NoteAssetLoader(PluginConfig config, NoteFileManager noteFileManager)
+    private readonly Dictionary<string, CustomNoteData> loadedCustomNotes = [];
+
+    private NoteAssetLoader(NoteFileManager noteFileManager)
     {
-        this.config = config;
         this.noteFileManager = noteFileManager;
     }
 
@@ -28,8 +29,7 @@ internal class NoteAssetLoader : IAsyncInitializable, IDisposable
     private NoteFileInfo[] customNoteFiles = [];
 
     public static string NotesDirectory { get; } = Path.Combine(UnityGame.InstallPath, "CustomNotes");
-
-    public Dictionary<string, CustomNoteData> LoadedCustomNotes { get; private set; } = [];
+    public IEnumerable<CustomNoteData> LoadedCustomNotes => loadedCustomNotes.Values;
 
     public event Action<IEnumerable<CustomNoteData>> CustomNotesChanged; 
 
@@ -48,10 +48,13 @@ internal class NoteAssetLoader : IAsyncInitializable, IDisposable
         customNoteFiles = await noteFileManager.ReloadAllFiles(token, null);
         Plugin.Log.Notice($"{customNoteFiles.Length} external notes found. Preparing to load.");
             
-        LoadedCustomNotes = LoadCustomNotes(customNoteFiles).ToDictionary(x => x.Metadata.File.Hash);
-        Plugin.Log.Notice($"{LoadedCustomNotes.Count} total custom notes loaded.");
+        foreach (var note in LoadCustomNotes(customNoteFiles))
+        {
+            loadedCustomNotes.Add(note.Metadata.File.Hash, note);
+        }
+        Plugin.Log.Notice($"{loadedCustomNotes.Count} total custom notes loaded.");
         
-        CustomNotesChanged?.Invoke(LoadedCustomNotes.Values);
+        CustomNotesChanged?.Invoke(LoadedCustomNotes);
 
         isLoaded = true;
     }
@@ -61,10 +64,10 @@ internal class NoteAssetLoader : IAsyncInitializable, IDisposable
     /// </summary>
     public void Dispose()
     {
-        foreach (var (_, customNote) in LoadedCustomNotes)
+        foreach (var customNote in LoadedCustomNotes)
             customNote.Dispose();
-        LoadedCustomNotes.Clear();
-        CustomNotesChanged?.Invoke(LoadedCustomNotes.Values);
+        loadedCustomNotes.Clear();
+        CustomNotesChanged?.Invoke(LoadedCustomNotes);
         isLoaded = false;
     }
 
@@ -78,8 +81,14 @@ internal class NoteAssetLoader : IAsyncInitializable, IDisposable
         Dispose();
         await InitializeAsync(CancellationToken.None);
     }
+    
+    public bool TryGetCustomNote(string hash, [NotNullWhen(true)] out CustomNoteData note)
+    {
+        note = null;
+        return !string.IsNullOrEmpty(hash) && loadedCustomNotes.TryGetValue(hash, out note);
+    }
 
-    public static GameObject LoadNotePrefab(AssetBundle assetBundle) => 
+    private static GameObject LoadNotePrefab(AssetBundle assetBundle) => 
         assetBundle.LoadAsset<GameObject>("assets/_customnote.prefab");
 
     private static IEnumerable<CustomNoteData> LoadCustomNotes(IEnumerable<NoteFileInfo> customNoteFiles) => 
@@ -165,14 +174,12 @@ internal class NoteAssetLoader : IAsyncInitializable, IDisposable
         }
 
         burstSlider = new(sliderPrefabName);
+        burstSlider.transform.SetParent(prefab.transform);
             
-        var burstSliderDot = Object.Instantiate(dotPrefab, burstSlider.transform, true);
-        burstSliderDot.transform.localPosition = Vector3.zero;
-
-        var sliderScale = burstSliderDot.transform.localScale;
-        burstSliderDot.transform.localScale = sliderScale with { y = sliderScale.y / 4 };
-            
-        burstSlider.SetActive(false);
+        var model = Object.Instantiate(dotPrefab, burstSlider.transform, true);
+        model.transform.localPosition = Vector3.zero;
+        model.transform.localScale = model.transform.localScale with { y = model.transform.localScale.y / 4.5f };
+        
         return burstSlider;
     }
 }

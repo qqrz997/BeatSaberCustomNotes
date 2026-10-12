@@ -72,7 +72,7 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
         
         notesList.Clear();
         notesList.Add("Default");
-        foreach (var (_, customNote) in noteAssetLoader.LoadedCustomNotes)
+        foreach (var customNote in noteAssetLoader.LoadedCustomNotes)
         {
             notesList.Add(new DropdownListItem(customNote));
         }
