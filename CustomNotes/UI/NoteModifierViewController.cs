@@ -32,7 +32,7 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
     [UIValue("notes-list")] private readonly List<object> notesList = [];
     [UIComponent("notes-dropdown")] private readonly DropDownListSetting notesDropdown = null!;
 
-    public event PropertyChangedEventHandler PropertyChanged;
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     [UIAction("#post-parse")]
     public void PostParse()

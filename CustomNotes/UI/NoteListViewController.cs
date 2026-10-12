@@ -18,7 +18,7 @@ internal class NoteListViewController : BSMLAutomaticViewController
 {
     [Inject] private readonly PluginConfig config = null!;
     [Inject] private readonly NoteAssetLoader noteAssetLoader = null!;
-    [Inject] private readonly GameplaySetupViewController gameplaySetupViewController = null!;
+    [Inject] private readonly ColorSchemesSettings colorSchemesSettings = null!;
     [Inject] private readonly NotePreview preview = null!;
 
     private readonly Dictionary<CustomListTableData.CustomCellInfo, string> cellValueMap = new();
@@ -26,7 +26,7 @@ internal class NoteListViewController : BSMLAutomaticViewController
 
     private bool isReloading;
     
-    public Action<CustomNoteData> CustomNoteChanged;
+    public Action<CustomNoteData>? CustomNoteChanged;
         
     [UIComponent("noteList")] private readonly CustomListTableData customListTableData = null!;
     
@@ -78,7 +78,7 @@ internal class NoteListViewController : BSMLAutomaticViewController
         preview.ClearNotes();
         
         var cell = customListTableData.Data[row];
-        var hash = cellValueMap.GetValueOrDefault(cell, null);
+        var hash = cellValueMap.GetValueOrDefault(cell);
         config.LastNote = hash;
         
         if (noteAssetLoader.TryGetCustomNote(hash, out var selectedNote))
@@ -137,34 +137,19 @@ internal class NoteListViewController : BSMLAutomaticViewController
     private int GetSelectedIndex() =>
         config.LastNote == null ? 0 : valueIndexMap.GetValueOrDefault(config.LastNote, 0);
 
-    private void InitializePreviewNotes(CustomNoteData note)
+    private void InitializePreviewNotes(CustomNoteData? note)
     {
-        preview.LeftNoteArrow.SetNote(note?.Prefab.Left.NoteArrow.Instantiate());
-        preview.LeftNoteDot.SetNote(note?.Prefab.Left.NoteDot.Instantiate());
-        preview.LeftChainArrow.SetNote(note?.Prefab.Left.ChainArrow.Instantiate());
-        preview.LeftChainDot.SetNote(note?.Prefab.Left.ChainDot.Instantiate());
-        preview.LeftChainSegment.SetNote(note?.Prefab.Left.ChainSegment.Instantiate());
-        preview.RightNoteArrow.SetNote(note?.Prefab.Right.NoteArrow.Instantiate());
-        preview.RightNoteDot.SetNote(note?.Prefab.Right.NoteDot.Instantiate());
-        preview.RightChainArrow.SetNote(note?.Prefab.Right.ChainArrow.Instantiate());
-        preview.RightChainDot.SetNote(note?.Prefab.Right.ChainDot.Instantiate());
-        preview.RightChainSegment.SetNote(note?.Prefab.Right.ChainSegment.Instantiate());
-        preview.NoteBomb.SetNote(note?.Prefab.Bomb.Instantiate());
+        var colorScheme = colorSchemesSettings.GetSelectedColorScheme();
 
-        var leftColor = gameplaySetupViewController.colorSchemesSettings.GetSelectedColorScheme().saberAColor;
-        var rightColor = gameplaySetupViewController.colorSchemesSettings.GetSelectedColorScheme().saberBColor;
-        var colorMultiplier = note?.Prefab.ColorMultiplier ?? 1f;
+        if (note?.Prefab == null)
+        {
+            preview.ShowDefaultNotes();
+            preview.SetColors(colorScheme.saberAColor, colorScheme.saberBColor, 1f);
+            return;
+        }
         
-        preview.LeftNoteArrow.SetColor(leftColor, colorMultiplier);
-        preview.LeftNoteDot.SetColor(leftColor, colorMultiplier);
-        preview.LeftChainArrow.SetColor(leftColor, colorMultiplier);
-        preview.LeftChainDot.SetColor(leftColor, colorMultiplier);
-        preview.LeftChainSegment.SetColor(leftColor, colorMultiplier);
-        preview.RightNoteArrow.SetColor(rightColor, colorMultiplier);
-        preview.RightNoteDot.SetColor(rightColor, colorMultiplier);
-        preview.RightChainArrow.SetColor(rightColor, colorMultiplier);
-        preview.RightChainDot.SetColor(rightColor, colorMultiplier);
-        preview.RightChainSegment.SetColor(rightColor, colorMultiplier);
+        preview.SetNotes(note.Prefab);
+        preview.SetColors(colorScheme.saberAColor, colorScheme.saberBColor, note.Prefab.ColorMultiplier);
 
         ScalePreviewNotes(config.NoteSize);
     }

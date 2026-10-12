@@ -32,6 +32,13 @@ internal class PlayerInstaller : Installer
         {
             return;
         }
+        
+        var prefab = customNote.Prefab;
+        if (prefab == null)
+        {
+            return;
+        }
+        
         bool ghostNotes = gameplayCoreSceneSetupData.gameplayModifiers.ghostNotes;
         bool disappearingArrows = gameplayCoreSceneSetupData.gameplayModifiers.disappearingArrows;
         bool smallCubes = gameplayCoreSceneSetupData.gameplayModifiers.smallCubes;
@@ -63,8 +70,6 @@ internal class PlayerInstaller : Installer
         Container.BindInterfacesTo<ScoreSubmissionManager>().AsSingle();
 
         Container.BindInstance(customNote).AsSingle();
-        
-        var prefab = customNote.Prefab;
         
         #region Note Setup
 
@@ -109,13 +114,10 @@ internal class PlayerInstaller : Installer
             return bombNoteController;
         }, DecorationPriority));
 
-        if (bomb != null)
-        {
-            Container.BindMemoryPool<NoteInstanceContainer, NoteInstanceContainer.Pool>()
-                .WithId(Protocol.BombPool)
-                .WithInitialSize(10)
-                .FromComponentInNewPrefab(NoteInstanceContainer.Create(bomb));
-        }
+        Container.BindMemoryPool<NoteInstanceContainer, NoteInstanceContainer.Pool>()
+            .WithId(Protocol.BombPool)
+            .WithInitialSize(10)
+            .FromComponentInNewPrefab(NoteInstanceContainer.Create(bomb));
 
         #endregion
 

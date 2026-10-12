@@ -29,10 +29,10 @@ internal class NoteFileManager
     public NoteFileInfo[] GetLoadedNoteFiles() =>
         loadedFiles;
     
-    public async Task<NoteFileInfo[]> ReloadAllFiles(CancellationToken token, IProgress<int> progress) => 
+    public async Task<NoteFileInfo[]> ReloadAllFiles(CancellationToken token, IProgress<int>? progress = null) => 
         await Task.Run(() => GetDistinctFiles(token, progress), token);
     
-    private NoteFileInfo[] GetDistinctFiles(CancellationToken token, IProgress<int> progress)
+    private NoteFileInfo[] GetDistinctFiles(CancellationToken token, IProgress<int>? progress)
     {
         progress?.Report(0);
         
@@ -63,7 +63,7 @@ internal class NoteFileManager
         return loadedFiles;
     }
 
-    private static bool TryCreateFile(FileInfo file, [NotNullWhen(true)] out NoteFileInfo saberFileInfo)
+    private static bool TryCreateFile(FileInfo file, [NotNullWhen(true)] out NoteFileInfo? saberFileInfo)
     {
         saberFileInfo = null;
         try
@@ -112,7 +112,7 @@ internal class NoteFileManager
 
     private class NoteFileInfoHashComparer : IEqualityComparer<NoteFileInfo>
     {
-        public bool Equals(NoteFileInfo a, NoteFileInfo b) => a != null && b != null && a.Hash == b.Hash;
+        public bool Equals(NoteFileInfo? a, NoteFileInfo? b) => a != null && b != null && a.Hash == b.Hash;
         public int GetHashCode(NoteFileInfo obj) => obj.Hash.GetHashCode();
     }
 }

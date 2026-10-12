@@ -12,15 +12,15 @@ internal class CustomBombController : MonoBehaviour, INoteControllerDidInitEvent
     private BombNoteController bombNoteController = null!;
     
     private MeshRenderer vanillaBombRenderer = null!;
-    private MeshRenderer fakeBombRenderer;
+    private MeshRenderer fakeBombRenderer = null!;
 
-    private NoteInstanceContainer activeContainer;
-    private NoteInstanceContainer.Pool bombPool;
+    private NoteInstanceContainer? activeContainer;
+    private NoteInstanceContainer.Pool bombPool = null!;
 
     [Inject]
     public void Init(
         PluginConfig config, 
-        [InjectOptional(Id = Protocol.BombPool)] NoteInstanceContainer.Pool bombContainerPool)
+        [Inject(Id = Protocol.BombPool)] NoteInstanceContainer.Pool bombContainerPool)
     {
         this.config = config;
 
@@ -33,16 +33,13 @@ internal class CustomBombController : MonoBehaviour, INoteControllerDidInitEvent
     
         vanillaBombRenderer = gameObject.transform.Find("Mesh").GetComponent<MeshRenderer>();
 
-        if (bombPool != null)
-        {
-            bombNoteController.didInitEvent.Add(this);
-            bombNoteController.noteWasCutEvent.Add(this);
-            bombNoteController.noteWasMissedEvent.Add(this);
-            bombNoteController.noteDidDissolveEvent.Add(this);
+        bombNoteController.didInitEvent.Add(this);
+        bombNoteController.noteWasCutEvent.Add(this);
+        bombNoteController.noteWasMissedEvent.Add(this);
+        bombNoteController.noteDidDissolveEvent.Add(this);
             
-            vanillaBombRenderer.enabled = false;
-        }
-            
+        vanillaBombRenderer.enabled = false;
+
         if (config.HmdOnly)
         {
             // create fake bombs because for some reason changing the layer of the vanilla bomb mesh causes them
@@ -61,6 +58,7 @@ internal class CustomBombController : MonoBehaviour, INoteControllerDidInitEvent
 
     private void DidFinish()
     {
+        if (!activeContainer) return;
         activeContainer.instance.gameObject.SetActive(false);
         activeContainer.transform.SetParent(null);
         bombPool.Despawn(activeContainer);
@@ -69,6 +67,7 @@ internal class CustomBombController : MonoBehaviour, INoteControllerDidInitEvent
     public void HandleNoteControllerDidInit(NoteControllerBase noteController)
     {
         activeContainer = bombPool.Spawn();
+        if (!activeContainer) return;
         
         var go = activeContainer.instance.gameObject;
         go.SetLayerRecursively(config.HmdOnly ? VisibilityLayer.HmdOnlyAndReflected : VisibilityLayer.Note);

@@ -8,7 +8,7 @@ namespace CustomNotes.Models;
 /// </summary>
 internal class NoteInstanceContainer : MonoBehaviour
 {
-    public NoteInstance instance;
+    public NoteInstance instance = null!;
 
     public static NoteInstanceContainer Create(NoteInstance instance)
     {

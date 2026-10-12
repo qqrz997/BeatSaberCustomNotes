@@ -1,13 +1,14 @@
 using System;
+using CustomNotes.Utilities;
 using UnityEngine;
 
 namespace CustomNotes.Models;
 
 internal class CustomNoteData : IDisposable
 {
-    private readonly AssetBundle assetBundle;
+    private readonly AssetBundle? assetBundle;
     
-    public CustomNoteData(AssetBundle assetBundle, NoteMetadata metadata, CustomNotePrefab prefab)
+    public CustomNoteData(AssetBundle? assetBundle, NoteMetadata metadata, CustomNotePrefab? prefab)
     {
         this.assetBundle = assetBundle;
         Metadata = metadata;
@@ -15,10 +16,10 @@ internal class CustomNoteData : IDisposable
     }
 
     public NoteMetadata Metadata { get; }
-    public CustomNotePrefab Prefab { get; }
+    public CustomNotePrefab? Prefab { get; }
 
     public static CustomNoteData Error(NoteFileInfo file, string message) => 
-        new(null, new(file, new("", "", null), message), null);
+        new(null, new(file, new("", "", Utils.GetErrorIcon()), message), null);
 
     public void Dispose()
     {

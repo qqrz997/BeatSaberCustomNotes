@@ -20,7 +20,7 @@ internal class WatermarkManager : IInitializable, IDisposable
         this.config = config;
     }
         
-    private GameObject watermarkObject;
+    private GameObject? watermarkObject;
 
     public void Initialize()
     {

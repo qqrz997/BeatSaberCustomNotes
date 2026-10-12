@@ -7,13 +7,13 @@ internal class CustomNotePrefab
     public CustomNotePrefab(
         NotePrefabs left,
         NotePrefabs right,
-        GameObject bomb, 
+        NotePrefab bomb, 
         bool colorableNote = true,
         float colorMultiplier = 1f)
     {
         Left = left;
         Right = right;
-        Bomb = new(bomb, colorableNote, colorMultiplier);
+        Bomb = bomb;
         Colorable = colorableNote;
         ColorMultiplier = colorMultiplier;
     }

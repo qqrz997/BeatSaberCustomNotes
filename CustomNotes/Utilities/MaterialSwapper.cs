@@ -6,7 +6,7 @@ namespace CustomNotes.Utilities;
 
 internal static class MaterialSwapper
 {
-    private static Dictionary<string, Material> replacements;
+    private static Dictionary<string, Material>? replacements;
 
     public static void ReplaceSwappableMaterials(this GameObject gameObject)
     {

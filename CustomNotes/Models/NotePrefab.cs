@@ -20,9 +20,6 @@ internal class NotePrefab
 
     public NoteInstance Instantiate()
     {
-        if (noteModelPrefab == null)
-            return null;
-
         var gameObject = Object.Instantiate(noteModelPrefab);
         gameObject.ReplaceSwappableMaterials();
         return NoteInstance.AddTo(gameObject, useBaseArrows, colorMultiplier);

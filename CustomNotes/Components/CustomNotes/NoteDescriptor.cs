@@ -11,7 +11,7 @@ public class NoteDescriptor : MonoBehaviour
     public string NoteName = "Note";
     public string AuthorName = "Author";
     public string Description = string.Empty;
-    public Texture2D Icon;
+    public Texture2D? Icon;
     public bool DisableBaseNoteArrows;
     public bool UsesNoteColor;
     public float NoteColorStrength = 1.0f;

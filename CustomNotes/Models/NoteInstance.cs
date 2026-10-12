@@ -7,9 +7,11 @@ namespace CustomNotes.Models;
 
 internal class NoteInstance : MonoBehaviour
 {
-    [SerializeField] private Renderer[] colorableRenderers;
+    [SerializeField] private Renderer[] colorableRenderers = [];
     [SerializeField] private bool useBaseArrows;
     [SerializeField] private float colorMultiplier;
+    
+    private readonly MaterialPropertyBlock materialPropertyBlock = new();
     
     public static NoteInstance AddTo(GameObject noteObject, bool useBaseArrows, float colorMultiplier)
     {
@@ -19,9 +21,7 @@ internal class NoteInstance : MonoBehaviour
         noteInstance.colorMultiplier = colorMultiplier;
         return noteInstance;
     }
-    
-    private MaterialPropertyBlock materialPropertyBlock;
-    private MaterialPropertyBlockController materialPropertyBlockController;
+    private MaterialPropertyBlockController? materialPropertyBlockController;
 
     public bool UseBaseArrows => useBaseArrows;
     public float ColorMultiplier => colorMultiplier;
@@ -41,22 +41,19 @@ internal class NoteInstance : MonoBehaviour
     
     public void SetColor(Color color)
     {
-        materialPropertyBlock ??= new();
         materialPropertyBlock.SetColor(MaterialProps.Color, color);
 
-        if (colorableRenderers != null)
+        foreach (var renderer in colorableRenderers)
         {
-            foreach (var renderer in colorableRenderers)
-            {
-                renderer.SetPropertyBlock(materialPropertyBlock);
-            }
+            renderer.SetPropertyBlock(materialPropertyBlock);
         }
 
-        if (!materialPropertyBlockController && !gameObject.TryGetComponent(out materialPropertyBlockController))
+        if (!materialPropertyBlockController)
         {
-            return;
+            materialPropertyBlockController = gameObject.GetComponent<MaterialPropertyBlockController>();
         }
-        
+
+        if (!materialPropertyBlockController) return;
         materialPropertyBlockController.materialPropertyBlock.SetColor(MaterialProps.Color, color);
         materialPropertyBlockController.ApplyChanges();
     }

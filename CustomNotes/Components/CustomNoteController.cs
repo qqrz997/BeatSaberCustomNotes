@@ -16,17 +16,17 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
     private GameNoteController gameNoteController = null!;
     private CustomNoteColorNoteVisuals customNoteColorNoteVisuals = null!;
 
-    private NoteInstanceContainer activeContainer;
-    private NoteInstanceContainer.Pool activePool;
+    private NoteInstanceContainer? activeContainer;
+    private NoteInstanceContainer.Pool? activePool;
 
-    private NoteInstanceContainer.Pool leftDotNotePool;
-    private NoteInstanceContainer.Pool rightDotNotePool;
-    private NoteInstanceContainer.Pool leftArrowNotePool;
-    private NoteInstanceContainer.Pool rightArrowNotePool;
-    private NoteInstanceContainer.Pool leftBurstSliderHeadPool;
-    private NoteInstanceContainer.Pool rightBurstSliderHeadPool;
-    private NoteInstanceContainer.Pool leftBurstSliderHeadDotPool;
-    private NoteInstanceContainer.Pool rightBurstSliderHeadDotPool;
+    private NoteInstanceContainer.Pool? leftDotNotePool;
+    private NoteInstanceContainer.Pool? rightDotNotePool;
+    private NoteInstanceContainer.Pool leftArrowNotePool = null!;
+    private NoteInstanceContainer.Pool rightArrowNotePool = null!;
+    private NoteInstanceContainer.Pool leftBurstSliderHeadPool = null!;
+    private NoteInstanceContainer.Pool rightBurstSliderHeadPool = null!;
+    private NoteInstanceContainer.Pool leftBurstSliderHeadDotPool = null!;
+    private NoteInstanceContainer.Pool rightBurstSliderHeadDotPool = null!;
 
     public Color Color
     {
@@ -40,8 +40,8 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
         CustomNoteData customNote,
         [Inject(Id = Protocol.LeftArrowPool)] NoteInstanceContainer.Pool leftArrowNotePool,
         [Inject(Id = Protocol.RightArrowPool)] NoteInstanceContainer.Pool rightArrowNotePool,
-        [InjectOptional(Id = Protocol.LeftDotPool)] NoteInstanceContainer.Pool leftDotNotePool,
-        [InjectOptional(Id = Protocol.RightDotPool)] NoteInstanceContainer.Pool rightDotNotePool,
+        [InjectOptional(Id = Protocol.LeftDotPool)] NoteInstanceContainer.Pool? leftDotNotePool,
+        [InjectOptional(Id = Protocol.RightDotPool)] NoteInstanceContainer.Pool? rightDotNotePool,
         [Inject(Id = Protocol.LeftBurstSliderHeadPool)] NoteInstanceContainer.Pool leftBurstSliderHeadPool,
         [Inject(Id = Protocol.RightBurstSliderHeadPool)] NoteInstanceContainer.Pool rightBurstSliderHeadPool,
         [Inject(Id = Protocol.LeftBurstSliderHeadDotPool)] NoteInstanceContainer.Pool leftBurstSliderHeadDotPool,
@@ -87,6 +87,7 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
 
     public void HandleNoteControllerNoteWasMissed(NoteController noteController)
     {
+        if (!activeContainer) return;
         activeContainer.transform.SetParent(null);
             
         if (noteController.noteData.colorType != ColorType.None)
@@ -114,11 +115,12 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
         }
     }
 
-    private void SpawnThenParent(NoteInstanceContainer.Pool noteModelPool)
+    private void SpawnThenParent(NoteInstanceContainer.Pool? noteModelPool)
     {
         activePool = noteModelPool;
-        activeContainer = noteModelPool.Spawn();
-
+        activeContainer = noteModelPool?.Spawn();
+        if (!activeContainer) return;
+        
         var go = activeContainer.instance.gameObject;
         go.SetLayerRecursively(config.HmdOnly ? VisibilityLayer.HmdOnlyAndReflected : VisibilityLayer.Note);
         go.transform.localPosition = Vector3.zero;
@@ -133,8 +135,10 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
 
     private void Visuals_DidInit(ColorNoteVisuals visuals, NoteControllerBase noteController)
     {
+        if (!activeContainer) return;
         activeContainer.instance.gameObject.SetActive(true);
-        if (customNote.Prefab.Colorable)
+        
+        if (customNote.Prefab is { Colorable:true })
         {
             SetColor(visuals._noteColor, true);
         }

@@ -8,6 +8,18 @@ internal class NotePreview
 {
     private static readonly Vector3 PreviewPosition = new(1.55f, 0.7f, 3.25f);
     private static readonly Vector3 PreviewRotation = new(0f, 42f, 0f);
+
+    private readonly PreviewNote leftNoteArrow;
+    private readonly PreviewNote leftNoteDot;
+    private readonly PreviewNote leftChainArrow;
+    private readonly PreviewNote leftChainDot;
+    private readonly PreviewNote leftChainSegment;
+    private readonly PreviewNote rightNoteArrow;
+    private readonly PreviewNote rightNoteDot;
+    private readonly PreviewNote rightChainArrow;
+    private readonly PreviewNote rightChainDot;
+    private readonly PreviewNote rightChainSegment;
+    private readonly PreviewNote noteBomb;
     
     public NotePreview(GameResourcesManager gameResourcesManager)
     {
@@ -31,62 +43,94 @@ internal class NotePreview
         
         var noteBomb = gameResourcesManager.CreateBombNote(false);
         
-        LeftNoteArrow = new(transform, leftNoteArrow, "LeftNoteArrow", new(0f, 0.6f, 0f));
-        LeftNoteDot = new(transform, leftNoteDot, "LeftNoteDot", new(0.0f, 0.0f, 0.0f));
-        LeftChainArrow = new(transform, leftChainArrow, "LeftChainArrow", new(1.2f, 0.6f, 0f));
-        LeftChainDot = new(transform, leftChainDot, "LeftChainDot", new(1.2f, 0.175f, 0f));
-        LeftChainSegment = new(transform, leftChainSegment, "LeftChainSegment", new(1.2f, -0.15f, 0f));
-        RightNoteArrow = new(transform, rightNoteArrow, "RightNoteArrow", new(0.6f, 0.6f, 0.0f));
-        RightNoteDot = new(transform, rightNoteDot, "RightNoteDot", new(0.6f, 0.0f, 0.0f));
-        RightChainArrow = new(transform, rightChainArrow, "RightChainArrow", new(1.8f, 0.6f, 0f));
-        RightChainDot = new(transform, rightChainDot, "RightChainDot", new(1.8f, 0.175f, 0f));
-        RightChainSegment = new(transform, rightChainSegment, "RightChainSegment", new(1.8f, -0.15f, 0f));
-        NoteBomb = new(transform, noteBomb, "NoteBomb", new(2.4f, 0.3f, 0.0f));
+        this.leftNoteArrow = new(transform, leftNoteArrow, "LeftNoteArrow", new(0f, 0.6f, 0f));
+        this.leftNoteDot = new(transform, leftNoteDot, "LeftNoteDot", new(0.0f, 0.0f, 0.0f));
+        this.leftChainArrow = new(transform, leftChainArrow, "LeftChainArrow", new(1.2f, 0.6f, 0f));
+        this.leftChainDot = new(transform, leftChainDot, "LeftChainDot", new(1.2f, 0.175f, 0f));
+        this.leftChainSegment = new(transform, leftChainSegment, "LeftChainSegment", new(1.2f, -0.15f, 0f));
+        this.rightNoteArrow = new(transform, rightNoteArrow, "RightNoteArrow", new(0.6f, 0.6f, 0.0f));
+        this.rightNoteDot = new(transform, rightNoteDot, "RightNoteDot", new(0.6f, 0.0f, 0.0f));
+        this.rightChainArrow = new(transform, rightChainArrow, "RightChainArrow", new(1.8f, 0.6f, 0f));
+        this.rightChainDot = new(transform, rightChainDot, "RightChainDot", new(1.8f, 0.175f, 0f));
+        this.rightChainSegment = new(transform, rightChainSegment, "RightChainSegment", new(1.8f, -0.15f, 0f));
+        this.noteBomb = new(transform, noteBomb, "NoteBomb", new(2.4f, 0.3f, 0.0f));
+    }
+
+    public void SetNotes(CustomNotePrefab prefab)
+    {
+        leftNoteArrow.SetNote(prefab.Left.NoteArrow.Instantiate());
+        leftNoteDot.SetNote(prefab.Left.NoteDot.Instantiate());
+        leftChainArrow.SetNote(prefab.Left.ChainArrow.Instantiate());
+        leftChainDot.SetNote(prefab.Left.ChainDot.Instantiate());
+        leftChainSegment.SetNote(prefab.Left.ChainSegment.Instantiate());
+        rightNoteArrow.SetNote(prefab.Right.NoteArrow.Instantiate());
+        rightNoteDot.SetNote(prefab.Right.NoteDot.Instantiate());
+        rightChainArrow.SetNote(prefab.Right.ChainArrow.Instantiate());
+        rightChainDot.SetNote(prefab.Right.ChainDot.Instantiate());
+        rightChainSegment.SetNote(prefab.Right.ChainSegment.Instantiate());
+        noteBomb.SetNote(prefab.Bomb.Instantiate());
     }
     
-    public PreviewNote LeftNoteArrow { get; }
-    public PreviewNote LeftNoteDot { get; }
-    public PreviewNote LeftChainArrow { get; }
-    public PreviewNote LeftChainDot { get; }
-    public PreviewNote LeftChainSegment { get; }
-    public PreviewNote RightNoteArrow { get; }
-    public PreviewNote RightNoteDot { get; }
-    public PreviewNote RightChainArrow { get; }
-    public PreviewNote RightChainDot { get; }
-    public PreviewNote RightChainSegment { get; }
-    public PreviewNote NoteBomb { get; }
-
     public void SetScale(float scale)
     {
-        LeftNoteArrow.SetScale(scale);
-        LeftNoteDot.SetScale(scale);
-        LeftChainArrow.SetScale(scale);
-        LeftChainDot.SetScale(scale);
-        LeftChainSegment.SetScale(scale);
-        RightNoteArrow.SetScale(scale);
-        RightNoteDot.SetScale(scale);
-        RightChainArrow.SetScale(scale);
-        RightChainDot.SetScale(scale);
-        RightChainSegment.SetScale(scale);
-        NoteBomb.SetScale(scale);
+        leftNoteArrow.SetScale(scale);
+        leftNoteDot.SetScale(scale);
+        leftChainArrow.SetScale(scale);
+        leftChainDot.SetScale(scale);
+        leftChainSegment.SetScale(scale);
+        rightNoteArrow.SetScale(scale);
+        rightNoteDot.SetScale(scale);
+        rightChainArrow.SetScale(scale);
+        rightChainDot.SetScale(scale);
+        rightChainSegment.SetScale(scale);
+        noteBomb.SetScale(scale);
+    }
+
+    public void SetColors(Color leftColor, Color rightColor, float multiplier)
+    {
+        leftNoteArrow.SetColor(leftColor, multiplier);
+        leftNoteDot.SetColor(leftColor, multiplier);
+        leftChainArrow.SetColor(leftColor, multiplier);
+        leftChainDot.SetColor(leftColor, multiplier);
+        leftChainSegment.SetColor(leftColor, multiplier);
+        rightNoteArrow.SetColor(rightColor, multiplier);
+        rightNoteDot.SetColor(rightColor, multiplier);
+        rightChainArrow.SetColor(rightColor, multiplier);
+        rightChainDot.SetColor(rightColor, multiplier);
+        rightChainSegment.SetColor(rightColor, multiplier);
     }
 
     public void ClearNotes()
     {
-        LeftNoteArrow.ClearNote();
-        LeftNoteDot.ClearNote();
-        LeftChainArrow.ClearNote();
-        LeftChainDot.ClearNote();
-        LeftChainSegment.ClearNote();
-        RightNoteArrow.ClearNote();
-        RightNoteDot.ClearNote();
-        RightChainArrow.ClearNote();
-        RightChainDot.ClearNote();
-        RightChainSegment.ClearNote();
-        NoteBomb.ClearNote();
+        leftNoteArrow.ClearNote();
+        leftNoteDot.ClearNote();
+        leftChainArrow.ClearNote();
+        leftChainDot.ClearNote();
+        leftChainSegment.ClearNote();
+        rightNoteArrow.ClearNote();
+        rightNoteDot.ClearNote();
+        rightChainArrow.ClearNote();
+        rightChainDot.ClearNote();
+        rightChainSegment.ClearNote();
+        noteBomb.ClearNote();
     }
-    
-    public class PreviewNote
+
+    public void ShowDefaultNotes()
+    {
+        leftNoteArrow.SetNote(null);
+        leftNoteDot.SetNote(null);
+        leftChainArrow.SetNote(null);
+        leftChainDot.SetNote(null);
+        leftChainSegment.SetNote(null);
+        rightNoteArrow.SetNote(null);
+        rightNoteDot.SetNote(null);
+        rightChainArrow.SetNote(null);
+        rightChainDot.SetNote(null);
+        rightChainSegment.SetNote(null);
+        noteBomb.SetNote(null);
+    }
+
+    private class PreviewNote
     {
         private readonly Transform container;
         private readonly INoteModel defaultNote;
@@ -101,14 +145,14 @@ internal class NotePreview
             defaultNote.Transform.SetParent(container, false);
         }
         
-        private NoteInstance note;
+        private NoteInstance? note;
         
-        public void SetNote(NoteInstance note)
+        public void SetNote(NoteInstance? note)
         {
             ClearNote();
             this.note = note;
             
-            if (note == null)
+            if (!note)
             {
                 defaultNote.GameObject.SetActive(true);
                 return;

@@ -16,10 +16,10 @@ internal class CustomBurstSliderController : MonoBehaviour, IColorable, INoteCon
     private BurstSliderGameNoteController burstSliderGameNoteController = null!;
     private CustomNoteColorNoteVisuals customNoteColorNoteVisuals = null!;
 
-    private NoteInstanceContainer activeContainer;
-    private NoteInstanceContainer.Pool activeSliderPool;
-    private NoteInstanceContainer.Pool leftBurstSliderPool;
-    private NoteInstanceContainer.Pool rightBurstSliderPool;
+    private NoteInstanceContainer? activeContainer;
+    private NoteInstanceContainer.Pool? activeSliderPool;
+    private NoteInstanceContainer.Pool leftBurstSliderPool = null!;
+    private NoteInstanceContainer.Pool rightBurstSliderPool = null!;
 
     [Inject]
     internal void Init(PluginConfig config,
@@ -82,7 +82,8 @@ internal class CustomBurstSliderController : MonoBehaviour, IColorable, INoteCon
     {
         activeSliderPool = noteController.noteData.colorType == ColorType.ColorA ? leftBurstSliderPool : rightBurstSliderPool;
         activeContainer = activeSliderPool.Spawn();
-
+        if (!activeContainer) return;
+        
         var go = activeContainer.instance.gameObject;
         go.SetLayerRecursively(config.HmdOnly ? VisibilityLayer.HmdOnlyAndReflected : VisibilityLayer.Note);
         go.transform.localPosition = Vector3.zero;
@@ -95,10 +96,10 @@ internal class CustomBurstSliderController : MonoBehaviour, IColorable, INoteCon
         activeContainer.transform.localPosition = Vector3.zero;
     }
 
-    protected void SetActiveThenColor(NoteInstance note, Color color)
+    private void SetActiveThenColor(NoteInstance note, Color color)
     {
         note.gameObject.SetActive(true);
-        if (customNote.Prefab.Colorable)
+        if (customNote.Prefab is { Colorable: true })
         {
             SetColor(color, true);
         }
@@ -106,6 +107,7 @@ internal class CustomBurstSliderController : MonoBehaviour, IColorable, INoteCon
 
     private void Visuals_DidInit(ColorNoteVisuals visuals, NoteControllerBase noteController)
     {
+        if (!activeContainer) return;
         SetActiveThenColor(activeContainer.instance, ((CustomNoteColorNoteVisuals)visuals)._noteColor);
             
         // Hide certain parts of the default note which is not required

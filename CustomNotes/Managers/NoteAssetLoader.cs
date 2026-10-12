@@ -17,13 +17,15 @@ namespace CustomNotes.Managers;
 internal class NoteAssetLoader : IAsyncInitializable, IDisposable
 {
     private readonly NoteFileManager noteFileManager;
+    private readonly GameResourcesManager gameResourcesManager;
 
     private readonly string notesDirectory = Path.Combine(UnityGame.InstallPath, "CustomNotes");
     private readonly Dictionary<string, CustomNoteData> loadedCustomNotes = [];
 
-    private NoteAssetLoader(NoteFileManager noteFileManager)
+    private NoteAssetLoader(NoteFileManager noteFileManager, GameResourcesManager gameResourcesManager)
     {
         this.noteFileManager = noteFileManager;
+        this.gameResourcesManager = gameResourcesManager;
     }
 
     private bool isLoaded;
@@ -31,7 +33,7 @@ internal class NoteAssetLoader : IAsyncInitializable, IDisposable
 
     public IEnumerable<CustomNoteData> LoadedCustomNotes => loadedCustomNotes.Values;
 
-    public event Action<IEnumerable<CustomNoteData>> CustomNotesChanged; 
+    public event Action<IEnumerable<CustomNoteData>>? CustomNotesChanged; 
 
     /// <summary>
     /// Load all CustomNotes 
@@ -45,7 +47,7 @@ internal class NoteAssetLoader : IAsyncInitializable, IDisposable
 
         Directory.CreateDirectory(notesDirectory);
 
-        customNoteFiles = await noteFileManager.ReloadAllFiles(token, null);
+        customNoteFiles = await noteFileManager.ReloadAllFiles(token);
         Plugin.Log.Notice($"{customNoteFiles.Length} external notes found. Preparing to load.");
             
         foreach (var note in LoadCustomNotes(customNoteFiles))
@@ -82,19 +84,19 @@ internal class NoteAssetLoader : IAsyncInitializable, IDisposable
         await InitializeAsync(CancellationToken.None);
     }
     
-    public bool TryGetCustomNote(string hash, [NotNullWhen(true)] out CustomNoteData note)
+    public bool TryGetCustomNote(string? hash, [NotNullWhen(true)] out CustomNoteData? note)
     {
         note = null;
-        return !string.IsNullOrEmpty(hash) && loadedCustomNotes.TryGetValue(hash, out note);
+        return !string.IsNullOrEmpty(hash) && loadedCustomNotes.TryGetValue(hash!, out note);
     }
 
     private static GameObject LoadNotePrefab(AssetBundle assetBundle) => 
         assetBundle.LoadAsset<GameObject>("assets/_customnote.prefab");
 
-    private static IEnumerable<CustomNoteData> LoadCustomNotes(IEnumerable<NoteFileInfo> customNoteFiles) => 
+    private IEnumerable<CustomNoteData> LoadCustomNotes(IEnumerable<NoteFileInfo> customNoteFiles) => 
         customNoteFiles.Select(LoadCustomNote);
     
-    private static CustomNoteData LoadCustomNote(NoteFileInfo file)
+    private CustomNoteData LoadCustomNote(NoteFileInfo file)
     {
         try
         {
@@ -114,7 +116,7 @@ internal class NoteAssetLoader : IAsyncInitializable, IDisposable
         }
     }
 
-    private static CustomNoteData LoadFromBundle(AssetBundle assetBundle, NoteFileInfo file)
+    private CustomNoteData LoadFromBundle(AssetBundle assetBundle, NoteFileInfo file)
     {
         var prefab = LoadNotePrefab(assetBundle);
 
@@ -127,8 +129,9 @@ internal class NoteAssetLoader : IAsyncInitializable, IDisposable
         var noteDotRightTransform = prefab.transform.Find("NoteDotRight");
         var noteDotLeft = noteDotLeftTransform != null ? noteDotLeftTransform.gameObject : noteArrowLeft;
         var noteDotRight = noteDotRightTransform != null ? noteDotRightTransform.gameObject : noteArrowRight;
-        var noteBomb = prefab.transform.Find("NoteBomb")?.gameObject;
-
+       
+        var noteBomb = GetBomb("NoteBomb");
+        
         var chainSegmentLeft = GetSubPrefab(noteDotLeft, "BurstSliderLeft", Vector3.zero, new(1f, 0.225f, 1f));
         var chainSegmentRight = GetSubPrefab(noteDotLeft, "BurstSliderRight", Vector3.zero, new(1f, 0.225f, 1f));
 
@@ -149,8 +152,10 @@ internal class NoteAssetLoader : IAsyncInitializable, IDisposable
             noteArrowRight, noteDotRight, chainArrowRight, chainDotRight, chainSegmentRight, 
             !descriptor.DisableBaseNoteArrows, descriptor.NoteColorStrength);
         
+        var bombPrefab = new NotePrefab(noteBomb, !descriptor.DisableBaseNoteArrows, descriptor.NoteColorStrength);
+        
         var customNotePrefab = new CustomNotePrefab(
-            leftPrefabs, rightPrefabs, noteBomb, descriptor.UsesNoteColor, descriptor.NoteColorStrength);
+            leftPrefabs, rightPrefabs, bombPrefab, descriptor.UsesNoteColor, descriptor.NoteColorStrength);
         
         return new(assetBundle, metadata, customNotePrefab);
 
@@ -167,6 +172,22 @@ internal class NoteAssetLoader : IAsyncInitializable, IDisposable
             model.transform.localScale = scale;
         
             return subPrefab;
+        }
+
+        GameObject GetBomb(string bombName)
+        {
+            var bomb = prefab.transform.Find(bombName)?.gameObject;
+            if (bomb != null) return bomb;
+
+            bomb = new(bombName);
+            bomb.transform.SetParent(prefab.transform);
+
+            var model = gameResourcesManager.CreateBombNote(true);
+            model.Transform.SetParent(bomb.transform, true);
+            model.Transform.localPosition = Vector3.zero;
+            model.Transform.localScale = Vector3.one / 0.4f;
+        
+            return bomb;
         }
     }
 }
