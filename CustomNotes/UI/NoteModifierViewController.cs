@@ -28,6 +28,7 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
     }
 
     private bool parsed;
+    private bool needsSetup = true;
     
     [UIValue("notes-list")] private readonly List<object> notesList = [];
     [UIComponent("notes-dropdown")] private readonly DropDownListSetting notesDropdown = null!;
@@ -42,28 +43,24 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
     
     public void Initialize()
     {
-        SetupList();
+        noteAssetLoader.CustomNotesChanged += CustomNotesChanged;
         gameplaySetup.AddTab("Custom Notes", "CustomNotes.UI.BSML.noteModifier.bsml", this);
     }
 
     public void Dispose()
     {
+        noteAssetLoader.CustomNotesChanged -= CustomNotesChanged;
         gameplaySetup.RemoveTab("Custom Notes");
     }
 
     public void ParentControllerActivated()
     {
-        noteAssetLoader.CustomNotesChanged += CustomNotesChanged;
-        if (parsed) notesDropdown.ReceiveValue();
         PropertyChanged?.Invoke(this, new(nameof(ModEnabled)));
         PropertyChanged?.Invoke(this, new(nameof(NoteSize)));
         PropertyChanged?.Invoke(this, new(nameof(HmdOnly)));
         PropertyChanged?.Invoke(this, new(nameof(AutoDisable)));
-    }
-
-    public void ParentControllerDeactivated()
-    {
-        noteAssetLoader.CustomNotesChanged -= CustomNotesChanged;
+        
+        SetupList();
     }
 
     public void SelectionChanged(object selectedCell)
@@ -122,12 +119,13 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
 
     private void CustomNotesChanged(IEnumerable<CustomNoteData> noteData)
     {
+        needsSetup = true;
         SetupList();
     }
 
     private void SetupList()
     {
-        if (!parsed) return;
+        if (!parsed || !needsSetup) return;
         
         notesList.Clear();
         notesList.Add("Default");
@@ -138,6 +136,9 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
 
         notesDropdown.Values = notesList;
         notesDropdown.UpdateChoices();
+        notesDropdown.ReceiveValue();
+
+        needsSetup = false;
     }
     
     private class DropdownListItem
