@@ -200,7 +200,6 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
     {
         if (activeContainer == null) return;
         customNoteColorNoteVisuals.SetColor(color, updateMatBlocks);
-        Plugin.Log.Info($"color: {color}, mult: {activeContainer.instance.ColorMultiplier}");
         activeContainer.instance.SetColor(color * activeContainer.instance.ColorMultiplier);
     }
 
