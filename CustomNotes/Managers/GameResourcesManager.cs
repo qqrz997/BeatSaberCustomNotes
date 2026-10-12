@@ -11,10 +11,16 @@ internal class GameResourcesManager
 {
     private readonly GameObject normalGameNote = LoadResource<GameObject>(
         "Packages/com.beatgames.beatsaber.main.core/Prefabs/SongElements/Notes/NormalGameNote.prefab");
+    private readonly GameObject burstSliderNoteHead = LoadResource<GameObject>(
+        "Packages/com.beatgames.beatsaber.main.core/Prefabs/SongElements/Notes/BurstSliders/BurstSliderHeadNote.prefab");
+    private readonly GameObject burstSliderNote = LoadResource<GameObject>(
+        "Packages/com.beatgames.beatsaber.main.core/Prefabs/SongElements/Notes/BurstSliders/BurstSliderNote.prefab");
     private readonly GameObject bombNote = LoadResource<GameObject>(
         "Packages/com.beatgames.beatsaber.main.core/Prefabs/SongElements/Notes/BombNote.prefab");
 
     public DefaultNoteModel CreateNormalGameNote(bool active) => new(normalGameNote, active);
+    public DefaultNoteModel CreateBurstSliderHead(bool active) => new(burstSliderNoteHead, active);
+    public DefaultNoteModel CreateBurstSlider(bool active) => new(burstSliderNote, active);
     public DefaultBombModel CreateBombNote(bool active) => new(bombNote, active);
 
     private static T LoadResource<T>(string label) where T : Object

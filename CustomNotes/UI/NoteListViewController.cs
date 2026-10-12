@@ -142,9 +142,15 @@ internal class NoteListViewController : BSMLAutomaticViewController
     private void InitializePreviewNotes(CustomNoteData note)
     {
         preview.LeftNoteArrow.SetNote(note?.Prefab.Left.NoteArrow.Instantiate());
-        preview.RightNoteArrow.SetNote(note?.Prefab.Right.NoteArrow.Instantiate());
         preview.LeftNoteDot.SetNote(note?.Prefab.Left.NoteDot.Instantiate());
+        preview.LeftChainArrow.SetNote(note?.Prefab.Left.ChainArrow.Instantiate());
+        preview.LeftChainDot.SetNote(note?.Prefab.Left.ChainDot.Instantiate());
+        preview.LeftChainSegment.SetNote(note?.Prefab.Left.ChainSegment.Instantiate());
+        preview.RightNoteArrow.SetNote(note?.Prefab.Right.NoteArrow.Instantiate());
         preview.RightNoteDot.SetNote(note?.Prefab.Right.NoteDot.Instantiate());
+        preview.RightChainArrow.SetNote(note?.Prefab.Right.ChainArrow.Instantiate());
+        preview.RightChainDot.SetNote(note?.Prefab.Right.ChainDot.Instantiate());
+        preview.RightChainSegment.SetNote(note?.Prefab.Right.ChainSegment.Instantiate());
         preview.NoteBomb.SetNote(note?.Prefab.Bomb.Instantiate());
 
         var leftColor = gameplaySetupViewController.colorSchemesSettings.GetSelectedColorScheme().saberAColor;
@@ -152,9 +158,15 @@ internal class NoteListViewController : BSMLAutomaticViewController
         var colorMultiplier = note?.Prefab.ColorMultiplier ?? 1f;
         
         preview.LeftNoteArrow.SetColor(leftColor, colorMultiplier);
-        preview.RightNoteArrow.SetColor(rightColor, colorMultiplier);
         preview.LeftNoteDot.SetColor(leftColor, colorMultiplier);
+        preview.LeftChainArrow.SetColor(leftColor, colorMultiplier);
+        preview.LeftChainDot.SetColor(leftColor, colorMultiplier);
+        preview.LeftChainSegment.SetColor(leftColor, colorMultiplier);
+        preview.RightNoteArrow.SetColor(rightColor, colorMultiplier);
         preview.RightNoteDot.SetColor(rightColor, colorMultiplier);
+        preview.RightChainArrow.SetColor(rightColor, colorMultiplier);
+        preview.RightChainDot.SetColor(rightColor, colorMultiplier);
+        preview.RightChainSegment.SetColor(rightColor, colorMultiplier);
 
         ScalePreviewNotes(config.NoteSize);
     }
