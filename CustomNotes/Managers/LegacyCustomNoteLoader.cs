@@ -1,102 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+using System;
 using CustomNotes.Models;
-using IPA.Utilities;
-using SiraUtil.Zenject;
+using CustomNotes.Utilities;
 using UnityEngine;
 using Object = UnityEngine.Object;
-using Utils = CustomNotes.Utilities.Utils;
 
 namespace CustomNotes.Managers;
 
-internal class NoteAssetLoader : IAsyncInitializable, IDisposable
+internal class LegacyCustomNoteLoader
 {
-    private readonly NoteFileManager noteFileManager;
     private readonly GameResourcesManager gameResourcesManager;
 
-    private readonly string notesDirectory = Path.Combine(UnityGame.InstallPath, "CustomNotes");
-    private readonly Dictionary<string, CustomNoteData> loadedCustomNotes = [];
-
-    private NoteAssetLoader(NoteFileManager noteFileManager, GameResourcesManager gameResourcesManager)
+    public LegacyCustomNoteLoader(GameResourcesManager gameResourcesManager)
     {
-        this.noteFileManager = noteFileManager;
         this.gameResourcesManager = gameResourcesManager;
     }
 
-    private bool isLoaded;
-    private NoteFileInfo[] customNoteFiles = [];
-
-    public IEnumerable<CustomNoteData> LoadedCustomNotes => loadedCustomNotes.Values;
-
-    public event Action<IEnumerable<CustomNoteData>>? CustomNotesChanged; 
-
-    /// <summary>
-    /// Load all CustomNotes 
-    /// </summary>
-    public async Task InitializeAsync(CancellationToken token)
-    {
-        if (isLoaded)
-        {
-            return;
-        }
-
-        Directory.CreateDirectory(notesDirectory);
-
-        customNoteFiles = await noteFileManager.ReloadAllFiles(token);
-        Plugin.Log.Notice($"{customNoteFiles.Length} external notes found. Preparing to load.");
-            
-        foreach (var note in LoadCustomNotes(customNoteFiles))
-        {
-            loadedCustomNotes.Add(note.Metadata.File.Hash, note);
-        }
-        Plugin.Log.Notice($"{loadedCustomNotes.Count} total custom notes loaded.");
-        
-        CustomNotesChanged?.Invoke(LoadedCustomNotes);
-
-        isLoaded = true;
-    }
-
-    /// <summary>
-    /// Clear all loaded CustomNotes
-    /// </summary>
-    public void Dispose()
-    {
-        foreach (var customNote in LoadedCustomNotes)
-            customNote.Dispose();
-        loadedCustomNotes.Clear();
-        CustomNotesChanged?.Invoke(LoadedCustomNotes);
-        isLoaded = false;
-    }
-
-    /// <summary>
-    /// Reload all CustomNotes
-    /// </summary>
-    internal async Task Reload()
-    {
-        Plugin.Log.Debug("Reloading the NoteAssetLoader");
-
-        Dispose();
-        await InitializeAsync(CancellationToken.None);
-    }
-    
-    public bool TryGetCustomNote(string? hash, [NotNullWhen(true)] out CustomNoteData? note)
-    {
-        note = null;
-        return !string.IsNullOrEmpty(hash) && loadedCustomNotes.TryGetValue(hash!, out note);
-    }
-
-    private static GameObject LoadNotePrefab(AssetBundle assetBundle) => 
-        assetBundle.LoadAsset<GameObject>("assets/_customnote.prefab");
-
-    private IEnumerable<CustomNoteData> LoadCustomNotes(IEnumerable<NoteFileInfo> customNoteFiles) => 
-        customNoteFiles.Select(LoadCustomNote);
-    
-    private CustomNoteData LoadCustomNote(NoteFileInfo file)
+    public CustomNoteData LoadCustomNote(NoteFileInfo file)
     {
         try
         {
@@ -118,7 +37,7 @@ internal class NoteAssetLoader : IAsyncInitializable, IDisposable
 
     private CustomNoteData LoadFromBundle(AssetBundle assetBundle, NoteFileInfo file)
     {
-        var prefab = LoadNotePrefab(assetBundle);
+        var prefab = assetBundle.LoadAsset<GameObject>("assets/_customnote.prefab");
 
         var descriptor = prefab.GetComponent<NoteDescriptor>();
         descriptor.Icon ??= Utils.GetDefaultCustomIcon();

@@ -17,7 +17,7 @@ namespace CustomNotes.UI;
 internal class NoteListViewController : BSMLAutomaticViewController
 {
     [Inject] private readonly PluginConfig config = null!;
-    [Inject] private readonly NoteAssetLoader noteAssetLoader = null!;
+    [Inject] private readonly INoteDataLoader noteDataLoader = null!;
     [Inject] private readonly ColorSchemesSettings colorSchemesSettings = null!;
     [Inject] private readonly NotePreview preview = null!;
 
@@ -40,7 +40,7 @@ internal class NoteListViewController : BSMLAutomaticViewController
     {
         base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
 
-        noteAssetLoader.CustomNotesChanged += CustomNotesChanged;
+        noteDataLoader.CustomNotesChanged += CustomNotesChanged;
 
         int selectedNote = GetSelectedIndex();
         customListTableData.TableView.SelectCellWithIdx(selectedNote);
@@ -50,7 +50,7 @@ internal class NoteListViewController : BSMLAutomaticViewController
     protected override void DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling)
     {
         base.DidDeactivate(removedFromHierarchy, screenSystemDisabling);
-        noteAssetLoader.CustomNotesChanged -= CustomNotesChanged;
+        noteDataLoader.CustomNotesChanged -= CustomNotesChanged;
         preview.ClearNotes();
     }
     
@@ -59,7 +59,7 @@ internal class NoteListViewController : BSMLAutomaticViewController
         try
         {
             isReloading = true;
-            await noteAssetLoader.Reload();
+            await noteDataLoader.Reload();
         }
         catch (Exception ex)
         {
@@ -81,7 +81,7 @@ internal class NoteListViewController : BSMLAutomaticViewController
         var hash = cellValueMap.GetValueOrDefault(cell);
         config.LastNote = hash;
         
-        if (noteAssetLoader.TryGetCustomNote(hash, out var selectedNote))
+        if (noteDataLoader.TryGetCustomNote(hash, out var selectedNote))
         {
             CustomNoteChanged?.Invoke(selectedNote);
         }
@@ -102,7 +102,7 @@ internal class NoteListViewController : BSMLAutomaticViewController
             customListTableData.Data.Add(new("Default", "Beat Games", defSprite));
 
             int i = 1;
-            foreach (var customNote in noteAssetLoader.LoadedCustomNotes)
+            foreach (var customNote in noteDataLoader.LoadedCustomNotes)
             {
                 var hash = customNote.Metadata.File.Hash;
                 var icon = customNote.Metadata.Info.Icon;

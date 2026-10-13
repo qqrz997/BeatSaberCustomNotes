@@ -14,21 +14,21 @@ namespace CustomNotes.Installers;
 internal class PlayerInstaller : Installer
 {
     private readonly PluginConfig config;
-    private readonly NoteAssetLoader noteAssetLoader;
+    private readonly INoteDataLoader noteDataLoader;
     private readonly GameplayCoreSceneSetupData gameplayCoreSceneSetupData;
 
     private const int DecorationPriority = 300;
 
-    private PlayerInstaller(PluginConfig config, NoteAssetLoader noteAssetLoader, GameplayCoreSceneSetupData gameplayCoreSceneSetupData)
+    private PlayerInstaller(PluginConfig config, INoteDataLoader noteDataLoader, GameplayCoreSceneSetupData gameplayCoreSceneSetupData)
     {
         this.config = config;
-        this.noteAssetLoader = noteAssetLoader;
+        this.noteDataLoader = noteDataLoader;
         this.gameplayCoreSceneSetupData = gameplayCoreSceneSetupData;
     }
 
     public override void InstallBindings()
     {
-        if (!config.Enabled || !noteAssetLoader.TryGetCustomNote(config.LastNote, out var customNote))
+        if (!config.Enabled || !noteDataLoader.TryGetCustomNote(config.LastNote, out var customNote))
         {
             return;
         }

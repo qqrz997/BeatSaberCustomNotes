@@ -17,13 +17,13 @@ namespace CustomNotes.UI;
 internal class NoteModifierViewController : IInitializable, IDisposable, INotifyPropertyChanged
 {
     private readonly PluginConfig config;
-    private readonly NoteAssetLoader noteAssetLoader;
+    private readonly INoteDataLoader noteDataLoader;
     private readonly GameplaySetup gameplaySetup;
 
-    private NoteModifierViewController(PluginConfig config, NoteAssetLoader noteAssetLoader, GameplaySetup gameplaySetup)
+    private NoteModifierViewController(PluginConfig config, INoteDataLoader noteDataLoader, GameplaySetup gameplaySetup)
     {
         this.config = config;
-        this.noteAssetLoader = noteAssetLoader;
+        this.noteDataLoader = noteDataLoader;
         this.gameplaySetup = gameplaySetup;
     }
 
@@ -43,13 +43,13 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
     
     public void Initialize()
     {
-        noteAssetLoader.CustomNotesChanged += CustomNotesChanged;
+        noteDataLoader.CustomNotesChanged += CustomNotesChanged;
         gameplaySetup.AddTab("Custom Notes", "CustomNotes.UI.BSML.noteModifier.bsml", this);
     }
 
     public void Dispose()
     {
-        noteAssetLoader.CustomNotesChanged -= CustomNotesChanged;
+        noteDataLoader.CustomNotesChanged -= CustomNotesChanged;
         gameplaySetup.RemoveTab("Custom Notes");
     }
 
@@ -129,7 +129,7 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
         
         notesList.Clear();
         notesList.Add("Default");
-        foreach (var customNote in noteAssetLoader.LoadedCustomNotes)
+        foreach (var customNote in noteDataLoader.LoadedCustomNotes)
         {
             notesList.Add(new DropdownListItem(customNote));
         }
