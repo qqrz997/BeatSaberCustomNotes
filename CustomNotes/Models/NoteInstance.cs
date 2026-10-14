@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace CustomNotes.Models;
 
-internal class NoteInstance : MonoBehaviour
+internal class NoteInstance : MonoBehaviour, INote
 {
     [SerializeField] private Renderer[] colorableRenderers = [];
     [SerializeField] private bool useBaseArrows;
@@ -23,6 +23,9 @@ internal class NoteInstance : MonoBehaviour
     }
     
     private MaterialPropertyBlockController? materialPropertyBlockController;
+    
+    public GameObject GameObject => gameObject;
+    public Transform Transform => transform;
 
     public bool UseBaseArrows => useBaseArrows;
     public float ColorMultiplier => colorMultiplier;
@@ -33,11 +36,6 @@ internal class NoteInstance : MonoBehaviour
 
     public void SetBoostColors(ColorScheme colorScheme, bool boost)
     {
-    }
-
-    public void OnDestroy()
-    {
-        if (gameObject) Destroy(gameObject);
     }
     
     public void SetColor(Color color)
@@ -57,6 +55,11 @@ internal class NoteInstance : MonoBehaviour
         if (!materialPropertyBlockController) return;
         materialPropertyBlockController.materialPropertyBlock.SetColor(MaterialProps.Color, color);
         materialPropertyBlockController.ApplyChanges();
+    }
+
+    private void OnDestroy()
+    {
+        if (gameObject) Destroy(gameObject);
     }
 
     private static IEnumerable<Renderer> GetColorableRenderers(GameObject gameObject)

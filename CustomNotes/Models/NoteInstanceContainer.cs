@@ -8,14 +8,23 @@ namespace CustomNotes.Models;
 /// </summary>
 internal class NoteInstanceContainer : MonoBehaviour
 {
-    public NoteInstance instance = null!;
+    [SerializeField]
+    private MonoBehaviour instance = null!;
 
-    public static NoteInstanceContainer Create(NoteInstance instance)
+    // Not serializable by unity. Storing it as MonoBehaviour to get around this 
+    public INote Instance => (INote)instance;
+
+    public static NoteInstanceContainer Create(INote note)
     {
-        var container = new GameObject(nameof(NoteInstanceContainer)).AddComponent<NoteInstanceContainer>();    
+        if (note is not MonoBehaviour instance)
+        {
+            throw new($"Provided {nameof(INote)} must be a {nameof(MonoBehaviour)} to be serialized by Unity");
+        }
+        
+        var container = new GameObject(nameof(NoteInstanceContainer)).AddComponent<NoteInstanceContainer>();   
         container.instance = instance;
-        instance.transform.SetParent(container.transform);
-        instance.transform.localPosition = Vector3.zero;
+        note.Transform.SetParent(container.transform);
+        note.Transform.localPosition = Vector3.zero;
         container.gameObject.SetActive(false);
         return container;
     }

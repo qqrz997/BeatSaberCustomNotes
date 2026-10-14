@@ -16,6 +16,7 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
     private GameNoteController gameNoteController = null!;
     private CustomNoteColorNoteVisuals customNoteColorNoteVisuals = null!;
 
+    private INote? activeNote;
     private NoteInstanceContainer? activeContainer;
     private NoteInstanceContainer.Pool? activePool;
 
@@ -120,8 +121,9 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
         activePool = noteModelPool;
         activeContainer = noteModelPool?.Spawn();
         if (!activeContainer) return;
+        activeNote = activeContainer.Instance;
         
-        var go = activeContainer.instance.gameObject;
+        var go = activeNote.GameObject;
         go.SetLayerRecursively(config.HmdOnly ? VisibilityLayer.HmdOnlyAndReflected : VisibilityLayer.Note);
         go.transform.localPosition = Vector3.zero;
         go.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * config.GetNoteSize();
@@ -135,8 +137,8 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
 
     private void Visuals_DidInit(ColorNoteVisuals visuals, NoteControllerBase noteController)
     {
-        if (!activeContainer) return;
-        activeContainer.instance.gameObject.SetActive(true);
+        if (activeNote == null) return;
+        activeNote.GameObject.SetActive(true);
         
         if (customNote.Prefab is { Colorable:true })
         {
@@ -147,7 +149,7 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
         if (!config.HmdOnly)
         {
             customNoteColorNoteVisuals.SetBaseGameVisualsLayer(VisibilityLayer.Note);
-            if (!activeContainer.instance.UseBaseArrows)
+            if (!activeNote.UseBaseArrows)
             {
                 customNoteColorNoteVisuals.TurnOffVisuals();
             }
@@ -161,7 +163,7 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
 
         // HMDOnly code
         customNoteColorNoteVisuals.SetBaseGameVisualsLayer(VisibilityLayer.DesktopOnlyAndReflected);
-        if (activeContainer.instance.UseBaseArrows)
+        if (activeNote.UseBaseArrows)
         {
             if (!config.NoteSizeEquals(1))
             {
@@ -198,9 +200,9 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
 
     public void SetColor(Color color, bool updateMatBlocks)
     {
-        if (activeContainer == null) return;
+        if (activeNote == null) return;
         customNoteColorNoteVisuals.SetColor(color, updateMatBlocks);
-        activeContainer.instance.SetColor(color * activeContainer.instance.ColorMultiplier);
+        activeNote.SetColor(color * activeNote.ColorMultiplier);
     }
 
     public void HandleNoteControllerNoteWasCut(NoteController nc, in NoteCutInfo _)

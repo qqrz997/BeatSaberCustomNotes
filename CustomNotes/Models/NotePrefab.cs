@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace CustomNotes.Models;
 
-internal class NotePrefab
+internal class NotePrefab : INotePrefab
 {
     private readonly GameObject noteModelPrefab;
     private readonly bool useBaseArrows;
@@ -18,7 +18,7 @@ internal class NotePrefab
         this.colorMultiplier = colorMultiplier;
     }
 
-    public NoteInstance Instantiate()
+    public INote Instantiate()
     {
         var gameObject = Object.Instantiate(noteModelPrefab);
         gameObject.ReplaceSwappableMaterials();

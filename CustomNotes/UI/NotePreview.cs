@@ -148,22 +148,22 @@ internal class NotePreview
             defaultNote.Transform.SetParent(container, false);
         }
         
-        private NoteInstance? note;
+        private INote? note;
         
-        public void SetNote(NoteInstance? note)
+        public void SetNote(INote? note)
         {
             ClearNote();
             this.note = note;
             
-            if (!note)
+            if (note == null)
             {
                 defaultNote.GameObject.SetActive(true);
                 defaultNoteModel?.ShowNoteMesh = true;
                 return;
             }
 
-            note.transform.SetParent(container, false);
-            note.transform.localPosition = Vector3.zero;
+            note.Transform.SetParent(container, false);
+            note.Transform.localPosition = Vector3.zero;
 
             if (note.UseBaseArrows && defaultNoteModel != null)
             {
@@ -174,20 +174,20 @@ internal class NotePreview
 
         public void SetColor(Color color, float multiplier)
         {
-            if (note) note.SetColor(color * multiplier);
+            note?.SetColor(color * multiplier);
             defaultNote.SetColor(color);
         }
         
         public void SetScale(float scale)
         {
-            if (note) note.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * scale;
+            note?.Transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * scale;
             defaultNote.Transform.localScale = Vector3.one * scale;
         }
 
         public void ClearNote()
         {
             defaultNote.GameObject.SetActive(false);
-            if (note) Object.Destroy(note.gameObject);
+            if (note?.GameObject != null) Object.Destroy(note.GameObject);
         }
     }
 }

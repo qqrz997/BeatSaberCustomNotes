@@ -14,6 +14,7 @@ internal class CustomBombController : MonoBehaviour, INoteControllerDidInitEvent
     private MeshRenderer vanillaBombRenderer = null!;
     private MeshRenderer fakeBombRenderer = null!;
 
+    private INote? activeNote;
     private NoteInstanceContainer? activeContainer;
     private NoteInstanceContainer.Pool bombPool = null!;
 
@@ -59,7 +60,7 @@ internal class CustomBombController : MonoBehaviour, INoteControllerDidInitEvent
     private void DidFinish()
     {
         if (!activeContainer) return;
-        activeContainer.instance.gameObject.SetActive(false);
+        activeNote?.GameObject.SetActive(false);
         activeContainer.transform.SetParent(null);
         bombPool.Despawn(activeContainer);
     }
@@ -68,8 +69,9 @@ internal class CustomBombController : MonoBehaviour, INoteControllerDidInitEvent
     {
         activeContainer = bombPool.Spawn();
         if (!activeContainer) return;
+        activeNote = activeContainer.Instance;
         
-        var go = activeContainer.instance.gameObject;
+        var go = activeNote.GameObject;
         go.SetLayerRecursively(config.HmdOnly ? VisibilityLayer.HmdOnlyAndReflected : VisibilityLayer.Note);
         go.transform.localPosition = Vector3.zero;
         go.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * config.GetNoteSize();

@@ -16,6 +16,7 @@ internal class CustomBurstSliderController : MonoBehaviour, IColorable, INoteCon
     private BurstSliderGameNoteController burstSliderGameNoteController = null!;
     private CustomNoteColorNoteVisuals customNoteColorNoteVisuals = null!;
 
+    private INote? activeNote;
     private NoteInstanceContainer? activeContainer;
     private NoteInstanceContainer.Pool? activeSliderPool;
     private NoteInstanceContainer.Pool leftBurstSliderPool = null!;
@@ -65,16 +66,14 @@ internal class CustomBurstSliderController : MonoBehaviour, IColorable, INoteCon
 
     public void HandleNoteControllerNoteWasMissed(NoteController noteController)
     {
-        if (activeContainer != null)
-        {
-            activeContainer.transform.SetParent(null);
+        if (activeContainer == null) return;
+        activeContainer.transform.SetParent(null);
 
-            if (noteController.noteData.colorType != ColorType.None)
-            {
-                activeContainer.gameObject.SetActive(false);
-                activeSliderPool?.Despawn(activeContainer);
-                activeContainer = null;
-            }
+        if (noteController.noteData.colorType != ColorType.None)
+        {
+            activeContainer.gameObject.SetActive(false);
+            activeSliderPool?.Despawn(activeContainer);
+            activeContainer = null;
         }
     }
 
@@ -83,8 +82,9 @@ internal class CustomBurstSliderController : MonoBehaviour, IColorable, INoteCon
         activeSliderPool = noteController.noteData.colorType == ColorType.ColorA ? leftBurstSliderPool : rightBurstSliderPool;
         activeContainer = activeSliderPool.Spawn();
         if (!activeContainer) return;
+        activeNote = activeContainer.Instance;
         
-        var go = activeContainer.instance.gameObject;
+        var go = activeNote.GameObject;
         go.SetLayerRecursively(config.HmdOnly ? VisibilityLayer.HmdOnlyAndReflected : VisibilityLayer.Note);
         go.transform.localPosition = Vector3.zero;
         go.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * config.GetNoteSize();
@@ -96,9 +96,9 @@ internal class CustomBurstSliderController : MonoBehaviour, IColorable, INoteCon
         activeContainer.transform.localPosition = Vector3.zero;
     }
 
-    private void SetActiveThenColor(NoteInstance note, Color color)
+    private void SetActiveThenColor(INote note, Color color)
     {
-        note.gameObject.SetActive(true);
+        note.GameObject.SetActive(true);
         if (customNote.Prefab is { Colorable: true })
         {
             SetColor(color, true);
@@ -107,14 +107,14 @@ internal class CustomBurstSliderController : MonoBehaviour, IColorable, INoteCon
 
     private void Visuals_DidInit(ColorNoteVisuals visuals, NoteControllerBase noteController)
     {
-        if (!activeContainer) return;
-        SetActiveThenColor(activeContainer.instance, ((CustomNoteColorNoteVisuals)visuals)._noteColor);
+        if (activeNote == null) return;
+        SetActiveThenColor(activeNote, ((CustomNoteColorNoteVisuals)visuals)._noteColor);
             
         // Hide certain parts of the default note which is not required
         if (!config.HmdOnly)
         {
             customNoteColorNoteVisuals.SetBaseGameVisualsLayer(VisibilityLayer.Note);
-            if (!activeContainer.instance.UseBaseArrows)
+            if (!activeNote.UseBaseArrows)
             {
                 customNoteColorNoteVisuals.TurnOffVisuals();
             }
@@ -128,7 +128,7 @@ internal class CustomBurstSliderController : MonoBehaviour, IColorable, INoteCon
 
         // HMDOnly code
         customNoteColorNoteVisuals.SetBaseGameVisualsLayer(VisibilityLayer.DesktopOnlyAndReflected);
-        if (activeContainer.instance.UseBaseArrows)
+        if (activeNote.UseBaseArrows)
         {
             if (!config.NoteSizeEquals(1))
             {
@@ -165,9 +165,9 @@ internal class CustomBurstSliderController : MonoBehaviour, IColorable, INoteCon
 
     public void SetColor(Color color, bool updateMatBlocks)
     {
-        if (activeContainer == null) return;
+        if (activeNote == null) return;
         customNoteColorNoteVisuals.SetColor(color, updateMatBlocks);
-        activeContainer.instance.SetColor(color * activeContainer.instance.ColorMultiplier);
+        activeNote.SetColor(color * activeNote.ColorMultiplier);
     }
 
     public void HandleNoteControllerNoteWasCut(NoteController nc, in NoteCutInfo _)
