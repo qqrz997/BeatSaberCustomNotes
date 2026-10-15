@@ -63,15 +63,15 @@ internal class LegacyCustomNoteLoader
         var noteInfo = new NoteInfo(descriptor.NoteName, descriptor.AuthorName, descriptor.Icon);
         var metadata = new NoteMetadata(file, noteInfo, string.Empty);
         
-        var leftPrefabs = new NotePrefabs(
+        var leftPrefabs = NotePrefabs.LegacyNote(
             noteArrowLeft, noteDotLeft, chainArrowLeft, chainDotLeft, chainSegmentLeft, 
             !descriptor.DisableBaseNoteArrows, descriptor.NoteColorStrength);
         
-        var rightPrefabs = new NotePrefabs(
+        var rightPrefabs = NotePrefabs.LegacyNote(
             noteArrowRight, noteDotRight, chainArrowRight, chainDotRight, chainSegmentRight, 
             !descriptor.DisableBaseNoteArrows, descriptor.NoteColorStrength);
         
-        var bombPrefab = new NotePrefab(noteBomb, !descriptor.DisableBaseNoteArrows, descriptor.NoteColorStrength);
+        var bombPrefab = new LegacyNotePrefab(noteBomb, !descriptor.DisableBaseNoteArrows, descriptor.NoteColorStrength);
         
         var customNotePrefab = new CustomNotePrefab(
             leftPrefabs, rightPrefabs, bombPrefab, descriptor.UsesNoteColor, descriptor.NoteColorStrength);

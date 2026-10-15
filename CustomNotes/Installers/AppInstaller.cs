@@ -19,6 +19,7 @@ internal class AppInstaller : Installer
         Container.Bind<NoteFileManager>().AsSingle();
         Container.BindInterfacesTo<NoteDataLoader>().AsSingle();
         Container.Bind<NotesLoader>().AsSingle();
+        Container.Bind<Note2Loader>().AsSingle();
         Container.Bind<LegacyCustomNoteLoader>().AsSingle();
         
         Container.Bind<GameResourcesManager>().AsSingle();

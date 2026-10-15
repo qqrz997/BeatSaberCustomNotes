@@ -7,7 +7,7 @@ internal class CustomNotePrefab
     public CustomNotePrefab(
         NotePrefabs left,
         NotePrefabs right,
-        NotePrefab bomb, 
+        INotePrefab bomb, 
         bool colorableNote = true,
         float colorMultiplier = 1f)
     {
@@ -20,7 +20,7 @@ internal class CustomNotePrefab
 
     public NotePrefabs Left { get; }
     public NotePrefabs Right { get; }
-    public NotePrefab Bomb { get; }
+    public INotePrefab Bomb { get; }
     
     public bool Colorable { get; }
     public float ColorMultiplier { get; }

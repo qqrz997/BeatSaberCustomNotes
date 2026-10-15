@@ -19,6 +19,13 @@ internal class NoteFileManager
     private readonly DirectoryInfo customNotes;
     
     private NoteFileInfo[] loadedFiles = [];
+    
+    private static string[] FileTypes { get; } =
+    [
+        "note2",
+        "bloq",
+        "note"
+    ];
 
     public NoteFileManager()
     {
@@ -36,7 +43,7 @@ internal class NoteFileManager
     {
         progress?.Report(0);
         
-        var fileInfos = customNotes.EnumerateNoteFiles(SearchOption.AllDirectories).ToList();
+        var fileInfos = EnumerateNoteFiles(customNotes, SearchOption.AllDirectories).ToList();
         int i = 0;
         int lastPercent = 0;
         var fileBag = new ConcurrentBag<NoteFileInfo>();
@@ -109,6 +116,9 @@ internal class NoteFileManager
         }
         return sb.ToString();
     }
+    
+    private static IEnumerable<FileInfo> EnumerateNoteFiles(DirectoryInfo directory, SearchOption searchOption) =>
+        FileTypes.SelectMany(type => directory.EnumerateFiles($"*.{type}", searchOption));
 
     private class NoteFileInfoHashComparer : IEqualityComparer<NoteFileInfo>
     {

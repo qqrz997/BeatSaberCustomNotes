@@ -4,7 +4,21 @@ namespace CustomNotes.Models;
 
 internal class NotePrefabs
 {
-    public NotePrefabs(GameObject noteArrowPrefab,
+    public static NotePrefabs Note2(GameObject noteArrowPrefab,
+        GameObject noteDotPrefab,
+        GameObject chainArrowPrefab,
+        GameObject chainDotPrefab,
+        GameObject chainSegmentPrefab)
+    {
+        var noteArrow = new Note2Prefab(noteArrowPrefab);
+        var noteDot = new Note2Prefab(noteDotPrefab);
+        var chainArrow = new Note2Prefab(chainArrowPrefab);
+        var chainDot = new Note2Prefab(chainDotPrefab);
+        var chainSegment = new Note2Prefab(chainSegmentPrefab);
+        return new(noteArrow, noteDot, chainArrow, chainDot, chainSegment);
+    }
+    
+    public static NotePrefabs LegacyNote(GameObject noteArrowPrefab,
         GameObject noteDotPrefab,
         GameObject chainArrowPrefab,
         GameObject chainDotPrefab, 
@@ -12,16 +26,30 @@ internal class NotePrefabs
         bool useBaseArrows,
         float colorMultiplier)
     {
-        NoteArrow = new(noteArrowPrefab, useBaseArrows, colorMultiplier);
-        NoteDot = new(noteDotPrefab, useBaseArrows, colorMultiplier);
-        ChainArrow = new(chainArrowPrefab, useBaseArrows, colorMultiplier);
-        ChainDot = new(chainDotPrefab, useBaseArrows, colorMultiplier);
-        ChainSegment = new(chainSegmentPrefab, useBaseArrows, colorMultiplier);
+        var noteArrow = new LegacyNotePrefab(noteArrowPrefab, useBaseArrows, colorMultiplier);
+        var noteDot = new LegacyNotePrefab(noteDotPrefab, useBaseArrows, colorMultiplier);
+        var chainArrow = new LegacyNotePrefab(chainArrowPrefab, useBaseArrows, colorMultiplier);
+        var chainDot = new LegacyNotePrefab(chainDotPrefab, useBaseArrows, colorMultiplier);
+        var chainSegment = new LegacyNotePrefab(chainSegmentPrefab, useBaseArrows, colorMultiplier);
+        return new(noteArrow, noteDot, chainArrow, chainDot, chainSegment);
     }
 
-    public NotePrefab NoteArrow { get; }
-    public NotePrefab NoteDot { get; }
-    public NotePrefab ChainArrow { get; }
-    public NotePrefab ChainDot { get; }
-    public NotePrefab ChainSegment { get; }
+    private NotePrefabs(INotePrefab noteArrow,
+        INotePrefab noteDot,
+        INotePrefab chainArrow,
+        INotePrefab chainDot,
+        INotePrefab chainSegment)
+    {
+        NoteArrow = noteArrow;
+        NoteDot = noteDot;
+        ChainArrow = chainArrow;
+        ChainDot = chainDot;
+        ChainSegment = chainSegment;
+    }
+
+    public INotePrefab NoteArrow { get; }
+    public INotePrefab NoteDot { get; }
+    public INotePrefab ChainArrow { get; }
+    public INotePrefab ChainDot { get; }
+    public INotePrefab ChainSegment { get; }
 }
