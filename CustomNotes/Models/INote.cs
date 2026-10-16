@@ -13,4 +13,6 @@ internal interface INote
     void SetColorScheme(ColorScheme colorScheme);
     void SetBoostColors(ColorScheme colorScheme, bool boost);
     void SetColor(Color color);
+    
+    void SetScale(float scaleMultiplier);
 }

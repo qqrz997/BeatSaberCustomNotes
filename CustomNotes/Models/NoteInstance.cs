@@ -57,6 +57,11 @@ internal class NoteInstance : MonoBehaviour, INote
         materialPropertyBlockController.ApplyChanges();
     }
 
+    public void SetScale(float scaleMultiplier)
+    {
+        transform.localScale = Vector3.one * (0.4f * scaleMultiplier);
+    }
+
     private void OnDestroy()
     {
         if (gameObject) Destroy(gameObject);

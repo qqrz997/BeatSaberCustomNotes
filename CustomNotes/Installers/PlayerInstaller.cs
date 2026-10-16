@@ -73,10 +73,10 @@ internal class PlayerInstaller : Installer
         
         #region Note Setup
 
-        var leftNoteArrow = prefab.Left.NoteArrow.Instantiate();
-        var rightNoteArrow = prefab.Right.NoteArrow.Instantiate();
-        var leftNoteDot =  prefab.Left.NoteDot.Instantiate();
-        var rightNoteDot =  prefab.Right.NoteDot.Instantiate();
+        var leftNoteArrow = prefab.LeftNoteArrow.Instantiate();
+        var rightNoteArrow = prefab.RightNoteArrow.Instantiate();
+        var leftNoteDot =  prefab.LeftNoteDot.Instantiate();
+        var rightNoteDot =  prefab.RightNoteDot.Instantiate();
 
         Container.RegisterRedecorator((RedecoratorRegistration)(proMode
             ? new ProModeNoteRegistration(RedecorateNote, DecorationPriority)
@@ -123,8 +123,8 @@ internal class PlayerInstaller : Installer
 
         #region Burst Slider Setup
         
-        var leftChainSegment = prefab.Left.ChainSegment.Instantiate();
-        var rightChainSegment = prefab.Right.ChainSegment.Instantiate();
+        var leftChainSegment = prefab.LeftChainSegment.Instantiate();
+        var rightChainSegment = prefab.RightChainSegment.Instantiate();
         
         Container.RegisterRedecorator(new BurstSliderNoteRegistration(burstSliderGameNoteController =>
         {
@@ -158,10 +158,10 @@ internal class PlayerInstaller : Installer
 
         #region Burst Slider Head Setup
 
-        var leftChainArrow = prefab.Left.ChainArrow.Instantiate();
-        var rightChainArrow = prefab.Right.ChainArrow.Instantiate();
-        var leftChainDot = prefab.Left.ChainDot.Instantiate();
-        var rightChainDot = prefab.Right.ChainDot.Instantiate();
+        var leftChainArrow = prefab.LeftChainArrow.Instantiate();
+        var rightChainArrow = prefab.RightChainArrow.Instantiate();
+        var leftChainDot = prefab.LeftChainDot.Instantiate();
+        var rightChainDot = prefab.RightChainDot.Instantiate();
 
         Container.RegisterRedecorator(new BurstSliderHeadNoteRegistration(gameNoteController =>
         {

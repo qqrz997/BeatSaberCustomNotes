@@ -64,36 +64,65 @@ internal class Note2Loader
         var left = descriptor.leftNotes;
         var right = descriptor.rightNotes ? descriptor.rightNotes : descriptor.leftNotes;
 
-        var noteArrowLeft = left.noteArrow;
-        var noteArrowRight = right.noteArrow ? right.noteArrow : noteArrowLeft;
+        var noteArrowLeft = new Note2SubPrefab(left.noteArrow);
+        var noteDotLeft = GetSubPrefab(left.noteDot, noteArrowLeft);
+        var chainArrowLeft = GetOrCreateSubPrefab(left.chainArrow, new(0f, 0.255f, 0f), new(1f, 0.59f, 1f), noteArrowLeft);
+        var chainDotLeft = GetSubPrefab(left.chainDot, chainArrowLeft);
+        var chainSegmentLeft = GetOrCreateSubPrefab(left.chainSegment, Vector3.zero, new(1f, 0.225f, 1f), noteDotLeft);
+        
+        var noteArrowRight = GetSubPrefab(right.noteArrow, noteArrowLeft);
+        var noteDotRight = GetSubPrefab(right.noteDot, noteArrowRight);
+        var chainArrowRight = GetOrCreateSubPrefab(right.chainArrow, new(0f, 0.255f, 0f), new(1f, 0.59f, 1f), noteArrowRight);
+        var chainDotRight = GetSubPrefab(right.chainDot, chainArrowRight);
+        var chainSegmentRight = GetOrCreateSubPrefab(right.chainSegment, Vector3.zero, new(1f, 0.225f, 1f), noteDotRight);
 
-        var noteDotLeft = left.noteDot ? left.noteDot : noteArrowLeft;
-        var noteDotRight = right.noteDot ? right.noteDot : noteArrowRight;
-
-        var noteBomb = descriptor.bomb;
-
-        var chainSegmentLeft = left.chainSegment ? left.chainSegment : noteDotLeft;
-        var chainSegmentRight = right.chainSegment ? right.chainSegment : noteDotRight;
-
-        var chainArrowLeft = left.chainArrow ? left.chainArrow : noteArrowLeft;
-        var chainArrowRight = right.chainArrow ? right.chainArrow : noteArrowRight;
-
-        var chainDotLeft = left.chainDot ? left.chainDot : noteDotLeft;
-        var chainDotRight = right.chainDot ? right.chainDot : noteDotRight;
+        var bomb = GetBomb(descriptor.bomb);
         
         var noteInfo = new NoteInfo(descriptor.noteName, descriptor.authorName, descriptor.icon);
         var metadata = new NoteMetadata(file, noteInfo, string.Empty);
         
-        var leftPrefabs = NotePrefabs.Note2(
-            noteArrowLeft, noteDotLeft, chainArrowLeft, chainDotLeft, chainSegmentLeft);
-        var rightPrefabs = NotePrefabs.Note2(
-            noteArrowRight, noteDotRight, chainArrowRight, chainDotRight, chainSegmentRight);
-        
-        var bombPrefab = new Note2Prefab(noteBomb);
-        
-        var customNotePrefab = new CustomNotePrefab(leftPrefabs, rightPrefabs, bombPrefab);
+        var customNotePrefab = new NotePrefab(
+            noteArrowLeft, noteDotLeft, chainArrowLeft, chainDotLeft, chainSegmentLeft,
+            noteArrowRight, noteDotRight, chainArrowRight, chainDotRight, chainSegmentRight,
+            bomb);
         
         return new(assetBundle, metadata, customNotePrefab);
+
+        static Note2SubPrefab GetSubPrefab(GameObject? prefabObject, Note2SubPrefab fallback) => 
+            prefabObject != null ? new(prefabObject) : fallback;
+        
+        Note2SubPrefab GetOrCreateSubPrefab(GameObject? prefabObject,
+            Vector3 position,
+            Vector3 scale,
+            Note2SubPrefab fallback)
+        {
+            if (prefabObject != null) return new(prefabObject);
+            
+            var subPrefab = new GameObject("PlaceholderSubPrefab");
+            subPrefab.transform.SetParent(prefab.transform);
+
+            var model = fallback.Instantiate().GameObject;
+            model.transform.SetParent(subPrefab.transform);
+            model.transform.localPosition = position;
+            model.transform.localScale = scale;
+
+            return new(subPrefab);
+        }
+
+        Note2SubPrefab GetBomb(GameObject? prefabObject)
+        {
+            if (prefabObject != null) return new(prefabObject);
+            
+            var subPrefab = new GameObject("PlaceholderSubPrefab");
+            subPrefab.transform.SetParent(prefab.transform);
+
+            var model = gameResourcesManager.CreateBombNote(true);
+            model.Transform.SetParent(subPrefab.transform, true);
+            model.Transform.localPosition = Vector3.zero;
+            model.Transform.localScale = Vector3.one;
+
+            return new(subPrefab);
+        }
     }
 
     private static AssetBundle LoadBundle(Stream stream)

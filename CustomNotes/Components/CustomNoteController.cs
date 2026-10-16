@@ -140,11 +140,8 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
         if (activeNote == null) return;
         activeNote.GameObject.SetActive(true);
         
-        if (customNote.Prefab is { Colorable:true })
-        {
-            SetColor(visuals._noteColor, true);
-        }
-
+        SetColor(visuals._noteColor, true);
+        
         // Hide certain parts of the default note which is not required
         if (!config.HmdOnly)
         {
@@ -201,6 +198,7 @@ internal class CustomNoteController : MonoBehaviour, IColorable, INoteController
     public void SetColor(Color color, bool updateMatBlocks)
     {
         if (activeNote == null) return;
+        if (customNote.Prefab is LegacyNotePrefab { Colorable: false }) return;
         customNoteColorNoteVisuals.SetColor(color, updateMatBlocks);
         activeNote.SetColor(color * activeNote.ColorMultiplier);
     }

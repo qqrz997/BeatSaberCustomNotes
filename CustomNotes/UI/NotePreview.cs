@@ -56,18 +56,18 @@ internal class NotePreview
         this.noteBomb = new(transform, noteBomb, "NoteBomb", new(2.4f, 0.3f, 0.0f));
     }
 
-    public void SetNotes(CustomNotePrefab prefab)
+    public void SetNotes(INotePrefab prefab)
     {
-        leftNoteArrow.SetNote(prefab.Left.NoteArrow.Instantiate());
-        leftNoteDot.SetNote(prefab.Left.NoteDot.Instantiate());
-        leftChainArrow.SetNote(prefab.Left.ChainArrow.Instantiate());
-        leftChainDot.SetNote(prefab.Left.ChainDot.Instantiate());
-        leftChainSegment.SetNote(prefab.Left.ChainSegment.Instantiate());
-        rightNoteArrow.SetNote(prefab.Right.NoteArrow.Instantiate());
-        rightNoteDot.SetNote(prefab.Right.NoteDot.Instantiate());
-        rightChainArrow.SetNote(prefab.Right.ChainArrow.Instantiate());
-        rightChainDot.SetNote(prefab.Right.ChainDot.Instantiate());
-        rightChainSegment.SetNote(prefab.Right.ChainSegment.Instantiate());
+        leftNoteArrow.SetNote(prefab.LeftNoteArrow.Instantiate());
+        leftNoteDot.SetNote(prefab.LeftNoteDot.Instantiate());
+        leftChainArrow.SetNote(prefab.LeftChainArrow.Instantiate());
+        leftChainDot.SetNote(prefab.LeftChainDot.Instantiate());
+        leftChainSegment.SetNote(prefab.LeftChainSegment.Instantiate());
+        rightNoteArrow.SetNote(prefab.RightNoteArrow.Instantiate());
+        rightNoteDot.SetNote(prefab.RightNoteDot.Instantiate());
+        rightChainArrow.SetNote(prefab.RightChainArrow.Instantiate());
+        rightChainDot.SetNote(prefab.RightChainDot.Instantiate());
+        rightChainSegment.SetNote(prefab.RightChainSegment.Instantiate());
         noteBomb.SetNote(prefab.Bomb.Instantiate());
     }
     
@@ -180,7 +180,7 @@ internal class NotePreview
         
         public void SetScale(float scale)
         {
-            note?.Transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * scale;
+            note?.SetScale(scale);
             defaultNote.Transform.localScale = Vector3.one * scale;
         }
 

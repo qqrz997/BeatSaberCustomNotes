@@ -4,13 +4,13 @@ using UnityEngine;
 
 namespace CustomNotes.Models;
 
-internal class LegacyNotePrefab : INotePrefab
+internal class LegacyNoteSubPrefab : INoteSubPrefab
 {
     private readonly GameObject noteModelPrefab;
     private readonly bool useBaseArrows;
     private readonly float colorMultiplier;
 
-    public LegacyNotePrefab(GameObject noteModelPrefab, 
+    public LegacyNoteSubPrefab(GameObject noteModelPrefab, 
         bool useBaseArrows = false,
         float colorMultiplier = 1f)
     {
@@ -27,11 +27,11 @@ internal class LegacyNotePrefab : INotePrefab
     }
 }
 
-internal class Note2Prefab : INotePrefab
+internal class Note2SubPrefab : INoteSubPrefab
 {
     private readonly GameObject noteModelPrefab;
 
-    public Note2Prefab(GameObject noteModelPrefab)
+    public Note2SubPrefab(GameObject noteModelPrefab)
     {
         this.noteModelPrefab = noteModelPrefab;
     }
@@ -76,5 +76,10 @@ internal class Note2Instance : MonoBehaviour, INote
     {
         foreach (var materialColorer in allColorers)
             materialColorer.SetColor(color);
+    }
+
+    public void SetScale(float scaleMultiplier)
+    {
+        transform.localScale = Vector3.one * scaleMultiplier;
     }
 }

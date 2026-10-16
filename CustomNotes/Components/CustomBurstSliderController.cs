@@ -99,10 +99,7 @@ internal class CustomBurstSliderController : MonoBehaviour, IColorable, INoteCon
     private void SetActiveThenColor(INote note, Color color)
     {
         note.GameObject.SetActive(true);
-        if (customNote.Prefab is { Colorable: true })
-        {
-            SetColor(color, true);
-        }
+        SetColor(color, true);
     }
 
     private void Visuals_DidInit(ColorNoteVisuals visuals, NoteControllerBase noteController)
@@ -166,6 +163,7 @@ internal class CustomBurstSliderController : MonoBehaviour, IColorable, INoteCon
     public void SetColor(Color color, bool updateMatBlocks)
     {
         if (activeNote == null) return;
+        if (customNote.Prefab is LegacyNotePrefab { Colorable: false }) return;
         customNoteColorNoteVisuals.SetColor(color, updateMatBlocks);
         activeNote.SetColor(color * activeNote.ColorMultiplier);
     }

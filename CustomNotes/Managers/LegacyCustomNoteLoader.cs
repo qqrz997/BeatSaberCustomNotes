@@ -2,7 +2,6 @@ using System;
 using CustomNotes.Models;
 using CustomNotes.Utilities;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace CustomNotes.Managers;
 
@@ -42,71 +41,72 @@ internal class LegacyCustomNoteLoader
         var descriptor = prefab.GetComponent<NoteDescriptor>();
         descriptor.Icon ??= Utils.GetDefaultCustomIcon();
 
-        var noteArrowLeft = prefab.transform.Find("NoteLeft").gameObject;
-        var noteArrowRight = prefab.transform.Find("NoteRight").gameObject;
-        var noteDotLeftTransform = prefab.transform.Find("NoteDotLeft");
-        var noteDotRightTransform = prefab.transform.Find("NoteDotRight");
-        var noteDotLeft = noteDotLeftTransform != null ? noteDotLeftTransform.gameObject : noteArrowLeft;
-        var noteDotRight = noteDotRightTransform != null ? noteDotRightTransform.gameObject : noteArrowRight;
-       
-        var noteBomb = GetBomb("NoteBomb");
+        var noteArrowLeft = new LegacyNoteSubPrefab(prefab.transform.Find("NoteLeft").gameObject);
+        var noteDotLeft = GetSubPrefab("NoteDotLeft", noteArrowLeft);
+        var chainArrowLeft = GetOrCreateSubPrefab("BurstSliderHeadLeft", new(0f, 0.255f, 0f), new(1f, 0.59f, 1f), noteArrowLeft);
+        var chainDotLeft = GetSubPrefab("BurstSliderHeadDotLeft", chainArrowLeft);
+        var chainSegmentLeft = GetOrCreateSubPrefab("BurstSliderLeft", Vector3.zero, new(1f, 0.225f, 1f), noteDotLeft);
         
-        var chainSegmentLeft = GetSubPrefab(noteDotLeft, "BurstSliderLeft", Vector3.zero, new(1f, 0.225f, 1f));
-        var chainSegmentRight = GetSubPrefab(noteDotLeft, "BurstSliderRight", Vector3.zero, new(1f, 0.225f, 1f));
-
-        var chainArrowLeft = GetSubPrefab(noteArrowLeft, "BurstSliderHeadLeft", new(0f, 0.255f, 0f), new(1f, 0.59f, 1f));
-        var chainArrowRight = GetSubPrefab(noteArrowRight, "BurstSliderHeadRight", new(0f, 0.255f, 0f), new(1f, 0.59f, 1f));
+        var noteArrowRight = new LegacyNoteSubPrefab(prefab.transform.Find("NoteRight").gameObject);
+        var noteDotRight = GetSubPrefab("NoteDotRight", noteArrowRight);
+        var chainArrowRight = GetOrCreateSubPrefab("BurstSliderHeadRight", new(0f, 0.255f, 0f), new(1f, 0.59f, 1f), noteArrowRight);
+        var chainDotRight = GetSubPrefab("BurstSliderHeadDotRight", chainArrowRight);
+        var chainSegmentRight = GetOrCreateSubPrefab("BurstSliderRight", Vector3.zero, new(1f, 0.225f, 1f), noteDotRight);
         
-        var chainDotLeft = GetSubPrefab(noteDotLeft, "BurstSliderHeadDotLeft", new(0f, 0.255f, 0f), new(1f, 0.59f, 1f));
-        var chainDotRight = GetSubPrefab(noteDotRight, "BurstSliderHeadDotRight", new(0f, 0.255f, 0f), new(1f, 0.59f, 1f));
-
+        var bomb = GetBomb("NoteBomb");
+        
         var noteInfo = new NoteInfo(descriptor.NoteName, descriptor.AuthorName, descriptor.Icon);
         var metadata = new NoteMetadata(file, noteInfo, string.Empty);
         
-        var leftPrefabs = NotePrefabs.LegacyNote(
-            noteArrowLeft, noteDotLeft, chainArrowLeft, chainDotLeft, chainSegmentLeft, 
-            !descriptor.DisableBaseNoteArrows, descriptor.NoteColorStrength);
-        
-        var rightPrefabs = NotePrefabs.LegacyNote(
-            noteArrowRight, noteDotRight, chainArrowRight, chainDotRight, chainSegmentRight, 
-            !descriptor.DisableBaseNoteArrows, descriptor.NoteColorStrength);
-        
-        var bombPrefab = new LegacyNotePrefab(noteBomb, !descriptor.DisableBaseNoteArrows, descriptor.NoteColorStrength);
-        
-        var customNotePrefab = new CustomNotePrefab(
-            leftPrefabs, rightPrefabs, bombPrefab, descriptor.UsesNoteColor, descriptor.NoteColorStrength);
-        
+        var customNotePrefab = new LegacyNotePrefab(
+            noteArrowLeft, noteDotLeft, chainArrowLeft, chainDotLeft, chainSegmentLeft,
+            noteArrowRight, noteDotRight,  chainArrowRight, chainDotRight, chainSegmentRight,
+            bomb,
+            descriptor.UsesNoteColor, descriptor.NoteColorStrength);
+            
         return new(assetBundle, metadata, customNotePrefab);
 
-        GameObject GetSubPrefab(GameObject fallback, string subPrefabName, Vector3 position, Vector3 scale)
+        LegacyNoteSubPrefab GetSubPrefab(string subPrefabName, LegacyNoteSubPrefab fallback)
+        {
+            var subPrefab = prefab.transform.Find(subPrefabName);
+            return !subPrefab ? fallback : new(subPrefab.gameObject);
+        }
+        
+        LegacyNoteSubPrefab GetOrCreateSubPrefab(string subPrefabName,
+            Vector3 position,
+            Vector3 scale,
+            LegacyNoteSubPrefab fallback)
         {
             var subPrefab = prefab.transform.Find(subPrefabName)?.gameObject;
-            if (subPrefab != null) return subPrefab;
+            if (subPrefab == null)
+            {
+                subPrefab = new(subPrefabName);
+                subPrefab.transform.SetParent(prefab.transform);
 
-            subPrefab = new(subPrefabName);
-            subPrefab.transform.SetParent(prefab.transform);
-            
-            var model = Object.Instantiate(fallback, subPrefab.transform, true);
-            model.transform.localPosition = position;
-            model.transform.localScale = scale;
-        
-            return subPrefab;
+                var model = fallback.Instantiate().GameObject;
+                model.transform.SetParent(subPrefab.transform);
+                model.transform.localPosition = position;
+                model.transform.localScale = scale;
+            }
+
+            return new(subPrefab, !descriptor.DisableBaseNoteArrows, descriptor.NoteColorStrength);
         }
 
-        GameObject GetBomb(string bombName)
+        LegacyNoteSubPrefab GetBomb(string bombName)
         {
-            var bomb = prefab.transform.Find(bombName)?.gameObject;
-            if (bomb != null) return bomb;
+            var noteBomb = prefab.transform.Find(bombName)?.gameObject;
+            if (noteBomb == null)
+            {
+                noteBomb = new(bombName);
+                noteBomb.transform.SetParent(prefab.transform);
 
-            bomb = new(bombName);
-            bomb.transform.SetParent(prefab.transform);
+                var model = gameResourcesManager.CreateBombNote(true);
+                model.Transform.SetParent(noteBomb.transform, true);
+                model.Transform.localPosition = Vector3.zero;
+                model.Transform.localScale = Vector3.one / 0.4f;
+            }
 
-            var model = gameResourcesManager.CreateBombNote(true);
-            model.Transform.SetParent(bomb.transform, true);
-            model.Transform.localPosition = Vector3.zero;
-            model.Transform.localScale = Vector3.one / 0.4f;
-        
-            return bomb;
+            return new(noteBomb, !descriptor.DisableBaseNoteArrows, descriptor.NoteColorStrength);
         }
     }
 }

@@ -149,7 +149,8 @@ internal class NoteListViewController : BSMLAutomaticViewController
         }
         
         preview.SetNotes(note.Prefab);
-        preview.SetColors(colorScheme.saberAColor, colorScheme.saberBColor, note.Prefab.ColorMultiplier);
+        //preview.SetColors(colorScheme.saberAColor, colorScheme.saberBColor, note.Prefab.ColorMultiplier);
+        preview.SetColors(colorScheme.saberAColor, colorScheme.saberBColor, 1f);
 
         ScalePreviewNotes(config.NoteSize);
     }
