@@ -1,0 +1,12 @@
+﻿<bg xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="https://monkeymanboy.github.io/BSML-Docs/BSMLSchema.xsd">
+
+	<settings-container spacing='1' child-control-width='true' child-expand-width='true' size-delta-y='-15'>
+		<checkbox-setting id='enabled-checkbox' text='Enabled' value='ModEnabled' apply-on-change='true' bind-value='true' hover-hint='Enable Custom Notes.'/>
+		<dropdown-list-setting id='notes-dropdown' text='Custom Note' value='DropdownValue' choices='notes-list' on-change='SelectionChanged' hover-hint='Select a Custom Note' />
+		<slider-setting id='size-slider' text='Note Scale' min='0.4' max='2' increment='0.05' value='NoteSize' bind-value='true' apply-on-change='true' hover-hint='Changes the scale of custom notes. Requires a non-default note to be used.' />
+		<checkbox-setting id='hmd-checkbox' text='HMD Only' value='HmdOnly' apply-on-change='true' bind-value='true' hover-hint='Only displays custom notes in the headset. A non-default camera such as Smooth Camera, Camera+, or Camera2 is required.' />
+		<checkbox-setting id='auto-checkbox' text='Auto Disable Custom Notes' value='AutoDisable' apply-on-change='true' bind-value='true' hover-hint='Automatically disable custom notes in situations where submission would normally be turned off, allowing submissions.' />
+	</settings-container>
+
+</bg>

@@ -6,35 +6,28 @@ namespace CustomNotes.Managers;
 
 internal class CustomNotesViewManager : IInitializable, IDisposable
 {
-    private readonly NoteListViewController noteListViewController;
     private readonly NoteModifierViewController noteModifierViewController;
     private readonly GameplaySetupViewController gameplaySetupViewController;
 
-    private CustomNotesViewManager(NoteListViewController noteListViewController, NoteModifierViewController noteModifierViewController, GameplaySetupViewController gameplaySetupViewController)
+    private CustomNotesViewManager(
+        NoteModifierViewController noteModifierViewController,
+        GameplaySetupViewController gameplaySetupViewController)
     {
-        this.noteListViewController = noteListViewController;
         this.noteModifierViewController = noteModifierViewController;
         this.gameplaySetupViewController = gameplaySetupViewController;
     }
 
     public void Initialize()
     {
-        noteListViewController.CustomNotesReloaded += NoteListViewController_CustomNotesReloaded;
-        gameplaySetupViewController.didActivateEvent += GameplaySetupViewController_DidActivateEvent;
+        gameplaySetupViewController.didActivateEvent += GameplaySetupViewControllerDidActivateEvent;
     }
 
     public void Dispose()
     {
-        noteListViewController.CustomNotesReloaded -= NoteListViewController_CustomNotesReloaded;
-        gameplaySetupViewController.didActivateEvent -= GameplaySetupViewController_DidActivateEvent;
+        gameplaySetupViewController.didActivateEvent -= GameplaySetupViewControllerDidActivateEvent;
     }
 
-    private void NoteListViewController_CustomNotesReloaded()
-    {
-        noteModifierViewController.SetupList();
-    }
-
-    private void GameplaySetupViewController_DidActivateEvent(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
+    private void GameplaySetupViewControllerDidActivateEvent(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
     {
         noteModifierViewController.ParentControllerActivated();
     }

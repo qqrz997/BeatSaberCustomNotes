@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Components.Settings;
 using BeatSaberMarkupLanguage.GameplaySetup;
 using CustomNotes.Managers;
+using CustomNotes.Models;
 using Zenject;
 
 namespace CustomNotes.UI;
@@ -17,67 +17,57 @@ namespace CustomNotes.UI;
 internal class NoteModifierViewController : IInitializable, IDisposable, INotifyPropertyChanged
 {
     private readonly PluginConfig config;
-    private readonly NoteAssetLoader noteAssetLoader;
+    private readonly INoteDataLoader noteDataLoader;
     private readonly GameplaySetup gameplaySetup;
 
-    private NoteModifierViewController(PluginConfig config, NoteAssetLoader noteAssetLoader, GameplaySetup gameplaySetup)
+    private NoteModifierViewController(PluginConfig config, INoteDataLoader noteDataLoader, GameplaySetup gameplaySetup)
     {
         this.config = config;
-        this.noteAssetLoader = noteAssetLoader;
+        this.noteDataLoader = noteDataLoader;
         this.gameplaySetup = gameplaySetup;
     }
-        
+
+    private bool parsed;
+    private bool needsSetup = true;
+    
     [UIValue("notes-list")] private readonly List<object> notesList = [];
     [UIComponent("notes-dropdown")] private readonly DropDownListSetting notesDropdown = null!;
 
-    public event PropertyChangedEventHandler PropertyChanged;
+    public event PropertyChangedEventHandler? PropertyChanged;
 
+    [UIAction("#post-parse")]
+    public void PostParse()
+    {
+        parsed = true;
+    }
+    
     public void Initialize()
     {
-        SetupList();
-        gameplaySetup.AddTab("Custom Notes", "CustomNotes.Resources.BSML.noteModifier.bsml", this);
+        noteDataLoader.CustomNotesChanged += CustomNotesChanged;
+        gameplaySetup.AddTab("Custom Notes", "CustomNotes.UI.BSML.noteModifier.bsml", this);
     }
 
     public void Dispose()
     {
+        noteDataLoader.CustomNotesChanged -= CustomNotesChanged;
         gameplaySetup.RemoveTab("Custom Notes");
     }
 
-    internal void ParentControllerActivated()
+    public void ParentControllerActivated()
     {
-        notesDropdown?.ReceiveValue();
         PropertyChanged?.Invoke(this, new(nameof(ModEnabled)));
         PropertyChanged?.Invoke(this, new(nameof(NoteSize)));
         PropertyChanged?.Invoke(this, new(nameof(HmdOnly)));
         PropertyChanged?.Invoke(this, new(nameof(AutoDisable)));
+        
+        SetupList();
     }
 
-    public void SetupList()
+    public void SelectionChanged(object selectedCell)
     {
-        notesList.Clear();
-        foreach (var customNote in noteAssetLoader.CustomNoteObjects)
-        {
-            notesList.Add(customNote.Descriptor.NoteName);
-        }
-
-        if (notesDropdown != null)
-        {
-            notesDropdown.Values = notesList;
-            notesDropdown.UpdateChoices();
-        }
+        config.LastNote = selectedCell is DropdownListItem item ? item.NoteData.Metadata.File.Hash : null;
     }
 
-    [UIAction("note-selected")]
-    public void OnSelect(string selectedCell)
-    {
-        int selectedNote = noteAssetLoader.CustomNoteObjects
-            .ToList()
-            .FindIndex(note => note.Descriptor.NoteName == selectedCell);
-        noteAssetLoader.SelectedNoteIdx = selectedNote;
-        config.LastNote = noteAssetLoader.CustomNoteObjects[selectedNote].FileName;
-    }
-
-    [UIValue("mod-enabled")]
     public bool ModEnabled
     {
         get => config.Enabled;
@@ -88,13 +78,15 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
         }
     }
 
-    [UIValue("selected-note")]
-    private string SelectedNote =>
-        // Only select if valid bloq is loaded
-        noteAssetLoader.CustomNoteObjects[noteAssetLoader.SelectedNoteIdx].ErrorMessage == null ? "Default" 
-            : noteAssetLoader.CustomNoteObjects[noteAssetLoader.SelectedNoteIdx].Descriptor.NoteName;
+    public object DropdownValue => GetSelectedNote();
+    private object GetSelectedNote()
+    {
+        foreach (var value in notesDropdown.Values)
+            if (value is DropdownListItem item && item.NoteData.Metadata.File.Hash == config.LastNote)
+                return value;
+        return "Default";
+    }
 
-    [UIValue("note-size")]
     public float NoteSize
     {
         get => config.NoteSize;
@@ -105,7 +97,6 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
         }
     }
 
-    [UIValue("hmd-only")]
     public bool HmdOnly
     {
         get => config.HmdOnly;
@@ -116,7 +107,6 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
         }
     }
 
-    [UIValue("auto-disable")]
     public bool AutoDisable
     {
         get => config.AutoDisable;
@@ -125,5 +115,36 @@ internal class NoteModifierViewController : IInitializable, IDisposable, INotify
             config.AutoDisable = value;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AutoDisable)));
         }
+    }
+
+    private void CustomNotesChanged(IEnumerable<CustomNoteData> noteData)
+    {
+        needsSetup = true;
+        SetupList();
+    }
+
+    private void SetupList()
+    {
+        if (!parsed || !needsSetup) return;
+        
+        notesList.Clear();
+        notesList.Add("Default");
+        foreach (var customNote in noteDataLoader.LoadedCustomNotes)
+        {
+            notesList.Add(new DropdownListItem(customNote));
+        }
+
+        notesDropdown.Values = notesList;
+        notesDropdown.UpdateChoices();
+        notesDropdown.ReceiveValue();
+
+        needsSetup = false;
+    }
+    
+    private class DropdownListItem
+    {
+        public DropdownListItem(CustomNoteData noteData) => NoteData = noteData;
+        public CustomNoteData NoteData { get; }
+        public override string ToString() => NoteData.Metadata.Info.Name;
     }
 }

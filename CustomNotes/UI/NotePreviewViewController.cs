@@ -6,22 +6,22 @@ using HMUI;
 
 namespace CustomNotes.UI;
 
-internal class NotePreviewViewController : BSMLResourceViewController
+[HotReload(RelativePathToLayout = "./BSML/notePreview.bsml")]
+[ViewDefinition("CustomNotes.UI.BSML.notePreview.bsml")]
+internal class NotePreviewViewController : BSMLAutomaticViewController
 {
-    public override string ResourceName => "CustomNotes.Resources.BSML.notePreview.bsml";
-
     [UIComponent("error-description")] private readonly TextPageScrollView errorDescription = null!;
 
-    public void OnNoteWasChanged(CustomNote customNote)
+    public void OnNoteWasChanged(CustomNoteData customNote)
     {
-        if (string.IsNullOrWhiteSpace(customNote.ErrorMessage))
+        if (string.IsNullOrWhiteSpace(customNote.Metadata.ErrorMessage))
         {
             errorDescription.gameObject.SetActive(false);
             return;
         }
 
         errorDescription.gameObject.SetActive(true);
-        errorDescription.SetText($"{customNote.Descriptor?.NoteName}:\n\n{Utils.SafeUnescape(customNote
-            .ErrorMessage)}");
+        errorDescription.SetText($"{customNote.Metadata.Info.Name}:\n\n" +
+                                 $"{Utils .SafeUnescape(customNote.Metadata.ErrorMessage)}");
     }
 }

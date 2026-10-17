@@ -1,58 +1,55 @@
-﻿using UnityEngine;
+﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace CustomNotes.Utilities;
 
-internal class MaterialSwapper
+internal static class MaterialSwapper
 {
-    private static IEnumerable<Material> allMaterials;
+    private static Dictionary<string, Material>? replacements;
 
-    public static void GetMaterials()
+    public static void ReplaceSwappableMaterials(this GameObject gameObject)
     {
-        // This object should be created in the Menu Scene
-        // Grab materials from Menu Scene objects
-        allMaterials = Resources.FindObjectsOfTypeAll<Material>();
-    }
+        replacements ??= GetReplacementCandidates();
 
-    public static void ReplaceMaterialsForGameObject(GameObject gameObject)
-    {
-        allMaterials ??= Resources.FindObjectsOfTypeAll<Material>();
-
-        foreach (var currentMaterial in allMaterials)
-        {
-            string materialName = currentMaterial.name.ToLower() + "_replace (Instance)";
-            ReplaceAllMaterialsForGameObjectChildren(gameObject, currentMaterial, materialName);
-        }
-    }
-
-    public static void ReplaceAllMaterialsForGameObjectChildren(GameObject gameObject, Material material, string materialToReplaceName = "")
-    {
         foreach (var renderer in gameObject.GetComponentsInChildren<Renderer>(true))
         {
-            ReplaceAllMaterialsForGameObject(renderer.gameObject, material, materialToReplaceName);
+            var materials = renderer.sharedMaterials;
+            var changed = false;
+
+            for (var i = 0; i < materials.Length; i++)
+            {
+                var oldMaterial = materials[i];
+                if (!oldMaterial || !replacements.TryGetValue(oldMaterial.name, out var replacement))
+                {
+                    continue;
+                }
+
+                var newMaterial = new Material(replacement);
+                if (oldMaterial.HasColor(MaterialProps.Color))
+                {
+                    newMaterial.SetColor(MaterialProps.Color, oldMaterial.GetColor(MaterialProps.Color));
+                }
+                materials[i] = newMaterial;
+                changed = true;
+            }
+
+            if (changed)
+            {
+                renderer.materials = materials;
+            }
         }
     }
 
-    public static void ReplaceAllMaterialsForGameObject(GameObject gameObject, Material material, string materialToReplaceName = "")
+    private static Dictionary<string, Material> GetReplacementCandidates()
     {
-        var renderer = gameObject.GetComponent<Renderer>();
-        var materialsCopy = renderer.materials;
-        bool materialsDidChange = false;
+        var replacements = new Dictionary<string, Material>(StringComparer.OrdinalIgnoreCase);
 
-        for (int i = 0; i < renderer.materials.Length; i++)
+        foreach (var material in Resources.FindObjectsOfTypeAll<Material>())
         {
-            if (materialsCopy[i].name == materialToReplaceName || materialToReplaceName == "")
-            {
-                var oldColor = materialsCopy[i].GetColor(MaterialProps.Color);
-                materialsCopy[i] = material;
-                materialsCopy[i].SetColor(MaterialProps.Color, oldColor);
-                materialsDidChange = true;
-            }
+            if (material) replacements[material.name + "_replace"] = material;
         }
 
-        if (materialsDidChange)
-        {
-            renderer.materials = materialsCopy;
-        }
+        return replacements;
     }
 }

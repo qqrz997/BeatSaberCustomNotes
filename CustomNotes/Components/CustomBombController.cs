@@ -1,6 +1,6 @@
 ﻿using CameraUtils.Core;
+using CustomNotes.Models;
 using CustomNotes.Utilities;
-using SiraUtil.Objects;
 using UnityEngine;
 using Zenject;
 
@@ -12,15 +12,16 @@ internal class CustomBombController : MonoBehaviour, INoteControllerDidInitEvent
     private BombNoteController bombNoteController = null!;
     
     private MeshRenderer vanillaBombRenderer = null!;
-    private MeshRenderer fakeBombRenderer;
+    private MeshRenderer fakeBombRenderer = null!;
 
-    private SiraPrefabContainer siraContainer;
-    private SiraPrefabContainer.Pool bombPool;
+    private INote? activeNote;
+    private NoteInstanceContainer? activeContainer;
+    private NoteInstanceContainer.Pool bombPool = null!;
 
     [Inject]
-    private void Init(
+    public void Init(
         PluginConfig config, 
-        [InjectOptional(Id = Protocol.BombPool)] SiraPrefabContainer.Pool bombContainerPool)
+        [Inject(Id = Protocol.BombPool)] NoteInstanceContainer.Pool bombContainerPool)
     {
         this.config = config;
 
@@ -33,16 +34,13 @@ internal class CustomBombController : MonoBehaviour, INoteControllerDidInitEvent
     
         vanillaBombRenderer = gameObject.transform.Find("Mesh").GetComponent<MeshRenderer>();
 
-        if (bombPool != null)
-        {
-            bombNoteController.didInitEvent.Add(this);
-            bombNoteController.noteWasCutEvent.Add(this);
-            bombNoteController.noteWasMissedEvent.Add(this);
-            bombNoteController.noteDidDissolveEvent.Add(this);
+        bombNoteController.didInitEvent.Add(this);
+        bombNoteController.noteWasCutEvent.Add(this);
+        bombNoteController.noteWasMissedEvent.Add(this);
+        bombNoteController.noteDidDissolveEvent.Add(this);
             
-            vanillaBombRenderer.enabled = false;
-        }
-            
+        vanillaBombRenderer.enabled = false;
+
         if (config.HmdOnly)
         {
             // create fake bombs because for some reason changing the layer of the vanilla bomb mesh causes them
@@ -61,25 +59,27 @@ internal class CustomBombController : MonoBehaviour, INoteControllerDidInitEvent
 
     private void DidFinish()
     {
-        siraContainer.Prefab.SetActive(false);
-        siraContainer.transform.SetParent(null);
-        bombPool.Despawn(siraContainer);
+        if (!activeContainer) return;
+        activeNote?.GameObject.SetActive(false);
+        activeContainer.transform.SetParent(null);
+        bombPool.Despawn(activeContainer);
     }
 
     public void HandleNoteControllerDidInit(NoteControllerBase noteController)
     {
-        siraContainer = bombPool.Spawn();
-        
-        var activeNoteBomb = siraContainer.Prefab;
-        activeNoteBomb.SetLayerRecursively(config.HmdOnly ? VisibilityLayer.HmdOnlyAndReflected : VisibilityLayer.Note);
-        activeNoteBomb.transform.localPosition = Vector3.zero;
-        activeNoteBomb.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * config.GetNoteSize();
-        activeNoteBomb.SetActive(true);
+        activeContainer = bombPool.Spawn();
+        if (!activeContainer) return;
+        activeNote = activeContainer.Instance;
+
+        activeNote.GameObject.SetLayerRecursively(config.HmdOnly ? VisibilityLayer.HmdOnlyAndReflected : VisibilityLayer.Note);
+        activeNote.GameObject.transform.localPosition = Vector3.zero;
+        activeNote.SetScale(config.GetNoteSize());
+        activeNote.GameObject.SetActive(true);
             
-        siraContainer.transform.SetParent(vanillaBombRenderer.transform);
-        siraContainer.transform.localPosition = Vector3.zero;
-        siraContainer.transform.localRotation = Quaternion.identity;
-        siraContainer.transform.localScale = Vector3.one;
+        activeContainer.transform.SetParent(vanillaBombRenderer.transform);
+        activeContainer.transform.localPosition = Vector3.zero;
+        activeContainer.transform.localRotation = Quaternion.identity;
+        activeContainer.transform.localScale = Vector3.one;
     }
 
     protected void OnDestroy()
