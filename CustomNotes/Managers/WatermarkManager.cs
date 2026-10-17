@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using BeatSaberMarkupLanguage;
 using CameraUtils.Core;
 using HMUI;
@@ -19,7 +20,7 @@ internal class WatermarkManager : IInitializable, IDisposable
         this.config = config;
     }
         
-    private GameObject watermarkObject;
+    private GameObject? watermarkObject;
 
     public void Initialize()
     {
@@ -34,7 +35,7 @@ internal class WatermarkManager : IInitializable, IDisposable
         DestroyWatermark();
     }
         
-    public void CreateWatermark()
+    private void CreateWatermark()
     {
         if (watermarkObject != null)
         {
@@ -52,14 +53,14 @@ internal class WatermarkManager : IInitializable, IDisposable
 
         watermarkObject.AddComponent<CurvedCanvasSettings>().SetRadius(0f);
 
-        var text = (CurvedTextMeshPro)BeatSaberUI.CreateText((RectTransform)watermarkCanvas.transform, "Custom Notes Enabled", new(0, 0));
+        var text = BeatSaberUI.CreateCurvedUIText((RectTransform)watermarkCanvas.transform, "Custom Notes Enabled");
         text.alignment = TextAlignmentOptions.Center;
         text.color = new(0.95f, 0.95f, 0.95f);
 
         watermarkObject.SetLayerRecursively(VisibilityLayer.DesktopOnlyAndReflected);
     }
         
-    public void DestroyWatermark()
+    private void DestroyWatermark()
     {
         if (watermarkObject != null)
         {

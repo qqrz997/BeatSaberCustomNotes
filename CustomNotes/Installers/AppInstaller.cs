@@ -15,6 +15,13 @@ internal class AppInstaller : Installer
     public override void InstallBindings()
     {
         Container.BindInstance(config).AsSingle();
-        Container.BindInterfacesAndSelfTo<NoteAssetLoader>().AsSingle();
+        
+        Container.Bind<NoteFileManager>().AsSingle();
+        Container.BindInterfacesTo<NoteDataLoader>().AsSingle();
+        Container.Bind<NotesLoader>().AsSingle();
+        Container.Bind<Note2Loader>().AsSingle();
+        Container.Bind<LegacyCustomNoteLoader>().AsSingle();
+        
+        Container.Bind<GameResourcesManager>().AsSingle();
     }
 }

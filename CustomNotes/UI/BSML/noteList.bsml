@@ -1,0 +1,16 @@
+﻿<bg xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="https://monkeymanboy.github.io/BSML-Docs/BSMLSchema.xsd">
+
+  <horizontal>
+
+    <vertical>
+      <list id='noteList' expand-cell='true' select-cell='NoteListCellSelected' show-scrollbar='true' />
+    </vertical>
+
+    <vertical>
+      <button text='Reload all notes' on-click='ReloadButtonClicked' pref-width='27.5'/>
+    </vertical>
+    
+  </horizontal>
+
+</bg>

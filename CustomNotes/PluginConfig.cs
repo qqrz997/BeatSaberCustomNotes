@@ -8,7 +8,7 @@ namespace CustomNotes;
 internal class PluginConfig
 {
     public virtual bool Enabled { get; set; } = true;
-    public virtual string LastNote { get; set; }
+    public virtual string? LastNote { get; set; }
     public virtual float NoteSize { get; set; } = 1;
     public virtual bool HmdOnly { get; set; }
     public virtual bool AutoDisable { get; set; }

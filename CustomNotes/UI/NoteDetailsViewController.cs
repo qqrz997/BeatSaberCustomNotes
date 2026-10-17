@@ -1,36 +1,29 @@
 ﻿using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
 using CustomNotes.Models;
-using CustomNotes.Utilities;
-using HMUI;
 using UnityEngine;
 using Zenject;
 using static IPA.Utilities.Utils;
 
 namespace CustomNotes.UI;
 
-internal class NoteDetailsViewController : BSMLResourceViewController
+[HotReload(RelativePathToLayout = "./BSML/noteDetails.bsml")]
+[ViewDefinition("CustomNotes.UI.BSML.noteDetails.bsml")]
+internal class NoteDetailsViewController : BSMLAutomaticViewController
 {
-    public override string ResourceName => "CustomNotes.Resources.BSML.noteDetails.bsml";
-
     [Inject] private readonly PluginConfig config = null!;
     [Inject] private readonly NoteListViewController listViewController = null!;
 
-    [UIComponent("note-description")] private readonly TextPageScrollView noteDescription = null;
-    [UIObject("disable-april-fools")] private readonly GameObject disableAprilFoolsCheckbox = null!;
+    [UIObject("DisableAprilFools")] private readonly GameObject disableAprilFoolsCheckbox = null!;
 
-    public void OnNoteWasChanged(CustomNote customNote)
+    public void OnNoteWasChanged(CustomNoteData customNote)
     {
-        noteDescription.SetText(!string.IsNullOrWhiteSpace(customNote.ErrorMessage) ? string.Empty 
-            : $"{customNote.Descriptor.NoteName}:\n\n{Utils.SafeUnescape(customNote.Descriptor.Description)}");
-
         NotifyPropertyChanged(nameof(ModEnabled));
         NotifyPropertyChanged(nameof(NoteSize));
         NotifyPropertyChanged(nameof(HmdOnly));
         NotifyPropertyChanged(nameof(AutoDisable));
     }
 
-    [UIValue("mod-enabled")]
     public bool ModEnabled
     {
         get => config.Enabled;
@@ -41,7 +34,6 @@ internal class NoteDetailsViewController : BSMLResourceViewController
         }
     }
 
-    [UIValue("note-size")]
     public float NoteSize
     {
         get => config.NoteSize;
@@ -53,7 +45,6 @@ internal class NoteDetailsViewController : BSMLResourceViewController
         }
     }
 
-    [UIValue("hmd-only")]
     public bool HmdOnly 
     {
         get => config.HmdOnly;
@@ -64,7 +55,6 @@ internal class NoteDetailsViewController : BSMLResourceViewController
         }
     }
 
-    [UIValue("auto-disable")]
     public bool AutoDisable
     {
         get => config.AutoDisable;
@@ -75,7 +65,6 @@ internal class NoteDetailsViewController : BSMLResourceViewController
         }
     }
 
-    [UIValue("disable-april-fools")]
     public bool DisableAprilFools
     {
         get => config.DisableAprilFools;

@@ -91,7 +91,7 @@ internal class CustomNoteColorNoteVisuals : ColorNoteVisuals
         duplicatedArrows.Clear();
     }
 
-    private GameObject DuplicateIfExists(GameObject gameObject, VisibilityLayer layer)
+    private GameObject? DuplicateIfExists(GameObject gameObject, VisibilityLayer layer)
     {
         if (!gameObject.activeInHierarchy)
         {
@@ -109,11 +109,10 @@ internal class CustomNoteColorNoteVisuals : ColorNoteVisuals
     private void ScaleIfExists(GameObject gameObject, VisibilityLayer layer, float scale, Vector3 positionModifier)
     {
         var tempObject = DuplicateIfExists(gameObject, layer);
-        if (tempObject != null)
-        {
-            var scaleVector = new Vector3(1, 1, 1) * scale;
-            tempObject.transform.localScale = scaleVector;
-            tempObject.transform.localPosition = positionModifier * scale;
-        }
+        if (!tempObject) return;
+        
+        var scaleVector = new Vector3(1, 1, 1) * scale;
+        tempObject.transform.localScale = scaleVector;
+        tempObject.transform.localPosition = positionModifier * scale;
     }
 }
