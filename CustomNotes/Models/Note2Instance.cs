@@ -7,9 +7,9 @@ namespace CustomNotes.Models;
 
 internal class Note2Instance : MonoBehaviour, INote
 {
-    private MaterialColorer[] allColorers = [];
-    private MaterialColorer[] boostColors = [];
-    private MaterialColorer[] saberColors = [];
+    [SerializeField] private MaterialColorer[] allColorers = [];
+    [SerializeField] private MaterialColorer[] boostColors = [];
+    [SerializeField] private MaterialColorer[] saberColors = [];
     
     public static Note2Instance AddTo(GameObject noteObject)
     {
