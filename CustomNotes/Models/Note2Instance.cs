@@ -1,3 +1,4 @@
+using System.Linq;
 using AssetComponents.Components;
 using CustomNotes.Utilities;
 using UnityEngine;
@@ -7,11 +8,15 @@ namespace CustomNotes.Models;
 internal class Note2Instance : MonoBehaviour, INote
 {
     private MaterialColorer[] allColorers = [];
+    private MaterialColorer[] boostColors = [];
+    private MaterialColorer[] saberColors = [];
     
     public static Note2Instance AddTo(GameObject noteObject)
     {
         var instance = noteObject.AddComponent<Note2Instance>();
         instance.allColorers = noteObject.GetComponentsInChildren<MaterialColorer>(true);
+        instance.boostColors = instance.allColorers.Where(c => c.UsesBoostColors()).ToArray();
+        instance.saberColors = instance.allColorers.Where(c => c.UsesSaberColors()).ToArray();
         return instance;
     }
 
@@ -24,19 +29,27 @@ internal class Note2Instance : MonoBehaviour, INote
     public void SetColorScheme(ColorScheme colorScheme)
     {
         foreach (var materialColorer in allColorers)
-            colorScheme.ColorForType(materialColorer.ColorSchemeType);
+        {
+            var color = colorScheme.GetColorByType(materialColorer.ColorSchemeType);
+            materialColorer.SetColor(color);
+        }
     }
 
     public void SetBoostColors(ColorScheme colorScheme, bool boost)
     {
-        foreach (var materialColorer in allColorers)
-            colorScheme.BoostColorForType(materialColorer.ColorSchemeType, boost);
+        foreach (var materialColorer in boostColors)
+        {
+            var color = colorScheme.GetBoostColorByType(materialColorer.ColorSchemeType, boost);
+            materialColorer.SetColor(color);
+        }
     }
 
     public void SetColor(Color color)
     {
-        foreach (var materialColorer in allColorers)
+        foreach (var materialColorer in saberColors)
+        {
             materialColorer.SetColor(color);
+        }
     }
 
     public void SetScale(float scaleMultiplier)

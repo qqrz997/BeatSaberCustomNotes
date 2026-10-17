@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace CustomNotes.Models;
 
-internal class NoteInstance : MonoBehaviour, INote
+internal class LegacyNoteInstance : MonoBehaviour, INote
 {
     [SerializeField] private Renderer[] colorableRenderers = [];
     [SerializeField] private bool useBaseArrows;
@@ -13,9 +13,9 @@ internal class NoteInstance : MonoBehaviour, INote
     
     private readonly MaterialPropertyBlock materialPropertyBlock = new();
     
-    public static NoteInstance AddTo(GameObject noteObject, bool useBaseArrows, float colorMultiplier)
+    public static LegacyNoteInstance AddTo(GameObject noteObject, bool useBaseArrows, float colorMultiplier)
     {
-        var noteInstance = noteObject.AddComponent<NoteInstance>();
+        var noteInstance = noteObject.AddComponent<LegacyNoteInstance>();
         noteInstance.colorableRenderers = GetColorableRenderers(noteObject).ToArray();
         noteInstance.useBaseArrows = useBaseArrows;
         noteInstance.colorMultiplier = colorMultiplier;

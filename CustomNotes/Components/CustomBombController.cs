@@ -70,12 +70,11 @@ internal class CustomBombController : MonoBehaviour, INoteControllerDidInitEvent
         activeContainer = bombPool.Spawn();
         if (!activeContainer) return;
         activeNote = activeContainer.Instance;
-        
-        var go = activeNote.GameObject;
-        go.SetLayerRecursively(config.HmdOnly ? VisibilityLayer.HmdOnlyAndReflected : VisibilityLayer.Note);
-        go.transform.localPosition = Vector3.zero;
-        go.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f) * config.GetNoteSize();
-        go.SetActive(true);
+
+        activeNote.GameObject.SetLayerRecursively(config.HmdOnly ? VisibilityLayer.HmdOnlyAndReflected : VisibilityLayer.Note);
+        activeNote.GameObject.transform.localPosition = Vector3.zero;
+        activeNote.SetScale(config.GetNoteSize());
+        activeNote.GameObject.SetActive(true);
             
         activeContainer.transform.SetParent(vanillaBombRenderer.transform);
         activeContainer.transform.localPosition = Vector3.zero;

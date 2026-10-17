@@ -6,7 +6,17 @@ namespace CustomNotes.Utilities;
 
 internal static class NoteColoring
 {
-    public static Color ColorForType(this ColorScheme s, ColorSchemeType t) => t switch
+    public static bool UsesSaberColors(this IBeatSaberColorer colorer) => colorer.ColorSchemeType 
+        is ColorSchemeType.LeftSaber or ColorSchemeType.RightSaber;
+
+    public static bool UsesBoostColors(this IBeatSaberColorer colorer) => colorer is {
+        UseColorBoostEvents: true,
+        ColorSchemeType: ColorSchemeType.EnvironmentColor0 or ColorSchemeType.EnvironmentColor1
+        or ColorSchemeType.EnvironmentColorW or ColorSchemeType.EnvironmentColor0Boost
+        or ColorSchemeType.EnvironmentColor1Boost or ColorSchemeType.EnvironmentColorWBoost
+    };
+
+    public static Color GetColorByType(this ColorScheme s, ColorSchemeType t) => t switch
     {
         ColorSchemeType.LeftSaber => s.saberAColor,
         ColorSchemeType.RightSaber => s.saberBColor,
@@ -20,7 +30,7 @@ internal static class NoteColoring
         _ => throw new ArgumentOutOfRangeException(nameof(t), t, null)
     };
 
-    public static Color BoostColorForType(this ColorScheme s, ColorSchemeType t, bool b) => (t, b) switch
+    public static Color GetBoostColorByType(this ColorScheme s, ColorSchemeType t, bool boost) => (t, boost) switch
     {
         (ColorSchemeType.LeftSaber, _) => s.saberAColor,
         (ColorSchemeType.RightSaber, _) => s.saberBColor,

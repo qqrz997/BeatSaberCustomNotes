@@ -22,6 +22,6 @@ internal class LegacyNoteSubPrefab : INoteSubPrefab
     {
         var gameObject = Object.Instantiate(noteModelPrefab);
         gameObject.ReplaceSwappableMaterials();
-        return NoteInstance.AddTo(gameObject, useBaseArrows, colorMultiplier);
+        return LegacyNoteInstance.AddTo(gameObject, useBaseArrows, colorMultiplier);
     }
 }
